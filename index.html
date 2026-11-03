@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>STUDIO HANEUL Virtual Pop-up Store</title>
+  <meta name="description" content="スタジオハヌルのバーチャルポップアップショップ。会場限定グッズ、クーポンガチャ、購入特典をオンラインで。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- 入口 -->
+  <div class="entrance" id="entrance">
+    <div class="sky" aria-hidden="true">
+      <span class="cloud c1"></span><span class="cloud c2"></span><span class="cloud c3"></span>
+    </div>
+    <div class="entrance-inner">
+      <p class="entrance-kicker" data-bind="title"></p>
+      <h1 class="logo-big"><span data-bind="brand"></span></h1>
+      <p class="entrance-theme" data-bind="theme"></p>
+      <div class="entrance-cast" id="entranceCast"></div>
+      <p class="entrance-period" data-bind="period"></p>
+      <button class="btn btn-primary btn-lg" id="enterBtn">お店に入る</button>
+    </div>
+    <div class="door door-left" aria-hidden="true"></div>
+    <div class="door door-right" aria-hidden="true"></div>
+  </div>
+
+  <header class="site-header">
+    <a class="logo" href="#top" aria-label="トップへ"><span data-bind="brand"></span><small>POP-UP</small></a>
+    <nav class="nav" aria-label="店内案内">
+      <a href="#floor">フロアマップ</a>
+      <a href="#shop">商品一覧</a>
+      <a href="#gacha">ガチャ</a>
+      <a href="#info">ご案内</a>
+    </nav>
+    <button class="cart-btn" id="cartBtn" aria-label="カートを開く">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 7zm3 0V6a3 3 0 0 1 6 0v1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </header>
+
+  <main id="top">
+    <!-- フロアマップ -->
+    <section class="section" id="floor">
+      <div class="section-head">
+        <p class="eyebrow">FLOOR MAP</p>
+        <h2>キャラクターのブースを回ろう</h2>
+        <p class="lead">ブースをクリックすると、そのキャラクターの商品が並ぶ棚に移動します。</p>
+      </div>
+      <div class="floor" id="floorMap"></div>
+    </section>
+
+    <!-- 商品一覧 -->
+    <section class="section" id="shop">
+      <div class="section-head">
+        <p class="eyebrow">SHOP</p>
+        <h2 id="shelfTitle">すべての商品</h2>
+      </div>
+      <div class="filters">
+        <div class="chips" id="charChips" role="group" aria-label="キャラクターで絞り込み"></div>
+        <div class="filter-row">
+          <div class="chips" id="catChips" role="group" aria-label="カテゴリで絞り込み"></div>
+          <label class="sort">並び替え
+            <select id="sortSelect">
+              <option value="recommend">おすすめ順</option>
+              <option value="new">新作順</option>
+              <option value="priceAsc">価格が安い順</option>
+              <option value="priceDesc">価格が高い順</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="grid" id="productGrid"></div>
+      <p class="empty" id="emptyMsg" hidden>条件に合う商品がありません。</p>
+    </section>
+
+    <!-- ガチャ -->
+    <section class="section section-alt" id="gacha">
+      <div class="gacha-wrap">
+        <div class="gacha-text">
+          <p class="eyebrow">DAILY GACHA</p>
+          <h2>1日1回 クーポンガチャ</h2>
+          <p class="lead">ハンドルを回すと、今日のお買い物で使える割引クーポンが当たります。シークレットは 20% OFF！</p>
+          <ul class="odds" id="gachaOdds"></ul>
+        </div>
+        <div class="machine" id="machine">
+          <div class="machine-dome">
+            <div class="capsules" id="capsules"></div>
+          </div>
+          <div class="machine-body">
+            <div class="machine-slot"></div>
+            <button class="handle" id="gachaBtn" aria-label="ガチャを回す"><span></span></button>
+          </div>
+          <div class="capsule-out" id="capsuleOut" aria-hidden="true"></div>
+        </div>
+      </div>
+      <p class="gacha-result" id="gachaResult" role="status" aria-live="polite"></p>
+    </section>
+
+    <!-- ご案内 -->
+    <section class="section" id="info">
+      <div class="section-head">
+        <p class="eyebrow">INFORMATION</p>
+        <h2>ご案内</h2>
+      </div>
+      <div class="info-grid">
+        <div class="info-card">
+          <h3>開催期間</h3>
+          <p data-bind="period"></p>
+        </div>
+        <div class="info-card">
+          <h3>購入特典</h3>
+          <p id="noveltyInfo"></p>
+        </div>
+        <div class="info-card">
+          <h3>送料</h3>
+          <p id="shippingInfo"></p>
+        </div>
+        <div class="info-card">
+          <h3>会場限定商品</h3>
+          <p>「会場限定」マークの商品は、お一人様の購入数に上限があります。なくなり次第終了です。</p>
+        </div>
+      </div>
+      <div class="cast">
+        <h3>キャラクター紹介</h3>
+        <div class="cast-grid" id="castGrid"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>&copy; <span data-bind="brand"></span> — Virtual Pop-up Store</p>
+    <p class="demo-note">※ このサイトはデモです。決済は接続されていません。</p>
+  </footer>
+
+  <!-- 商品詳細 -->
+  <div class="modal" id="productModal" role="dialog" aria-modal="true" aria-labelledby="pmName" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card product-detail">
+      <button class="icon-btn modal-close" data-close aria-label="閉じる">&times;</button>
+      <div class="pd-image" id="pmImage"></div>
+      <div class="pd-body">
+        <div class="badges" id="pmBadges"></div>
+        <h3 id="pmName"></h3>
+        <p class="pd-price" id="pmPrice"></p>
+        <p id="pmDesc"></p>
+        <p class="pd-spec" id="pmSpec"></p>
+        <p class="pd-stock" id="pmStock"></p>
+        <div class="pd-actions">
+          <div class="qty">
+            <button class="icon-btn" id="pmMinus" aria-label="数量を減らす">−</button>
+            <output id="pmQty">1</output>
+            <button class="icon-btn" id="pmPlus" aria-label="数量を増やす">＋</button>
+          </div>
+          <button class="btn btn-primary" id="pmAdd">カートに入れる</button>
+        </div>
+        <p class="pd-note" id="pmNote"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- カート -->
+  <aside class="drawer" id="cartDrawer" aria-labelledby="cartTitle" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="drawer-panel">
+      <div class="drawer-head">
+        <h3 id="cartTitle">ショッピングバッグ</h3>
+        <button class="icon-btn" data-close aria-label="閉じる">&times;</button>
+      </div>
+      <div class="novelty" id="noveltyBar"></div>
+      <ul class="cart-items" id="cartItems"></ul>
+      <div class="cart-summary" id="cartSummary"></div>
+      <button class="btn btn-primary btn-block" id="checkoutBtn">購入手続きへ</button>
+    </div>
+  </aside>
+
+  <!-- 注文完了 -->
+  <div class="modal" id="doneModal" role="dialog" aria-modal="true" aria-labelledby="doneTitle" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card done-card">
+      <div class="done-cast" id="doneCast"></div>
+      <h3 id="doneTitle">ご注文ありがとうございます！</h3>
+      <p id="doneText"></p>
+      <p class="demo-note">※ デモのため実際の注文・決済は行われていません。</p>
+      <button class="btn btn-primary" data-close>お店に戻る</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
