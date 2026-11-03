@@ -1,8 +1,18 @@
-(function () {
+/*
+ * ページ全体の動き（商品一覧・商品詳細・カート・ガチャ）
+ * Shopify が設定されていれば、まず Shopify から商品とイベント設定を読み込んでから表示します。
+ */
+window.AppReady = (async function () {
+  try { await window.ShopifyData?.load(); } catch (err) {
+    console.error('Shopify の読み込みに失敗したため、見本データで表示します', err);
+  }
   const { SHOP, CHARACTERS, CATEGORIES, PRODUCTS, GACHA_PRIZES, Art } = window;
+  const shopify = window.ShopifyData?.enabled ? window.ShopifyData : null;
   const $ = (sel, root = document) => root.querySelector(sel);
   const yen = (n) => `¥${n.toLocaleString('ja-JP')}`;
   const charById = Object.fromEntries(CHARACTERS.map((c) => [c.id, c]));
+  const NO_CHAR = { id: '', name: '', color: '#e3e6f0' };
+  const charOf = (p) => charById[p.character] || NO_CHAR;
   const productById = Object.fromEntries(PRODUCTS.map((p) => [p.id, p]));
   const today = () => new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
 
@@ -64,7 +74,7 @@
     $('#sortSelect').value = state.sort;
 
     const parts = [];
-    if (state.char !== 'all') parts.push(`${charById[state.char].name}のブース`);
+    if (state.char !== 'all') parts.push(`${charOf({ character: state.char }).name}のグッズ`);
     if (state.cat === 'limited') parts.push('会場限定');
     else if (state.cat !== 'all') parts.push(CATEGORIES.find((c) => c.id === state.cat).name);
     $('#shelfTitle').textContent = parts.length ? parts.join(' / ') : 'すべての商品';
@@ -102,7 +112,7 @@
     list = [...list].sort((a, b) => (a.stock === 0) - (b.stock === 0) || sorters[state.sort](a, b));
 
     $('#productGrid').innerHTML = list.map((p) => {
-      const c = charById[p.character];
+      const c = charOf(p);
       return `
       <article class="card ${p.stock === 0 ? 'is-soldout' : ''}" style="--c:${c.color}">
         <button class="card-hit" data-open="${p.id}" aria-label="${p.name} の詳細を見る"></button>
@@ -157,7 +167,7 @@
   function openProduct(id) {
     current = productById[id];
     const p = current;
-    const c = charById[p.character];
+    const c = charOf(p);
     qty = 1;
     $('#pmImage').innerHTML = Art.productSVG(p);
     $('#pmImage').style.setProperty('--c', c.color);
@@ -234,6 +244,7 @@
     const subtotal = lines.reduce((s, l) => s + l.p.price * l.q, 0);
     const coupon = activeCoupon();
     const discount = coupon ? Math.floor((subtotal * coupon.rate) / 100) : 0;
+    // Shopify 連携時は、送料・割引の最終額は Shopify の購入手続きで計算されます（ここでは目安）
     const shipping = subtotal === 0 || subtotal >= SHOP.freeShippingThreshold ? 0 : SHOP.shippingFee;
     return { lines, count, subtotal, coupon, discount, shipping, total: subtotal - discount + shipping };
   }
@@ -242,8 +253,6 @@
     const t = totals();
     $('#cartCount').textContent = t.count;
     $('#cartCount').hidden = t.count === 0;
-    const reg = $('#registerCount');
-    if (reg) reg.textContent = t.count ? `バッグに ${t.count} 点` : '';
 
     const remain = SHOP.novelty.threshold - t.subtotal;
     const pct = Math.min(100, (t.subtotal / SHOP.novelty.threshold) * 100);
@@ -252,7 +261,7 @@
       <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}"><span style="width:${pct}%"></span></div>`;
 
     $('#cartItems').innerHTML = t.lines.length ? t.lines.map(({ p, q }) => `
-      <li class="cart-item" style="--c:${charById[p.character].color}">
+      <li class="cart-item" style="--c:${charOf(p).color}">
         <div class="ci-image">${Art.productSVG(p)}</div>
         <div class="ci-body">
           <p class="ci-name">${p.name}</p>
@@ -275,11 +284,13 @@
         <div><dt>小計</dt><dd>${yen(t.subtotal)}</dd></div>
         ${t.coupon ? `<div class="discount"><dt>${t.coupon.label}</dt><dd>−${yen(t.discount)}</dd></div>` : ''}
         <div><dt>送料</dt><dd>${t.shipping ? yen(t.shipping) : '無料'}</dd></div>
-        <div class="total"><dt>合計（税込）</dt><dd>${yen(t.total)}</dd></div>
+        <div class="total"><dt>合計（税込）${shopify ? '<small>目安</small>' : ''}</dt><dd>${yen(t.total)}</dd></div>
       </dl>
+      ${shopify ? '<p class="hint">送料・割引の最終金額は、次の購入手続き画面（Shopify）で確定します</p>' : ''}
       ${!t.coupon ? '<p class="hint">クーポンガチャで割引クーポンをゲットできます</p>' : ''}
       ${t.shipping ? `<p class="hint">あと ${yen(SHOP.freeShippingThreshold - t.subtotal)} で送料無料</p>` : ''}` : '';
     $('#checkoutBtn').disabled = t.lines.length === 0;
+    document.dispatchEvent(new CustomEvent('haneul:cart', { detail: { count: t.count } }));
   }
 
   $('#cartItems').addEventListener('click', (e) => {
@@ -293,9 +304,25 @@
   function openCart() { renderCart(); openLayer($('#cartDrawer')); }
   $('#cartBtn').addEventListener('click', openCart);
 
-  $('#checkoutBtn').addEventListener('click', () => {
+  if (shopify) $('#checkoutBtn').textContent = '購入手続きへ（Shopify）';
+  $('#checkoutBtn').addEventListener('click', async () => {
     const t = totals();
     if (!t.lines.length) return;
+    if (shopify) {
+      const btn = $('#checkoutBtn');
+      btn.disabled = true;
+      btn.textContent = '購入手続きを準備しています…';
+      try {
+        const url = await shopify.checkout(t.lines.map(({ p, q }) => ({ variantId: p.variantId, quantity: q })), t.coupon?.code);
+        window.location.href = url;
+      } catch (err) {
+        console.error(err);
+        toast('購入手続きを開始できませんでした。時間をおいてもう一度お試しください');
+        btn.disabled = false;
+        btn.textContent = '購入手続きへ（Shopify）';
+      }
+      return;
+    }
     for (const { p, q } of t.lines) p.stock = Math.max(0, p.stock - q);
     const orderNo = `HN-${Date.now().toString(36).toUpperCase().slice(-6)}`;
     $('#doneText').innerHTML = `注文番号 <strong>${orderNo}</strong><br>${t.count} 点・合計 <strong>${yen(t.total)}</strong>` +
@@ -305,7 +332,7 @@
     if (t.coupon) { state.coupon = { ...t.coupon, date: 'used' }; store.set('coupon', state.coupon); }
     saveCart();
     renderProducts();
-    window.Store?.render();
+    window.World?.refresh();
     closeLayer($('#cartDrawer'));
     setTimeout(() => openLayer($('#doneModal')), 260);
   });
@@ -367,7 +394,7 @@
       out.classList.add('open');
       // より良いクーポンを持っていればそちらを残す
       const prev = activeCoupon();
-      if (!prev || prize.rate > prev.rate) state.coupon = { label: prize.label, rate: prize.rate, date: today() };
+      if (!prev || prize.rate > prev.rate) state.coupon = { label: prize.label, rate: prize.rate, code: prize.code, date: today() };
       store.set('coupon', state.coupon);
       store.set('lastSpin', today());
       renderCart();
@@ -393,11 +420,13 @@
     toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
   }
 
-  /* ---------- 店内（store.js）から呼ぶ関数 ---------- */
+  /* ---------- 3D 店内（js/world/）から呼ぶ関数 ---------- */
   window.App = {
     openProduct,
     openCart,
-    refreshRegister: renderCart,
+    toast,
+    cartCount: () => totals().count,
+    isLayerOpen: () => !!document.querySelector('.modal.is-open, .drawer.is-open'),
     showCharacter(id) {
       state.char = id;
       state.cat = 'all';
@@ -411,5 +440,5 @@
   renderProducts();
   renderCart();
   renderGachaState();
-  window.Store.init();
+  return window.App;
 })();

@@ -82,3 +82,20 @@ window.STORE_LAYOUT = {
   right: { title: 'STATIONERY & GOODS', label: '文具・雑貨・バッグ', categories: ['stationery', 'living', 'bag'] },
   island: { title: 'LIMITED', label: '会場限定テーブル' }, // limited: true の商品が並びます
 };
+
+/*
+ * テーマの名前・入口の色をページに反映する（3D 店内の組み立ては js/world/ が行う）
+ * 存在しないキーなら最初のテーマを使い、実際に使ったキーを返す
+ */
+window.applyThemeMeta = function applyThemeMeta(key) {
+  const k = window.THEMES[key] ? key : Object.keys(window.THEMES)[0];
+  const t = window.THEMES[k];
+  window.SHOP.theme = k;
+  window.SHOP.themeLabel = `${t.name} ― ${t.title}`;
+  const root = document.documentElement.style;
+  root.setProperty('--theme-top', t.entrance.top);
+  root.setProperty('--theme-bottom', t.entrance.bottom);
+  document.querySelectorAll('[data-bind="themeLabel"]').forEach((el) => { el.textContent = window.SHOP.themeLabel; });
+  return k;
+};
+window.applyThemeMeta(new URLSearchParams(location.search).get('theme') || window.SHOP.theme);

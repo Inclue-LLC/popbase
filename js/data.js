@@ -15,6 +15,23 @@ window.SHOP = {
   shippingFee: 600,
   freeShippingThreshold: 5000,
   novelty: { threshold: 3000, name: 'オリジナルステッカー（全4種ランダム）' },
+  // 同時接続サーバーの URL。空ならこのサイトと同じサーバーの /ws につなぎます（npm start で起動したとき）
+  multiplayerUrl: '',
+};
+
+/*
+ * Shopify 連携
+ * --------------------------------------------------
+ * domain と storefrontToken を入れると、商品・価格・在庫・購入手続きが Shopify に切り替わり、
+ * 内装テーマや会期も Shopify 管理画面（メタオブジェクト）から変更できるようになります。
+ * 空のままなら、このファイルの見本データで動きます。設定方法は docs/shopify-setup.md を参照。
+ */
+window.SHOPIFY_CONFIG = {
+  domain: '',             // 例: 'studio-haneul.myshopify.com'
+  storefrontToken: '',    // ヘッドレス チャネルで発行する「公開アクセストークン」（公開してよいトークン）
+  apiVersion: '2025-01',
+  collection: 'popup',    // 店内に並べるコレクションのハンドル
+  eventHandle: 'current', // 使う「POP UPイベント」メタオブジェクトのハンドル
 };
 
 window.CHARACTERS = [
@@ -75,10 +92,13 @@ window.PRODUCTS = [
     desc: 'ポップアップ限定デザインのトート。お一人様1点まで。', spec: '約 W36 × H38cm / 綿100%' },
 ];
 
-/* 1日1回のクーポンガチャ（weight は出やすさ） */
+/*
+ * 1日1回のクーポンガチャ（weight は出やすさ）
+ * code は Shopify 管理画面で作成したディスカウントコード。Shopify 連携時は購入手続きに自動で付きます。
+ */
 window.GACHA_PRIZES = [
-  { id: 'off5', label: '5% OFF クーポン', rate: 5, weight: 55 },
-  { id: 'off10', label: '10% OFF クーポン', rate: 10, weight: 30 },
-  { id: 'off15', label: '15% OFF クーポン', rate: 15, weight: 12 },
-  { id: 'off20', label: 'シークレット 20% OFF', rate: 20, weight: 3 },
+  { id: 'off5', label: '5% OFF クーポン', rate: 5, weight: 55, code: 'HANEUL5' },
+  { id: 'off10', label: '10% OFF クーポン', rate: 10, weight: 30, code: 'HANEUL10' },
+  { id: 'off15', label: '15% OFF クーポン', rate: 15, weight: 12, code: 'HANEUL15' },
+  { id: 'off20', label: 'シークレット 20% OFF', rate: 20, weight: 3, code: 'HANEUL20' },
 ];

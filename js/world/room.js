@@ -1,0 +1,318 @@
+/*
+ * 店内の組み立て
+ * --------------------------------------------------
+ * 単位はメートル。x 右が＋ / y 上が＋ / z 手前（入口）が＋。
+ *   店内: x -7〜7、z -7（奥の壁）〜 7（入口）、天井 4.2m
+ * 返り値:
+ *   group        … シーンに追加する Object3D
+ *   colliders    … ぶつかり判定用の箱 [{minX,maxX,minZ,maxZ}]
+ *   interactables… 近づく／クリックで反応するもの [{type,id,label,object,pos}]
+ */
+import * as THREE from '../../vendor/three.module.min.js';
+import * as T from './textures.js';
+
+export const ROOM = { w: 14, d: 14, h: 4.2 };
+const HALF_W = ROOM.w / 2;
+const HALF_D = ROOM.d / 2;
+
+const ITEM_HEIGHT = { plush: 0.78, mug: 0.6, tote: 0.66, pouch: 0.56, note: 0.6, keychain: 0.56, sticker: 0.56 };
+
+/* 吊り飾り（SVG） */
+const HANGING = {
+  cloud: () => '<svg viewBox="-34 -26 68 44"><g fill="#fff"><circle cx="-18" cy="2" r="13"/><circle cx="0" cy="-6" r="18"/><circle cx="19" cy="2" r="12"/><rect x="-30" y="0" width="60" height="15" rx="7.5"/></g></svg>',
+  star: () => `<svg viewBox="-24 -24 48 48"><polygon points="${window.Art.starPoints(0, 0, 18, 8)}" fill="#ffd76a" stroke="#ffd76a" stroke-width="4" stroke-linejoin="round"/></svg>`,
+  moon: () => '<svg viewBox="0 0 48 48"><path d="M30 6 a19 19 0 1 0 12 30 a15 15 0 1 1 -12 -30z" fill="#fff1a8"/></svg>',
+  ornament: (i) => `<svg viewBox="0 0 48 56"><rect x="18" y="0" width="12" height="8" rx="2" fill="#d4af37"/><circle cx="24" cy="32" r="21" fill="${['#c94a4a', '#2f6b4f', '#ffd76a', '#4a90c8'][i % 4]}"/><path d="M6 30 Q24 40 42 30" stroke="#fff" stroke-width="3" fill="none" opacity=".7"/><circle cx="16" cy="24" r="4" fill="#fff" opacity=".5"/></svg>`,
+  snow: () => '<svg viewBox="-24 -24 48 48"><g stroke="#fff" stroke-width="3.5" stroke-linecap="round"><line x1="0" y1="-20" x2="0" y2="20"/><line x1="0" y1="-20" x2="0" y2="20" transform="rotate(60)"/><line x1="0" y1="-20" x2="0" y2="20" transform="rotate(120)"/></g><circle r="4" fill="#cfe8ff"/></svg>',
+  flower: (i) => {
+    const fill = ['#ffb3c6', '#ffffff', '#fff1a8'][i % 3];
+    const petals = [0, 1, 2, 3, 4].map((k) => {
+      const a = (Math.PI * 2 * k) / 5 - Math.PI / 2;
+      return `<circle cx="${(Math.cos(a) * 10).toFixed(1)}" cy="${(Math.sin(a) * 10).toFixed(1)}" r="7.5" fill="${fill}"/>`;
+    }).join('');
+    return `<svg viewBox="-24 -24 48 48">${petals}<circle r="6" fill="#ffd76a"/></svg>`;
+  },
+  heart: () => '<svg viewBox="-16 -14 32 26"><path transform="scale(1.4)" d="M0 6 C-10 -2 -8 -10 -3 -10 C-1 -10 0 -8 0 -7 C0 -8 1 -10 3 -10 C8 -10 10 -2 0 6Z" fill="#ff8fa8"/></svg>',
+  balloon: (i) => {
+    const c = ['#ffb3c6', '#8fc8f0', '#ffd76a', '#c9b8f0'][i % 4];
+    return `<svg viewBox="0 0 40 56"><ellipse cx="20" cy="22" rx="17" ry="21" fill="${c}"/><path d="M17 43 L23 43 L20 48 Z" fill="${c}"/><ellipse cx="13" cy="14" rx="4" ry="6" fill="#fff" opacity=".5"/></svg>`;
+  },
+};
+
+const GACHA_SVG = `<svg viewBox="0 0 160 280">
+  <rect x="18" y="150" width="124" height="120" rx="16" fill="#e0607e"/>
+  <rect x="34" y="218" width="40" height="32" rx="8" fill="rgba(58,51,70,.35)"/>
+  <circle cx="112" cy="190" r="20" fill="#fff"/><rect x="107" y="174" width="10" height="32" rx="5" fill="#ffd76a"/>
+  <path d="M14 156 a66 66 0 0 1 132 0 v4 h-132z" fill="rgba(255,255,255,.8)" stroke="#fff" stroke-width="5"/>
+  ${['#8fc8f0', '#ffd76a', '#c9b8f0', '#f2b8a0', '#ffb3c6', '#a8e0c0', '#8fc8f0', '#ffd76a'].map((c, i) =>
+    `<circle cx="${38 + (i % 4) * 28}" cy="${138 - Math.floor(i / 4) * 26}" r="12" fill="${c}"/>`).join('')}
+  <rect x="40" y="58" width="80" height="22" rx="11" fill="#fff"/>
+  <text x="80" y="74" text-anchor="middle" font-size="12" font-weight="800" fill="#e0607e" font-family="sans-serif">GACHA</text>
+</svg>`;
+
+function rand(seed) {
+  let s = seed;
+  return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+}
+
+const basic = (map, extra = {}) => new THREE.MeshBasicMaterial({ map, ...extra });
+const lambert = (color) => new THREE.MeshLambertMaterial({ color });
+
+function plane(w, h, material) {
+  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
+}
+
+function productsFor(zone) {
+  const lay = window.STORE_LAYOUT[zone] || {};
+  return window.PRODUCTS.filter((p) => {
+    if (p.display) return p.display === zone;
+    if (zone === 'island') return !!p.limited;
+    return !p.limited && (lay.categories || []).includes(p.category);
+  }).sort((a, b) => (a.order ?? 0) - (b.order ?? 0) ||
+    (lay.categories ? lay.categories.indexOf(a.category) - lay.categories.indexOf(b.category) : 0));
+}
+
+export async function buildRoom(theme) {
+  const group = new THREE.Group();
+  const colliders = [];
+  const interactables = [];
+  const night = theme.light === 'night';
+
+  /* ---------- 床・天井・壁 ---------- */
+  const floor = plane(ROOM.w, ROOM.d, basic(await T.floorTexture(theme, ROOM.w)));
+  floor.rotation.x = -Math.PI / 2;
+  floor.name = 'floor';
+  group.add(floor);
+
+  const ceil = plane(ROOM.w, ROOM.d, new THREE.MeshBasicMaterial({ color: theme.ceiling }));
+  ceil.rotation.x = Math.PI / 2;
+  ceil.position.y = ROOM.h;
+  group.add(ceil);
+  const lampMat = new THREE.MeshBasicMaterial({ color: night ? '#fff1c4' : '#ffffff' });
+  for (const x of [-4.5, 0, 4.5]) for (const z of [-4.5, 0, 4.5]) {
+    const lamp = new THREE.Mesh(new THREE.CircleGeometry(night ? 0.32 : 0.26, 24), lampMat);
+    lamp.rotation.x = Math.PI / 2;
+    lamp.position.set(x, ROOM.h - 0.01, z);
+    group.add(lamp);
+  }
+
+  const walls = [
+    { pos: [0, ROOM.h / 2, -HALF_D], ry: 0, w: ROOM.w },
+    { pos: [-HALF_W, ROOM.h / 2, 0], ry: Math.PI / 2, w: ROOM.d },
+    { pos: [HALF_W, ROOM.h / 2, 0], ry: -Math.PI / 2, w: ROOM.d },
+    { pos: [0, ROOM.h / 2, HALF_D], ry: Math.PI, w: ROOM.w, door: true },
+  ];
+  for (const wd of walls) {
+    const m = plane(wd.w, ROOM.h, basic(await T.wallTexture(theme, wd.w, ROOM.h, { door: wd.door })));
+    m.position.set(...wd.pos);
+    m.rotation.y = wd.ry;
+    group.add(m);
+  }
+
+  /* ---------- 奥の壁：看板・キャラクター・会期 ---------- */
+  const signW = 5.2;
+  const signH = 1.5;
+  const sign = plane(signW, signH, basic(T.signTexture([
+    { text: window.SHOP.brand, size: 0.18, color: theme.sign.sub, spacing: 14 },
+    { text: theme.name, size: 0.48 },
+    { text: theme.title, size: 0.2, weight: 700 },
+  ], theme.sign, signW, signH), { transparent: true }));
+  sign.position.set(0, 3.15, -HALF_D + 0.03);
+  group.add(sign);
+
+  const plate = plane(2.2, 0.36, basic(T.signTexture([{ text: window.SHOP.period, size: 0.62 }], theme.sign, 2.2, 0.36, { radius: 0.08 }), { transparent: true }));
+  plate.position.set(4.6, 3.35, -HALF_D + 0.03);
+  plate.rotation.z = -0.06;
+  group.add(plate);
+
+  const chars = window.CHARACTERS;
+  for (let i = 0; i < chars.length; i++) {
+    const c = chars[i];
+    const x = (i - (chars.length - 1) / 2) * 1.35;
+    const m = plane(1.1, 1.1, basic(await T.characterTexture(c), { transparent: true, alphaTest: 0.05 }));
+    m.position.set(x, 1.95, -HALF_D + 0.05);
+    group.add(m);
+    const nameTag = plane(0.7, 0.2, basic(T.signTexture([{ text: c.name, size: 0.7 }], { bg: '#ffffff', ink: '#3a3346' }, 0.7, 0.2, { radius: 0.1 }), { transparent: true }));
+    nameTag.position.set(x, 1.32, -HALF_D + 0.05);
+    group.add(nameTag);
+    interactables.push({ type: 'character', id: c.id, label: `${c.name}のグッズを見る`, object: m, pos: new THREE.Vector3(x, 0, -HALF_D + 0.6) });
+  }
+
+  /* ---------- 左右の棚 ---------- */
+  const shelfLen = 7.6;
+  const shelfDepth = 0.5;
+  const shelfH = 2.4;
+  const shelfCenterZ = -0.6;
+  for (const side of ['left', 'right']) {
+    const items = productsFor(side);
+    const unit = new THREE.Group();
+    const dir = side === 'left' ? 1 : -1;
+    unit.position.set(-dir * (HALF_W - shelfDepth / 2), 0, shelfCenterZ);
+    unit.rotation.y = dir * Math.PI / 2; // ローカル +z（手前）が通路側を向く
+    group.add(unit);
+
+    const backM = new THREE.MeshBasicMaterial({ color: theme.shelf.back });
+    const boardM = lambert(theme.shelf.board);
+    const edgeM = lambert(theme.shelf.edge);
+    const back = new THREE.Mesh(new THREE.BoxGeometry(shelfLen, shelfH, 0.04), backM);
+    back.position.set(0, shelfH / 2, -shelfDepth / 2 + 0.02);
+    unit.add(back);
+    for (const sx of [-1, 1]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.08, shelfH, shelfDepth), edgeM);
+      post.position.set(sx * (shelfLen / 2 - 0.04), shelfH / 2, 0);
+      unit.add(post);
+    }
+    const top = new THREE.Mesh(new THREE.BoxGeometry(shelfLen, 0.08, shelfDepth), edgeM);
+    top.position.set(0, shelfH, 0);
+    unit.add(top);
+
+    const lay = window.STORE_LAYOUT[side] || { title: '', label: '' };
+    const zs = plane(2.8, 0.7, basic(T.signTexture([
+      { text: lay.title, size: 0.5, spacing: 4 },
+      { text: lay.label, size: 0.3, color: theme.sign.sub },
+    ], theme.sign, 2.8, 0.7), { transparent: true }));
+    zs.position.set(0, shelfH + 0.55, -shelfDepth / 2 + 0.03);
+    unit.add(zs);
+
+    const rows = Math.min(3, Math.max(1, Math.ceil(items.length / 4)));
+    const perRow = Math.ceil(items.length / rows) || 1;
+    const levels = rows === 3 ? [0.3, 1.02, 1.7] : rows === 2 ? [0.38, 1.36] : [0.7];
+    for (let r = 0; r < rows; r++) {
+      const y = levels[r];
+      const plank = new THREE.Mesh(new THREE.BoxGeometry(shelfLen - 0.12, 0.05, shelfDepth - 0.04), boardM);
+      plank.position.set(0, y, 0.01);
+      unit.add(plank);
+      const rowItems = items.slice(r * perRow, (r + 1) * perRow);
+      const gap = (shelfLen - 0.6) / Math.max(rowItems.length, 1);
+      for (let i = 0; i < rowItems.length; i++) {
+        const p = rowItems[i];
+        const lx = -shelfLen / 2 + 0.3 + gap * (i + 0.5);
+        const h = ITEM_HEIGHT[p.shape] || 0.48;
+        // 商品画像は正方形のテクスチャに下揃えで描いてあるので、下端を板に合わせて置く
+        const [tex] = await T.productTexture(p);
+        const item = plane(h, h, basic(tex, { transparent: true, alphaTest: 0.05 }));
+        item.position.set(lx, y + 0.025 + h / 2, 0.02);
+        unit.add(item);
+        const tag = plane(0.64, 0.16, basic(T.tagTexture(p.name, p.price, { soldOut: p.stock === 0 }), { transparent: true }));
+        tag.position.set(lx, y - 0.1, shelfDepth / 2 + 0.005);
+        unit.add(tag);
+        const pos = new THREE.Vector3();
+        unit.localToWorld(pos.set(lx, 0, shelfDepth / 2 + 0.5));
+        interactables.push({ type: 'product', id: p.id, label: p.name, price: p.price, object: item, pos: pos.clone() });
+      }
+    }
+    const minZ = shelfCenterZ - shelfLen / 2;
+    const maxZ = shelfCenterZ + shelfLen / 2;
+    colliders.push(side === 'left'
+      ? { minX: -HALF_W, maxX: -HALF_W + shelfDepth, minZ, maxZ }
+      : { minX: HALF_W - shelfDepth, maxX: HALF_W, minZ, maxZ });
+  }
+
+  /* ---------- 中央：会場限定テーブル ---------- */
+  const tW = 3.6; const tH = 0.9; const tD = 1.4; const tZ = -1.6;
+  const tableSign = T.signTexture([
+    { text: (window.STORE_LAYOUT.island || {}).title || 'LIMITED', size: 0.42, spacing: 16 },
+    { text: (window.STORE_LAYOUT.island || {}).label || '会場限定', size: 0.26, color: theme.sign.sub },
+  ], { ...theme.sign, style: 'board' }, tW, tH, { radius: 0.02 });
+  const sideM = lambert(theme.shelf.edge);
+  const table = new THREE.Mesh(new THREE.BoxGeometry(tW, tH, tD), [
+    sideM, sideM, lambert(theme.shelf.board), sideM,
+    new THREE.MeshBasicMaterial({ map: tableSign }), new THREE.MeshBasicMaterial({ map: tableSign }),
+  ]);
+  table.position.set(0, tH / 2, tZ);
+  group.add(table);
+  colliders.push({ minX: -tW / 2, maxX: tW / 2, minZ: tZ - tD / 2, maxZ: tZ + tD / 2 });
+
+  const limited = productsFor('island');
+  for (let i = 0; i < limited.length; i++) {
+    const p = limited[i];
+    const x = -tW / 2 + (tW / limited.length) * (i + 0.5);
+    const h = (ITEM_HEIGHT[p.shape] || 0.6) * 0.95;
+    const [tex] = await T.productTexture(p);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, alphaTest: 0.05 }));
+    sp.center.set(0.5, 0);
+    sp.scale.set(h, h, 1);
+    sp.position.set(x, tH, tZ);
+    group.add(sp);
+    const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.tagTexture(p.name, p.price, { soldOut: p.stock === 0 }), transparent: true }));
+    tag.center.set(0.5, 0);
+    tag.scale.set(0.56, 0.14, 1);
+    tag.position.set(x, tH + h + 0.04, tZ);
+    group.add(tag);
+    const front = new THREE.Vector3(x, 0, tZ + tD / 2 + 0.5);
+    interactables.push({ type: 'product', id: p.id, label: p.name, price: p.price, object: sp, pos: front, alt: new THREE.Vector3(x, 0, tZ - tD / 2 - 0.5) });
+  }
+
+  const rug = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: theme.rug, transparent: true, opacity: 0.55 }));
+  rug.rotation.x = -Math.PI / 2;
+  rug.scale.set(3.2, 1.9, 1);
+  rug.position.set(0, 0.004, tZ);
+  group.add(rug);
+
+  /* ---------- レジ ---------- */
+  const rW = 2.2; const rH = 1.0; const rD = 0.9; const rX = -5.3; const rZ = -6.1;
+  const regTex = T.signTexture([{ text: 'REGISTER', size: 0.34, spacing: 10, color: '#6f6880' }], { bg: theme.shelf.back, ink: '#6f6880' }, rW, rH, { radius: 0.02 });
+  const register = new THREE.Mesh(new THREE.BoxGeometry(rW, rH, rD), [
+    sideM, sideM, lambert(theme.shelf.board), sideM, new THREE.MeshBasicMaterial({ map: regTex }), sideM,
+  ]);
+  register.position.set(rX, rH / 2, rZ);
+  group.add(register);
+  const regSign = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: T.signTexture([{ text: 'お会計', size: 0.5 }, { text: 'カートを見る', size: 0.26, color: theme.sign.sub }], theme.sign, 1.0, 0.5),
+    transparent: true,
+  }));
+  regSign.center.set(0.5, 0);
+  regSign.scale.set(1.0, 0.5, 1);
+  regSign.position.set(rX, rH + 0.05, rZ);
+  group.add(regSign);
+  colliders.push({ minX: rX - rW / 2, maxX: rX + rW / 2, minZ: -HALF_D, maxZ: rZ + rD / 2 });
+  interactables.push({ type: 'cart', id: 'cart', label: 'お会計（カートを見る）', object: register, extra: regSign, pos: new THREE.Vector3(rX, 0, rZ + rD / 2 + 0.6) });
+
+  /* ---------- ガチャマシン ---------- */
+  const gacha = new THREE.Sprite(new THREE.SpriteMaterial({ map: await T.svgTexture(GACHA_SVG, 320, 560), transparent: true, alphaTest: 0.05 }));
+  gacha.center.set(0.5, 0);
+  gacha.scale.set(1.0, 1.75, 1);
+  gacha.position.set(5.3, 0, -6.1);
+  group.add(gacha);
+  colliders.push({ minX: 4.8, maxX: 5.8, minZ: -HALF_D, maxZ: -5.7 });
+  interactables.push({ type: 'gacha', id: 'gacha', label: 'クーポンガチャ', object: gacha, pos: new THREE.Vector3(5.3, 0, -5.1) });
+
+  /* ---------- 吊り飾り ---------- */
+  const kinds = theme.hangings || [];
+  const r = rand(7);
+  const lineMat = new THREE.LineBasicMaterial({ color: night ? '#8088c0' : '#9890a8', transparent: true, opacity: 0.6 });
+  const hangTex = {};
+  for (let i = 0; i < 18 && kinds.length; i++) {
+    const kind = kinds[i % kinds.length];
+    const key = `${kind}${i % 4}`;
+    hangTex[key] ||= await T.svgTexture(HANGING[kind](i), 128, 128);
+    let x = (r() * 2 - 1) * 5.6;
+    if (Math.abs(x) < 2.8) x += x < 0 ? -2.8 : 2.8; // 看板の前はあける
+    const z = -6 + r() * 11;
+    const y = ROOM.h - 0.5 - r() * 0.8;
+    const s = 0.35 + r() * 0.25;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: hangTex[key], transparent: true, alphaTest: 0.05 }));
+    sp.scale.set(s, s, 1);
+    sp.position.set(x, y, z);
+    sp.userData.sway = { base: x, phase: r() * 6 };
+    group.add(sp);
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, ROOM.h, z), new THREE.Vector3(x, y + s / 2, z)]), lineMat);
+    group.add(line);
+  }
+
+  /* ---------- 照明 ---------- */
+  group.add(new THREE.HemisphereLight('#ffffff', night ? '#2a2f55' : '#d8c8b0', night ? 1.4 : 2.6));
+  const sun = new THREE.DirectionalLight('#ffffff', night ? 0.6 : 1.3);
+  sun.position.set(3, 8, 6);
+  group.add(sun);
+
+  return { group, colliders, interactables };
+}
+
+export function disposeRoom(group) {
+  group.traverse((o) => {
+    o.geometry?.dispose?.();
+    const mats = Array.isArray(o.material) ? o.material : o.material ? [o.material] : [];
+    for (const m of mats) { m.map?.dispose?.(); m.dispose?.(); }
+  });
+}
