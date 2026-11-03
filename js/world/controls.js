@@ -1,6 +1,6 @@
 /*
  * 操作
- *   PC   : WASD / 矢印キーで移動、ドラッグ・Q/E で視点を回す、ホイールで寄る/引く、床クリックでそこへ歩く
+ *   PC   : WASD / 矢印キーで移動、ドラッグ（店内をつかんで動かす向き）・Q/E で視点を回す、ホイールで寄る/引く、床クリックでそこへ歩く
  *   スマホ: 左下のスティックで移動、画面スワイプで視点、床タップでそこへ歩く
  *   共通 : Enter / Space で近くの商品を見る、1〜6 でスタンプ
  */
@@ -43,8 +43,9 @@ export class Controls {
       drag.x = e.clientX;
       drag.y = e.clientY;
       if (drag.moved > 6) {
-        this.yaw -= dx * 0.006;
-        this.pitch = Math.min(0.85, Math.max(0.08, this.pitch + dy * 0.004));
+        // 店内をつかんで動かす向き（右にドラッグすると左を向く／下にドラッグすると見上げる）
+        this.yaw += dx * 0.006;
+        this.pitch = Math.min(0.85, Math.max(0.08, this.pitch - dy * 0.004));
       }
     });
     const end = (e) => {

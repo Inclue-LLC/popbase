@@ -28,9 +28,6 @@ window.AppReady = (async function () {
   };
 
   const state = {
-    char: 'all',
-    cat: 'all',
-    sort: 'recommend',
     cart: store.get('cart', {}),
     coupon: store.get('coupon', null),
   };
@@ -60,35 +57,7 @@ window.AppReady = (async function () {
     try { return sessionStorage.getItem(`haneul:${key}`) === '1'; } catch { return false; }
   }
 
-  /* ---------- 絞り込み ---------- */
-  function chip(group, id, label, active, extra = '') {
-    return `<button class="chip ${active ? 'is-active' : ''}" data-group="${group}" data-id="${id}" aria-pressed="${active}" ${extra}>${label}</button>`;
-  }
-  function renderFilters() {
-    $('#charChips').innerHTML = chip('char', 'all', 'すべて', state.char === 'all') +
-      CHARACTERS.map((c) => chip('char', c.id,
-        `<span class="chip-face">${Art.characterSVG(c)}</span>${c.name}`, state.char === c.id, `style="--c:${c.color}"`)).join('');
-    $('#catChips').innerHTML = chip('cat', 'all', '全カテゴリ', state.cat === 'all') +
-      chip('cat', 'limited', '会場限定', state.cat === 'limited') +
-      CATEGORIES.map((c) => chip('cat', c.id, c.name, state.cat === c.id)).join('');
-    $('#sortSelect').value = state.sort;
-
-    const parts = [];
-    if (state.char !== 'all') parts.push(`${charOf({ character: state.char }).name}のグッズ`);
-    if (state.cat === 'limited') parts.push('会場限定');
-    else if (state.cat !== 'all') parts.push(CATEGORIES.find((c) => c.id === state.cat).name);
-    $('#shelfTitle').textContent = parts.length ? parts.join(' / ') : 'すべての商品';
-  }
-  document.querySelector('.filters').addEventListener('click', (e) => {
-    const b = e.target.closest('.chip');
-    if (!b) return;
-    state[b.dataset.group] = b.dataset.id;
-    renderFilters();
-    renderProducts();
-  });
-  $('#sortSelect').addEventListener('change', (e) => { state.sort = e.target.value; renderProducts(); });
-
-  /* ---------- 商品一覧 ---------- */
+  /* ---------- 商品のバッジ ---------- */
   function badges(p) {
     const out = [];
     if (p.limited) out.push('<span class="badge badge-limited">会場限定</span>');
@@ -97,45 +66,6 @@ window.AppReady = (async function () {
     else if (p.stock <= 5) out.push('<span class="badge badge-few">残りわずか</span>');
     return out.join('');
   }
-
-  function renderProducts() {
-    let list = PRODUCTS.filter((p) =>
-      (state.char === 'all' || p.character === state.char) &&
-      (state.cat === 'all' || (state.cat === 'limited' ? p.limited : p.category === state.cat)));
-    const order = PRODUCTS.map((p) => p.id);
-    const sorters = {
-      recommend: (a, b) => (b.limited - a.limited) || order.indexOf(a.id) - order.indexOf(b.id),
-      new: (a, b) => (!!b.isNew - !!a.isNew) || order.indexOf(a.id) - order.indexOf(b.id),
-      priceAsc: (a, b) => a.price - b.price,
-      priceDesc: (a, b) => b.price - a.price,
-    };
-    list = [...list].sort((a, b) => (a.stock === 0) - (b.stock === 0) || sorters[state.sort](a, b));
-
-    $('#productGrid').innerHTML = list.map((p) => {
-      const c = charOf(p);
-      return `
-      <article class="card ${p.stock === 0 ? 'is-soldout' : ''}" style="--c:${c.color}">
-        <button class="card-hit" data-open="${p.id}" aria-label="${p.name} の詳細を見る"></button>
-        <div class="card-image">${Art.productSVG(p)}<div class="badges">${badges(p)}</div></div>
-        <div class="card-body">
-          <p class="card-char">${c.name}</p>
-          <h3 class="card-name">${p.name}</h3>
-          <div class="card-foot">
-            <span class="price">${yen(p.price)}<small>税込</small></span>
-            <button class="add-btn" data-add="${p.id}" ${p.stock === 0 ? 'disabled' : ''} aria-label="${p.name} をカートに入れる">＋</button>
-          </div>
-        </div>
-      </article>`;
-    }).join('');
-    $('#emptyMsg').hidden = list.length > 0;
-  }
-
-  $('#productGrid').addEventListener('click', (e) => {
-    const add = e.target.closest('[data-add]');
-    if (add) return addToCart(add.dataset.add, 1, add);
-    const open = e.target.closest('[data-open]');
-    if (open) openProduct(open.dataset.open);
-  });
 
   /* ---------- モーダル / ドロワー共通 ---------- */
   let lastFocus = null;
@@ -215,7 +145,8 @@ window.AppReady = (async function () {
   }
 
   function flyToCart(el) {
-    const target = $('#cartBtn');
+    // 全画面のときは店内右上のカートボタンへ
+    const target = document.body.classList.contains('world-fs') ? $('#hudCart') : $('#cartBtn');
     target.classList.remove('bump');
     void target.offsetWidth;
     target.classList.add('bump');
@@ -251,8 +182,12 @@ window.AppReady = (async function () {
 
   function renderCart() {
     const t = totals();
-    $('#cartCount').textContent = t.count;
-    $('#cartCount').hidden = t.count === 0;
+    for (const id of ['#cartCount', '#hudCartCount']) {
+      const el = $(id);
+      if (!el) continue;
+      el.textContent = t.count;
+      el.hidden = t.count === 0;
+    }
 
     const remain = SHOP.novelty.threshold - t.subtotal;
     const pct = Math.min(100, (t.subtotal / SHOP.novelty.threshold) * 100);
@@ -331,7 +266,6 @@ window.AppReady = (async function () {
     state.cart = {};
     if (t.coupon) { state.coupon = { ...t.coupon, date: 'used' }; store.set('coupon', state.coupon); }
     saveCart();
-    renderProducts();
     window.World?.refresh();
     closeLayer($('#cartDrawer'));
     setTimeout(() => openLayer($('#doneModal')), 260);
@@ -427,17 +361,14 @@ window.AppReady = (async function () {
     toast,
     cartCount: () => totals().count,
     isLayerOpen: () => !!document.querySelector('.modal.is-open, .drawer.is-open'),
+    openGacha() { renderGachaState(); openLayer($('#gachaModal')); },
+    // 壁のキャラクターに話しかけたとき
     showCharacter(id) {
-      state.char = id;
-      state.cat = 'all';
-      renderFilters();
-      renderProducts();
-      $('#shop').scrollIntoView({ behavior: 'smooth' });
+      const c = charById[id];
+      if (c) toast(`${c.name}：${c.profile}`);
     },
   };
 
-  renderFilters();
-  renderProducts();
   renderCart();
   renderGachaState();
   return window.App;

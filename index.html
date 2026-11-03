@@ -33,8 +33,6 @@
     <a class="logo" href="#top" aria-label="トップへ"><span data-bind="brand"></span><small>POP-UP</small></a>
     <nav class="nav" aria-label="店内案内">
       <a href="#store">店内</a>
-      <a href="#shop">商品一覧</a>
-      <a href="#gacha">ガチャ</a>
       <a href="#info">ご案内</a>
     </nav>
     <button class="cart-btn" id="cartBtn" aria-label="カートを開く">
@@ -56,8 +54,9 @@
         <div class="hud hud-top">
           <span class="net-status" id="netStatus" data-state="connecting" role="status">接続しています…</span>
           <span class="hud-actions">
+            <button class="hud-btn hud-cart" id="hudCart" aria-label="カートを見る">カート<span class="hud-cart-count" id="hudCartCount" hidden>0</span></button>
             <button class="hud-btn" id="lookBtn">アバター</button>
-            <button class="hud-btn" id="fullscreenBtn" aria-label="全画面表示">全画面</button>
+            <button class="hud-btn" id="fullscreenBtn">全画面</button>
           </span>
         </div>
         <div class="hud hud-prompt" id="prompt" hidden><button class="prompt-btn" id="promptBtn"></button></div>
@@ -78,7 +77,7 @@
           </div>
         </div>
         <div class="world-fallback" id="worldFallback" hidden>
-          <p>お使いのブラウザでは 3D の店内を表示できませんでした。<br><a href="#shop">商品一覧</a>からお買い物いただけます。</p>
+          <p>お使いのブラウザでは 3D の店内を表示できませんでした。<br>最新の Chrome・Safari・Edge でご覧ください。</p>
         </div>
       </div>
       <div class="store-controls">
@@ -86,53 +85,6 @@
           <select id="themeSelect"></select>
         </label>
       </div>
-    </section>
-
-    <!-- 商品一覧 -->
-    <section class="section" id="shop">
-      <div class="section-head">
-        <p class="eyebrow">SHOP</p>
-        <h2 id="shelfTitle">すべての商品</h2>
-      </div>
-      <div class="filters">
-        <div class="chips" id="charChips" role="group" aria-label="キャラクターで絞り込み"></div>
-        <div class="filter-row">
-          <div class="chips" id="catChips" role="group" aria-label="カテゴリで絞り込み"></div>
-          <label class="sort">並び替え
-            <select id="sortSelect">
-              <option value="recommend">おすすめ順</option>
-              <option value="new">新作順</option>
-              <option value="priceAsc">価格が安い順</option>
-              <option value="priceDesc">価格が高い順</option>
-            </select>
-          </label>
-        </div>
-      </div>
-      <div class="grid" id="productGrid"></div>
-      <p class="empty" id="emptyMsg" hidden>条件に合う商品がありません。</p>
-    </section>
-
-    <!-- ガチャ -->
-    <section class="section section-alt" id="gacha">
-      <div class="gacha-wrap">
-        <div class="gacha-text">
-          <p class="eyebrow">DAILY GACHA</p>
-          <h2>1日1回 クーポンガチャ</h2>
-          <p class="lead">ハンドルを回すと、今日のお買い物で使える割引クーポンが当たります。シークレットは 20% OFF！</p>
-          <ul class="odds" id="gachaOdds"></ul>
-        </div>
-        <div class="machine" id="machine">
-          <div class="machine-dome">
-            <div class="capsules" id="capsules"></div>
-          </div>
-          <div class="machine-body">
-            <div class="machine-slot"></div>
-            <button class="handle" id="gachaBtn" aria-label="ガチャを回す"><span></span></button>
-          </div>
-          <div class="capsule-out" id="capsuleOut" aria-hidden="true"></div>
-        </div>
-      </div>
-      <p class="gacha-result" id="gachaResult" role="status" aria-live="polite"></p>
     </section>
 
     <!-- ご案内 -->
@@ -211,6 +163,33 @@
       <button class="btn btn-primary btn-block" id="checkoutBtn">購入手続きへ</button>
     </div>
   </aside>
+
+  <!-- クーポンガチャ（店内のガチャマシンから開く） -->
+  <div class="modal" id="gachaModal" role="dialog" aria-modal="true" aria-labelledby="gachaTitle" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card gacha-card">
+      <button class="icon-btn modal-close" data-close aria-label="閉じる">&times;</button>
+      <div class="gacha-wrap">
+        <div class="gacha-text">
+          <p class="eyebrow">DAILY GACHA</p>
+          <h2 id="gachaTitle">1日1回 クーポンガチャ</h2>
+          <p class="lead">ハンドルを回すと、今日のお買い物で使える割引クーポンが当たります。シークレットは 20% OFF！</p>
+          <ul class="odds" id="gachaOdds"></ul>
+        </div>
+        <div class="machine" id="machine">
+          <div class="machine-dome">
+            <div class="capsules" id="capsules"></div>
+          </div>
+          <div class="machine-body">
+            <div class="machine-slot"></div>
+            <button class="handle" id="gachaBtn" aria-label="ガチャを回す"><span></span></button>
+          </div>
+          <div class="capsule-out" id="capsuleOut" aria-hidden="true"></div>
+        </div>
+      </div>
+      <p class="gacha-result" id="gachaResult" role="status" aria-live="polite"></p>
+    </div>
+  </div>
 
   <!-- 注文完了 -->
   <div class="modal" id="doneModal" role="dialog" aria-modal="true" aria-labelledby="doneTitle" hidden>

@@ -197,7 +197,7 @@ async function main() {
     if (!it) return;
     if (it.type === 'product') window.App.openProduct(it.id);
     else if (it.type === 'cart') window.App.openCart();
-    else if (it.type === 'gacha') document.getElementById('gacha').scrollIntoView({ behavior: 'smooth' });
+    else if (it.type === 'gacha') window.App.openGacha();
     else if (it.type === 'character') window.App.showCharacter(it.id);
   }
   promptBtn.addEventListener('click', () => interact(nearest));
@@ -324,13 +324,34 @@ async function main() {
   }
   frame();
 
-  /* ---------- 全画面 ---------- */
+  /* ---------- 全画面 ----------
+   * 店内だけを全画面にすると、商品詳細やカート（店内の外にある画面）が表示されないため、
+   * ページ全体を全画面にして、店内を画面いっぱいに広げる。
+   * Fullscreen API がない環境（iPhone の Safari など）でも、画面いっぱいの表示になる。 */
   const fsBtn = $('#fullscreenBtn');
-  if (!root.requestFullscreen) fsBtn.hidden = true;
+  const docEl = document.documentElement;
+  function setFs(on) {
+    document.body.classList.toggle('world-fs', on);
+    fsBtn.textContent = on ? '全画面をやめる' : '全画面';
+    if (on) root.focus({ preventScroll: true });
+    else root.scrollIntoView({ block: 'center' });
+  }
   fsBtn.addEventListener('click', () => {
-    if (document.fullscreenElement) document.exitFullscreen();
-    else root.requestFullscreen().then(() => root.focus({ preventScroll: true })).catch(() => {});
+    const on = !document.body.classList.contains('world-fs');
+    if (on) {
+      setFs(true);
+      docEl.requestFullscreen?.().catch(() => {});
+    } else {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      setFs(false);
+    }
   });
+  // Esc キーなどでブラウザの全画面が解除されたら、表示も戻す
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && document.body.classList.contains('world-fs')) setFs(false);
+  });
+
+  $('#hudCart').addEventListener('click', () => window.App.openCart());
 
   window.World = {
     refresh: () => setTheme(themeKey), // 在庫が変わったときに棚を作り直す

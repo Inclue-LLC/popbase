@@ -16,7 +16,13 @@
   user-select: none;
   -webkit-user-select: none;
 }
-.world:fullscreen { border-radius: 0; height: 100vh; }
+/* 全画面：ページ全体を全画面にして、店内を画面いっぱいに広げる（商品詳細・カートはこの上に出る） */
+body.world-fs { overflow: hidden; }
+body.world-fs .world {
+  position: fixed; inset: 0; z-index: 40;
+  width: 100%; height: 100%; height: 100dvh; min-height: 0;
+  margin: 0; border-radius: 0; box-shadow: none;
+}
 .world-canvas { display: block; width: 100%; height: 100%; cursor: grab; }
 .world-canvas:active { cursor: grabbing; }
 .world:not([data-ready]) .world-canvas { opacity: 0; }
@@ -70,6 +76,14 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
 }
 .hud-btn:hover { background: #fff; }
+.hud-cart { position: relative; }
+.hud-cart-count {
+  position: absolute; top: -6px; right: -6px;
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  background: #e0607e; color: #fff; font-size: .68rem; font-weight: 800; line-height: 18px;
+}
+.hud-cart-count[hidden] { display: none; }
+.hud-cart.bump { animation: bump .4s; }
 
 .hud-prompt { left: 50%; bottom: 84px; transform: translateX(-50%); }
 .hud-prompt[hidden] { display: none; }
@@ -165,4 +179,24 @@
 @media (max-width: 640px) {
   .world { border-radius: 18px; margin: 0 -4px; height: 72vh; }
   .store-controls { justify-content: center; }
+}
+
+/* クーポンガチャ（モーダル） */
+.gacha-card { width: min(780px, 100%); padding: 36px 32px 28px; }
+.gacha-card .gacha-wrap { gap: 28px; }
+.gacha-card h2 { font-size: clamp(1.3rem, 3.4vw, 1.8rem); font-weight: 800; }
+.gacha-card .odds li { background: var(--surface-2); }
+@media (max-width: 720px) {
+  .gacha-card { padding: 24px 18px 18px; }
+  .gacha-card .gacha-wrap { gap: 0; }
+  .gacha-card .lead { font-size: .85rem; }
+  .gacha-card .odds { grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 10px; }
+  .gacha-card .odds li { font-size: .74rem; padding: .3em .7em; }
+  .gacha-card .machine { transform: scale(.78); margin: -26px 0 -34px; }
+  .gacha-card .gacha-result { margin-top: 8px; }
+}
+
+@media (max-width: 640px) {
+  .hud-top { flex-wrap: wrap; }
+  .hud-btn { font-size: .76rem; padding: .35em .75em; }
 }
