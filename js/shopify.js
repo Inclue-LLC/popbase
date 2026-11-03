@@ -6,7 +6,8 @@
  * 管理はすべて Shopify 管理画面で行います（設定手順: docs/shopify-setup.md）。
  *   商品・価格・在庫・画像          … 通常の商品管理
  *   店内での置き場所・並び順など    … 商品メタフィールド（ネームスペース popup）
- *   会期・内装テーマ・壁紙・色      … メタオブジェクト「POP UPイベント」（タイプ popup_event）
+ *   会期・内装テーマ・壁紙・色・棚の配置 … メタオブジェクト「POP UPイベント」（タイプ popup_event、ハンドル current）
+ *                                     ※ 店内管理画面（/admin）から編集・公開します
  *   購入手続き・割引コード          … Shopify のチェックアウト
  */
 (function () {
@@ -82,40 +83,15 @@
     };
   }
 
-  /* メタオブジェクト「POP UPイベント」→ SHOP / テーマ / 棚の看板 */
-  function applyEvent(mo) {
-    if (!mo) return;
+  /* メタオブジェクト「POP UPイベント」→ イベント設定（js/event.js の形）と棚の配置 */
+  function eventFromMetaobject(mo) {
+    if (!mo) return null;
     const f = Object.fromEntries(mo.fields.map((x) => [x.key, x.reference?.image?.url || x.value]));
-    const has = (k) => f[k] != null && f[k] !== '';
-    const base = window.THEMES[f.theme_preset] || window.THEMES[window.SHOP.theme] || Object.values(window.THEMES)[0];
-    const theme = JSON.parse(JSON.stringify(base));
-    if (has('title')) theme.name = f.title;
-    if (has('subtitle')) theme.title = f.subtitle;
-    const set = (obj, key, field) => { if (has(field)) obj[key] = f[field]; };
-    set(theme.wall, 'image', 'wall_image');
-    set(theme.wall, 'color', 'wall_color');
-    set(theme.wall, 'pattern', 'wall_pattern');
-    set(theme.wall, 'patternColor', 'wall_pattern_color');
-    set(theme.wall, 'lower', 'lower_color');
-    set(theme.wall, 'trim', 'trim_color');
-    set(theme.floor, 'image', 'floor_image');
-    set(theme.floor, 'style', 'floor_style');
-    if (has('floor_color_1')) theme.floor.colors[0] = f.floor_color_1;
-    if (has('floor_color_2')) theme.floor.colors[1] = f.floor_color_2;
-    set(theme.sign, 'bg', 'sign_color');
-    set(theme.sign, 'ink', 'sign_text_color');
-    set(theme, 'light', 'light');
-    window.THEMES.shopify = theme;
-    window.SHOP.theme = 'shopify';
-    window.applyThemeMeta?.('shopify');
-    if (has('period')) window.SHOP.period = f.period;
-    if (has('novelty_threshold')) window.SHOP.novelty.threshold = Number(f.novelty_threshold);
-    if (has('novelty_name')) window.SHOP.novelty.name = f.novelty_name;
-    const L = window.STORE_LAYOUT;
-    if (has('left_title')) L.left.title = f.left_title;
-    if (has('left_label')) L.left.label = f.left_label;
-    if (has('right_title')) L.right.title = f.right_title;
-    if (has('right_label')) L.right.label = f.right_label;
+    let layout = null;
+    try { layout = f.layout ? JSON.parse(f.layout) : null; } catch { layout = null; }
+    delete f.layout;
+    delete f.admin_meta;
+    return { event: f, layout };
   }
 
   async function load() {
@@ -138,7 +114,11 @@
     let flip = 0;
     for (const p of products) if (!p.display) p.display = p.limited ? 'island' : (flip++ % 2 ? 'right' : 'left');
 
-    applyEvent(json.data?.metaobject);
+    const ev = eventFromMetaobject(json.data?.metaobject);
+    if (ev) {
+      window.HaneulEvent.applyEvent(ev.event);
+      window.HaneulEvent.applyLayout(ev.layout);
+    }
   }
 
   async function checkout(lines, discountCode) {

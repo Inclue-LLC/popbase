@@ -3,6 +3,7 @@
  * --------------------------------------------------
  * 1. サイト（静的ファイル）の配信
  * 2. 同時接続（WebSocket /ws）：同じ店内にいる他のお客さんのアバターを中継
+ * 3. 店内管理画面（/admin）と、その API（server/admin/）
  *
  * お客さんが送れるのは「位置・向き・アバターの種類・名前の番号・スタンプの番号」だけです。
  * 自由入力の文字は一切受け付けないので、チャットの荒らし対策は不要です。
@@ -17,6 +18,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { WebSocketServer } = require('ws');
+const adminApi = require('./admin/api');
 
 const PORT = Number(process.env.PORT) || 8080;
 const ROOM_CAPACITY = Number(process.env.ROOM_CAPACITY) || 30;
@@ -36,12 +38,13 @@ const MIME = {
   '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp',
   '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.md': 'text/plain; charset=utf-8', '.glb': 'model/gltf-binary',
 };
-const PUBLIC_DIRS = ['css', 'js', 'vendor', 'images'];
+const PUBLIC_DIRS = ['css', 'js', 'vendor', 'images', 'admin'];
 
 function serveStatic(req, res) {
   let urlPath;
   try { urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { urlPath = '/'; }
   if (urlPath === '/' || urlPath === '') urlPath = '/index.html';
+  if (urlPath === '/admin' || urlPath === '/admin/') urlPath = '/admin/index.html';
   if (urlPath === '/healthz') { res.writeHead(200, { 'content-type': 'application/json' }); return res.end(JSON.stringify(stats())); }
 
   const filePath = path.resolve(ROOT, `.${urlPath}`);
@@ -98,7 +101,20 @@ function broadcast(roomId, msg, exceptId) {
 }
 
 /* ---------- WebSocket ---------- */
-const server = http.createServer(serveStatic);
+const server = http.createServer(async (req, res) => {
+  let urlPath = '/';
+  try { urlPath = new URL(req.url, 'http://x').pathname; } catch { /* noop */ }
+  if (urlPath.startsWith('/admin/api/') || urlPath === '/api/published' || urlPath.startsWith('/uploads/')) {
+    try {
+      if ((await adminApi.handle(req, res, urlPath)) !== false) return;
+    } catch (e) {
+      console.error(e);
+      if (!res.headersSent) { res.writeHead(500); res.end(); }
+      return;
+    }
+  }
+  serveStatic(req, res);
+});
 const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 1024 });
 
 wss.on('connection', (ws, req) => {
@@ -174,4 +190,8 @@ wss.on('connection', (ws) => { ws.isAlive = true; ws.on('pong', () => { ws.isAli
 
 server.listen(PORT, () => {
   console.log(`STUDIO HANEUL pop-up: http://localhost:${PORT}  (multiplayer: ws://localhost:${PORT}/ws, ${ROOM_CAPACITY} people/room)`);
+  console.log(`店内管理画面: http://localhost:${PORT}/admin  （保存先: ${adminApi.store.label}）`);
+  if (!require('./admin/auth').readUsers().length) {
+    console.log('  ※ 管理画面のアカウントがまだありません。別のターミナルで npm run admin:user -- <名前> を実行して作成してください');
+  }
 });

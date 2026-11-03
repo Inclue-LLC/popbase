@@ -6,9 +6,13 @@
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "vendor": "node scripts/vendor.js"
+    "vendor": "node scripts/vendor.js",
+    "admin:user": "node server/admin/user-cli.js",
+    "shopify:setup": "node server/admin/shopify-setup.js"
   },
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "ws": "8.18.0"
   },

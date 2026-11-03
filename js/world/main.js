@@ -84,8 +84,8 @@ async function main() {
   await setTheme(new URLSearchParams(location.search).get('theme') || themeKey);
 
   const themeSel = $('#themeSelect');
-  if (window.ShopifyData?.enabled) {
-    $('.theme-switch').hidden = true; // Shopify 管理画面のイベント設定に従う
+  if (window.ShopifyData?.enabled || window.SHOP.theme === 'event') {
+    $('.theme-switch').hidden = true; // 店内管理画面（/admin）で公開した内装に従う
   } else {
     themeSel.innerHTML = Object.entries(window.THEMES).map(([id, t]) => `<option value="${id}">${t.name}（${t.title}）</option>`).join('');
     themeSel.value = themeKey;

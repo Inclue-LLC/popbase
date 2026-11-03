@@ -3,9 +3,7 @@
  * Shopify が設定されていれば、まず Shopify から商品とイベント設定を読み込んでから表示します。
  */
 window.AppReady = (async function () {
-  try { await window.ShopifyData?.load(); } catch (err) {
-    console.error('Shopify の読み込みに失敗したため、見本データで表示します', err);
-  }
+  await window.DataSource.load();
   const { SHOP, CHARACTERS, CATEGORIES, PRODUCTS, GACHA_PRIZES, Art } = window;
   const shopify = window.ShopifyData?.enabled ? window.ShopifyData : null;
   const $ = (sel, root = document) => root.querySelector(sel);

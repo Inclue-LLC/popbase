@@ -174,18 +174,29 @@ export async function buildRoom(theme) {
     zs.position.set(0, shelfH + 0.55, -shelfDepth / 2 + 0.03);
     unit.add(zs);
 
-    const rows = Math.min(3, Math.max(1, Math.ceil(items.length / 4)));
-    const perRow = Math.ceil(items.length / rows) || 1;
-    const levels = rows === 3 ? [0.3, 1.02, 1.7] : rows === 2 ? [0.38, 1.36] : [0.7];
-    for (let r = 0; r < rows; r++) {
+    // 管理画面で配置した棚（3段×5枠）なら枠どおりに、未設定なら商品数に合わせて自動で並べる
+    const byId = Object.fromEntries(window.PRODUCTS.map((x) => [x.id, x]));
+    let levels;
+    let rowSlots; // [[{ p, i, n }]]
+    if (lay.rows) {
+      levels = [0.3, 1.02, 1.7];
+      rowSlots = lay.rows.map((row) => row.map((id, i) => (byId[id] ? { p: byId[id], i, n: row.length } : null)).filter(Boolean));
+    } else {
+      const rows = Math.min(3, Math.max(1, Math.ceil(items.length / 4)));
+      const perRow = Math.ceil(items.length / rows) || 1;
+      levels = rows === 3 ? [0.3, 1.02, 1.7] : rows === 2 ? [0.38, 1.36] : [0.7];
+      rowSlots = levels.map((_, r) => {
+        const rowItems = items.slice(r * perRow, (r + 1) * perRow);
+        return rowItems.map((p, i) => ({ p, i, n: rowItems.length }));
+      });
+    }
+    for (let r = 0; r < levels.length; r++) {
       const y = levels[r];
       const plank = new THREE.Mesh(new THREE.BoxGeometry(shelfLen - 0.12, 0.05, shelfDepth - 0.04), boardM);
       plank.position.set(0, y, 0.01);
       unit.add(plank);
-      const rowItems = items.slice(r * perRow, (r + 1) * perRow);
-      const gap = (shelfLen - 0.6) / Math.max(rowItems.length, 1);
-      for (let i = 0; i < rowItems.length; i++) {
-        const p = rowItems[i];
+      for (const { p, i, n } of rowSlots[r] || []) {
+        const gap = (shelfLen - 0.6) / Math.max(n, 1);
         const lx = -shelfLen / 2 + 0.3 + gap * (i + 0.5);
         const h = ITEM_HEIGHT[p.shape] || 0.48;
         // 商品画像は正方形のテクスチャに下揃えで描いてあるので、下端を板に合わせて置く
@@ -223,10 +234,13 @@ export async function buildRoom(theme) {
   group.add(table);
   colliders.push({ minX: -tW / 2, maxX: tW / 2, minZ: tZ - tD / 2, maxZ: tZ + tD / 2 });
 
-  const limited = productsFor('island');
-  for (let i = 0; i < limited.length; i++) {
-    const p = limited[i];
-    const x = -tW / 2 + (tW / limited.length) * (i + 0.5);
+  const islandLay = window.STORE_LAYOUT.island || {};
+  const byIdAll = Object.fromEntries(window.PRODUCTS.map((x) => [x.id, x]));
+  const tableSlots = islandLay.items
+    ? islandLay.items.map((id, i) => (byIdAll[id] ? { p: byIdAll[id], i, n: islandLay.items.length } : null)).filter(Boolean)
+    : productsFor('island').map((p, i, arr) => ({ p, i, n: arr.length }));
+  for (const { p, i, n } of tableSlots) {
+    const x = -tW / 2 + (tW / n) * (i + 0.5);
     const h = (ITEM_HEIGHT[p.shape] || 0.6) * 0.95;
     const [tex] = await T.productTexture(p);
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, alphaTest: 0.05 }));

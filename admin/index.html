@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>店内管理 | STUDIO HANEUL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+  <!-- ログイン -->
+  <main class="login" id="login" hidden>
+    <form class="login-card" id="loginForm">
+      <p class="login-brand">STUDIO HANEUL</p>
+      <h1>店内管理</h1>
+      <label>ID<input name="user" autocomplete="username" required></label>
+      <label>パスワード<input name="password" type="password" autocomplete="current-password" required></label>
+      <p class="form-error" id="loginError" role="alert"></p>
+      <button class="btn btn-primary" type="submit">ログイン</button>
+      <p class="login-setup" id="loginSetup" hidden>
+        アカウントがまだありません。サーバーのフォルダで<br><code>npm run admin:user -- 名前</code><br>を実行して作成してください。
+      </p>
+    </form>
+  </main>
+
+  <!-- 管理画面 -->
+  <div class="app" id="app" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <strong>店内管理</strong>
+        <span class="storage" id="storage"></span>
+      </div>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+      <div class="top-actions">
+        <a class="btn" id="previewLink" href="/?preview=draft" target="_blank" rel="noopener">下書きをサイトで確認</a>
+        <button class="btn btn-primary" id="publishBtn" disabled>公開する</button>
+        <span class="user" id="userName"></span>
+        <button class="btn btn-ghost" id="logoutBtn">ログアウト</button>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="layout" aria-selected="true">商品の配置</button>
+      <button class="tab" role="tab" data-tab="event" aria-selected="false">内装・イベント</button>
+      <button class="tab" role="tab" data-tab="history" aria-selected="false">公開の履歴</button>
+    </nav>
+
+    <div class="workspace">
+      <section class="editor">
+        <!-- 商品の配置 -->
+        <div class="panel" data-panel="layout">
+          <p class="help">左の商品を、棚やテーブルの枠にドラッグして並べます。枠どうしでドラッグすると入れ替わります。
+            （ドラッグの代わりに、商品をクリック → 枠をクリックでも置けます）</p>
+          <div class="layout-grid">
+            <aside class="palette" id="palette" aria-label="商品">
+              <div class="palette-head">
+                <input type="search" id="search" placeholder="商品名で検索">
+                <label class="check"><input type="checkbox" id="onlyUnplaced"> 未配置だけ</label>
+              </div>
+              <ul class="product-list" id="productList"></ul>
+              <p class="palette-drop">ここにドラッグすると店内から外れます</p>
+            </aside>
+            <div class="fixtures">
+              <div class="fixture-actions">
+                <button class="btn btn-small" id="autoLayoutBtn">自動で並べ直す</button>
+                <button class="btn btn-small btn-ghost" id="clearLayoutBtn">すべて外す</button>
+              </div>
+              <div class="fixture" data-zone="left"><h3>左の棚 <small id="leftTitle"></small></h3><div class="rows" id="zone-left"></div></div>
+              <div class="fixture" data-zone="island"><h3>会場限定テーブル</h3><div class="rows" id="zone-island"></div></div>
+              <div class="fixture" data-zone="right"><h3>右の棚 <small id="rightTitle"></small></h3><div class="rows" id="zone-right"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 内装・イベント -->
+        <div class="panel" data-panel="event" hidden>
+          <p class="help">変更は右のプレビューにすぐ反映され、下書きとして自動で保存されます。お客さんのサイトには「公開する」を押すまで反映されません。</p>
+          <form class="event-form" id="eventForm" onsubmit="return false"></form>
+        </div>
+
+        <!-- 公開の履歴 -->
+        <div class="panel" data-panel="history" hidden>
+          <div class="history-summary" id="historySummary"></div>
+          <ul class="history" id="historyList"></ul>
+          <div class="danger">
+            <h3>下書きを取り消す</h3>
+            <p>下書きの変更をすべて捨てて、いま公開中の内容に戻します。</p>
+            <button class="btn btn-danger" id="discardBtn">公開中の内容に戻す</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3D プレビュー -->
+      <section class="preview" aria-label="店内のプレビュー">
+        <div class="preview-box" id="previewBox">
+          <div class="preview-loading" id="previewLoading">店内を準備しています…</div>
+        </div>
+        <div class="preview-views" id="previewViews">
+          <button data-view="overview" aria-pressed="true">全体</button>
+          <button data-view="left" aria-pressed="false">左の棚</button>
+          <button data-view="island" aria-pressed="false">テーブル</button>
+          <button data-view="right" aria-pressed="false">右の棚</button>
+          <button data-view="back" aria-pressed="false">正面の看板</button>
+        </div>
+        <p class="preview-note">ドラッグで向きを変え、ホイールで寄ったり引いたりできます。</p>
+      </section>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="/js/data.js"></script>
+  <script src="/js/themes.js"></script>
+  <script src="/js/event.js"></script>
+  <script src="/js/art.js"></script>
+  <script type="module" src="/admin/admin.js"></script>
+</body>
+</html>
