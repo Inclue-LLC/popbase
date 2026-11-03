@@ -24,7 +24,7 @@ const BOUND = 6.65;
 const SPAWN = new THREE.Vector3(0, 0, 3.4);
 const NEAR = 1.45;
 // クリック（タップ）1回で歩く距離（m）。遠くをクリックしても、この距離だけ進んで止まる
-const CLICK_STEP = 1.5;
+const CLICK_STEP = 3;
 
 async function main() {
   await window.AppReady;
