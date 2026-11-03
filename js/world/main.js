@@ -23,6 +23,8 @@ const RADIUS = 0.32;
 const BOUND = 6.65;
 const SPAWN = new THREE.Vector3(0, 0, 3.4);
 const NEAR = 1.45;
+// クリック（タップ）1回で歩く距離（m）。遠くをクリックしても、この距離だけ進んで止まる
+const CLICK_STEP = 1.5;
 
 async function main() {
   await window.AppReady;
@@ -191,6 +193,17 @@ async function main() {
   /* ---------- 近くのもの・クリック ---------- */
   let nearest = null;
   let walkTarget = null;
+  // クリックした方向へ CLICK_STEP だけ進む地点
+  function stepToward(x, z) {
+    const p = self.group.position;
+    const dx = x - p.x;
+    const dz = z - p.z;
+    const d = Math.hypot(dx, dz);
+    const k = d > CLICK_STEP ? CLICK_STEP / d : 1;
+    return new THREE.Vector3(
+      Math.max(-BOUND, Math.min(BOUND, p.x + dx * k)), 0,
+      Math.max(-BOUND, Math.min(BOUND, p.z + dz * k)));
+  }
   const promptEl = $('#prompt');
   const promptBtn = $('#promptBtn');
   function interact(it) {
@@ -214,11 +227,11 @@ async function main() {
         const it = room.interactables.find((x) => x.object === hit.object || x.extra === hit.object);
         // ガチャ・キャラクターの絵は、近くにいるときだけ反応（遠くからは歩いていく）
         if (it && (it.type === 'product' || it.type === 'cart' || self.group.position.distanceTo(it.pos) < NEAR * 1.6)) return interact(it);
-        if (it) { walkTarget = it.pos.clone(); return; }
+        if (it) { walkTarget = stepToward(it.pos.x, it.pos.z); return; }
       }
       const floor = room.group.getObjectByName('floor');
       const f = raycaster.intersectObject(floor, false)[0];
-      if (f) walkTarget = new THREE.Vector3(Math.max(-BOUND, Math.min(BOUND, f.point.x)), 0, Math.max(-BOUND, Math.min(BOUND, f.point.z)));
+      if (f) walkTarget = stepToward(f.point.x, f.point.z);
     },
   });
 
