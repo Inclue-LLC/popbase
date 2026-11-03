@@ -114,5 +114,5 @@
     return `<svg viewBox="0 0 200 200" aria-hidden="true">${shapes[p.shape](c)}</svg>`;
   }
 
-  window.Art = { character, characterSVG, productSVG, tint };
+  window.Art = { character, characterSVG, productSVG, tint, starPoints };
 })();

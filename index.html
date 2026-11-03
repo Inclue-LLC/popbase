@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/store.css">
 </head>
 <body>
   <!-- 入口 -->
@@ -19,7 +20,7 @@
     <div class="entrance-inner">
       <p class="entrance-kicker" data-bind="title"></p>
       <h1 class="logo-big"><span data-bind="brand"></span></h1>
-      <p class="entrance-theme" data-bind="theme"></p>
+      <p class="entrance-theme" data-bind="themeLabel"></p>
       <div class="entrance-cast" id="entranceCast"></div>
       <p class="entrance-period" data-bind="period"></p>
       <button class="btn btn-primary btn-lg" id="enterBtn">お店に入る</button>
@@ -31,7 +32,7 @@
   <header class="site-header">
     <a class="logo" href="#top" aria-label="トップへ"><span data-bind="brand"></span><small>POP-UP</small></a>
     <nav class="nav" aria-label="店内案内">
-      <a href="#floor">フロアマップ</a>
+      <a href="#store">店内</a>
       <a href="#shop">商品一覧</a>
       <a href="#gacha">ガチャ</a>
       <a href="#info">ご案内</a>
@@ -43,14 +44,29 @@
   </header>
 
   <main id="top">
-    <!-- フロアマップ -->
-    <section class="section" id="floor">
+    <!-- 店内 -->
+    <section class="section section-store" id="store">
       <div class="section-head">
-        <p class="eyebrow">FLOOR MAP</p>
-        <h2>キャラクターのブースを回ろう</h2>
-        <p class="lead">ブースをクリックすると、そのキャラクターの商品が並ぶ棚に移動します。</p>
+        <p class="eyebrow">IN STORE</p>
+        <h2>店内をぶらぶら見てまわろう</h2>
+        <p class="lead">棚の商品をクリックすると詳細が見られます。左右のボタン（キーボードの ← →）で店内を移動できます。</p>
       </div>
-      <div class="floor" id="floorMap"></div>
+      <div class="store-viewport" id="storeViewport" tabindex="0" aria-label="店内（← → キーで移動）">
+        <div class="store-stage" id="storeStage">
+          <div class="store-room" id="storeRoom"></div>
+        </div>
+      </div>
+      <div class="store-controls">
+        <div class="view-nav">
+          <button class="icon-btn" id="viewPrev" aria-label="左へ移動">&#8592;</button>
+          <strong class="view-label" id="viewLabel" aria-live="polite"></strong>
+          <button class="icon-btn" id="viewNext" aria-label="右へ移動">&#8594;</button>
+        </div>
+        <div class="view-buttons" id="viewButtons" role="group" aria-label="視点"></div>
+        <label class="theme-switch">内装テーマ
+          <select id="themeSelect"></select>
+        </label>
+      </div>
     </section>
 
     <!-- 商品一覧 -->
@@ -192,7 +208,9 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="js/data.js"></script>
+  <script src="js/themes.js"></script>
   <script src="js/art.js"></script>
+  <script src="js/store.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

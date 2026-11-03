@@ -31,7 +31,7 @@
   const activeCoupon = () => (state.coupon && state.coupon.date === today() ? state.coupon : null);
 
   /* ---------- 共通テキスト ---------- */
-  document.querySelectorAll('[data-bind]').forEach((el) => { el.textContent = SHOP[el.dataset.bind]; });
+  document.querySelectorAll('[data-bind]').forEach((el) => { el.textContent = SHOP[el.dataset.bind] ?? ''; });
   $('#noveltyInfo').textContent = `税込 ${yen(SHOP.novelty.threshold)} 以上お買い上げで「${SHOP.novelty.name}」をプレゼント。`;
   $('#shippingInfo').textContent = `全国一律 ${yen(SHOP.shippingFee)}。${yen(SHOP.freeShippingThreshold)} 以上で送料無料。`;
 
@@ -49,47 +49,6 @@
   function sessionStorageSafe(key) {
     try { return sessionStorage.getItem(`haneul:${key}`) === '1'; } catch { return false; }
   }
-
-  /* ---------- フロアマップ ---------- */
-  const booth = (c) => `
-    <button class="booth" style="--c:${c.color};--a:${c.accent}" data-char="${c.id}">
-      <span class="awning" aria-hidden="true"></span>
-      <span class="booth-char">${Art.characterSVG(c)}</span>
-      <span class="booth-name">${c.name}<small>${c.en} BOOTH</small></span>
-      <span class="booth-count">${PRODUCTS.filter((p) => p.character === c.id).length} items</span>
-    </button>`;
-  const [c1, c2, c3, c4] = CHARACTERS;
-  $('#floorMap').innerHTML = `
-    ${booth(c1)}
-    <button class="booth booth-special" data-cat="limited" style="--c:#ffb3c6;--a:#e0607e">
-      <span class="awning" aria-hidden="true"></span>
-      <span class="booth-char limited-stack">${CHARACTERS.map((c) => Art.characterSVG(c)).join('')}</span>
-      <span class="booth-name">会場限定コーナー<small>LIMITED</small></span>
-      <span class="booth-count">${PRODUCTS.filter((p) => p.limited).length} items</span>
-    </button>
-    ${booth(c2)}
-    ${booth(c3)}
-    <button class="booth booth-register" data-register style="--c:#cfe8d8;--a:#4f9a6e">
-      <span class="awning" aria-hidden="true"></span>
-      <span class="register-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M6 7h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 7zm3 0V6a3 3 0 0 1 6 0v1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </span>
-      <span class="booth-name">レジ<small>REGISTER</small></span>
-      <span class="booth-count" id="registerCount"></span>
-    </button>
-    ${booth(c4)}
-    <div class="floor-entrance" aria-hidden="true">ENTRANCE</div>`;
-
-  $('#floorMap').addEventListener('click', (e) => {
-    const b = e.target.closest('.booth');
-    if (!b) return;
-    if (b.hasAttribute('data-register')) return openCart();
-    state.char = b.dataset.char || 'all';
-    state.cat = b.dataset.cat || 'all';
-    renderFilters();
-    renderProducts();
-    $('#shop').scrollIntoView({ behavior: 'smooth' });
-  });
 
   /* ---------- 絞り込み ---------- */
   function chip(group, id, label, active, extra = '') {
@@ -283,7 +242,8 @@
     const t = totals();
     $('#cartCount').textContent = t.count;
     $('#cartCount').hidden = t.count === 0;
-    $('#registerCount').textContent = t.count ? `バッグに ${t.count} 点` : 'お会計はこちら';
+    const reg = $('#registerCount');
+    if (reg) reg.textContent = t.count ? `バッグに ${t.count} 点` : '';
 
     const remain = SHOP.novelty.threshold - t.subtotal;
     const pct = Math.min(100, (t.subtotal / SHOP.novelty.threshold) * 100);
@@ -345,6 +305,7 @@
     if (t.coupon) { state.coupon = { ...t.coupon, date: 'used' }; store.set('coupon', state.coupon); }
     saveCart();
     renderProducts();
+    window.Store?.render();
     closeLayer($('#cartDrawer'));
     setTimeout(() => openLayer($('#doneModal')), 260);
   });
@@ -432,8 +393,23 @@
     toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
   }
 
+  /* ---------- 店内（store.js）から呼ぶ関数 ---------- */
+  window.App = {
+    openProduct,
+    openCart,
+    refreshRegister: renderCart,
+    showCharacter(id) {
+      state.char = id;
+      state.cat = 'all';
+      renderFilters();
+      renderProducts();
+      $('#shop').scrollIntoView({ behavior: 'smooth' });
+    },
+  };
+
   renderFilters();
   renderProducts();
   renderCart();
   renderGachaState();
+  window.Store.init();
 })();

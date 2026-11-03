@@ -10,7 +10,7 @@ window.SHOP = {
   brand: 'STUDIO HANEUL',
   brandKana: 'スタジオハヌル',
   title: 'Virtual Pop-up Store',
-  theme: 'Sky Walk ― 空のおさんぽ',
+  theme: 'sky', // 店内の内装テーマ（js/themes.js のキー：sky / night / holiday / spring）
   period: '2026.11.20 (金) – 12.25 (金)',
   shippingFee: 600,
   freeShippingThreshold: 5000,
