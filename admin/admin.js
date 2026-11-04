@@ -512,6 +512,7 @@ function themeDefault(path) {
   const ev = state.draft.event;
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
   if (path.startsWith('const.')) return path.slice(6);
+  if (path === 'shop.brand') return ev.brand || E.original.brand;
   if (path === 'shop.themeLabel') return `${ev.title || base.name} ― ${ev.subtitle || base.title}`;
   if (path.startsWith('shop.')) return E.original[path.slice(5)];
   if (path.startsWith('layout.')) return path.split('.').slice(1).reduce((o, k) => o?.[k], E.original.layout);
@@ -533,6 +534,11 @@ function renderForm() {
   }
 }
 
+function unitLabel(v, max) {
+  const n = E.textUnits(v);
+  return `残り 全角${Math.floor((max - n) / 2)}文字（半角${max - n}）`;
+}
+
 function fieldHtml(f, value, placeholders) {
   const id = `f_${f.key}`;
   const label = `<label for="${id}">${esc(f.label)}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`;
@@ -541,6 +547,8 @@ function fieldHtml(f, value, placeholders) {
   if (f.type === 'text' || f.type === 'number') {
     const ph = f.placeholderPath ? themeDefault(f.placeholderPath) : placeholders[f.key];
     input = `<input id="${id}" data-key="${f.key}" type="${f.type}" value="${esc(value ?? '')}" placeholder="${esc(ph ?? '')}" ${f.type === 'number' ? 'min="0" step="100"' : 'maxlength="120"'}>`;
+    // 文字数の上限がある項目は、残りを表示（全角2・半角1で数える）
+    if (f.maxUnits) input = `<span class="unit-row">${input}<span class="unit-count" data-count-for="${f.key}">${unitLabel(value, f.maxUnits)}</span></span>`;
   } else if (f.type === 'textarea') {
     input = `<textarea id="${id}" data-key="${f.key}" maxlength="300" rows="2">${esc(value ?? '')}</textarea>`;
   } else if (f.type === 'select') {
@@ -572,6 +580,15 @@ for (const sel of Object.values(FORMS)) {
     const f = E.FIELDS.find((x) => x.key === key);
     let v = e.target.value;
     if (f.type === 'number') v = v === '' ? '' : Math.max(0, Math.round(Number(v)));
+    if (f.maxUnits && E.textUnits(v) > f.maxUnits) {
+      v = E.clampUnits(v, f.maxUnits);
+      e.target.value = v;
+      toast(`${f.label}は全角${f.maxUnits / 2}文字（半角${f.maxUnits}文字）までです`, { error: true });
+    }
+    if (f.maxUnits) {
+      const c = e.target.parentElement.querySelector(`[data-count-for="${key}"]`);
+      if (c) c.textContent = unitLabel(v, f.maxUnits);
+    }
     state.draft.event[key] = v;
     if (f.type === 'color') {
       const note = e.target.parentElement.querySelector('.color-note');

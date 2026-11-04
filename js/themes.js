@@ -1,7 +1,7 @@
 /*
  * POP UP テーマ（店内の内装）
  * --------------------------------------------------
- * 壁紙・腰壁・床・天井・棚・看板・ガーランド・入口の色をテーマごとに定義します。
+ * 壁紙・腰壁・床・天井・棚・看板・入口の色をテーマごとに定義します。
  * 使うテーマは data.js の SHOP.theme で指定します（URL の ?theme=night でも切り替え可）。
  *
  * 新しいテーマを作るときは、既存のテーマをコピーして色と柄を変えるだけでOKです。
@@ -10,7 +10,6 @@
  * wall.image     : 壁紙に実画像を使う場合の画像パス（指定すると pattern より優先）
  * floor.style    : 'wood' | 'check' | 'tile' | 'carpet'
  * floor.image    : 床に実画像を使う場合の画像パス
- * garland        : ガーランドの旗の色（null でなし）
  * light          : 'day' | 'night'（night は店内を暗めにして棚をスポットライトで照らす）
  */
 window.THEMES = {
@@ -23,7 +22,6 @@ window.THEMES = {
     shelf: { board: '#ffffff', edge: '#d9c6ad', back: '#f4f9fe' },
     sign: { bg: '#ffffff', ink: '#4a90c8', sub: '#e0607e', style: 'board' },
     rug: '#ffffff',
-    garland: ['#8fc8f0', '#ffd76a', '#c9b8f0', '#ffb3c6'],
     light: 'day',
     entrance: { top: '#9fd3f7', bottom: '#fde7f0' },
   },
@@ -37,7 +35,6 @@ window.THEMES = {
     shelf: { board: '#3a4280', edge: '#ffd76a', back: '#222a5a' },
     sign: { bg: '#141838', ink: '#ffe9a0', sub: '#c9b8f0', style: 'neon' },
     rug: '#c9b8f0',
-    garland: null,
     light: 'night',
     entrance: { top: '#141838', bottom: '#4a3567' },
   },
@@ -51,7 +48,6 @@ window.THEMES = {
     shelf: { board: '#fffaf2', edge: '#b8864f', back: '#fff6ea' },
     sign: { bg: '#c94a4a', ink: '#ffffff', sub: '#ffe9a0', style: 'board' },
     rug: '#2f6b4f',
-    garland: ['#c94a4a', '#2f6b4f', '#ffd76a', '#ffffff'],
     light: 'day',
     entrance: { top: '#2f6b4f', bottom: '#c94a4a' },
   },
@@ -65,7 +61,6 @@ window.THEMES = {
     shelf: { board: '#ffffff', edge: '#e8c9a8', back: '#fff5f8' },
     sign: { bg: '#ffffff', ink: '#e0607e', sub: '#4f9a6e', style: 'board' },
     rug: '#bfe3c6',
-    garland: ['#ffb3c6', '#bfe3c6', '#fff1a8', '#ffffff'],
     light: 'day',
     entrance: { top: '#ffd4e0', bottom: '#e6f6e0' },
   },

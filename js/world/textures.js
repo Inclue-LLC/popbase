@@ -78,7 +78,7 @@ const PATTERN_TILES = {
   hearts: (fg) => [`<svg viewBox="0 0 110 110">${heart(28, 30, 1.3, fg)}${heart(82, 84, 1, fg)}</svg>`, 0.7, 110, 110],
 };
 
-/** 壁一面のテクスチャ（壁紙＋腰壁＋巾木＋ガーランド＋陰影） */
+/** 壁一面のテクスチャ（壁紙＋腰壁＋巾木＋陰影） */
 export async function wallTexture(theme, widthM, heightM, { door = false } = {}) {
   const W = widthM * PPM;
   const H = heightM * PPM;
@@ -129,7 +129,6 @@ export async function wallTexture(theme, widthM, heightM, { door = false } = {})
   ctx.fillRect(0, H - 0.12 * PPM, W, 0.12 * PPM);
 
   if (door) drawDoor(ctx, W, H, theme);
-  if (theme.garland) drawGarland(ctx, W, theme.garland);
 
   // 陰影（天井付近を明るく、四隅を暗く）
   let g = ctx.createLinearGradient(0, 0, 0, H);
@@ -156,32 +155,6 @@ export async function wallTexture(theme, widthM, heightM, { door = false } = {})
     }
   }
   return toTexture(c);
-}
-
-function drawGarland(ctx, W, colors) {
-  const sag = 0.42 * PPM;
-  const top = 0.12 * PPM;
-  const span = 3.5 * PPM;
-  for (let x0 = 0; x0 < W; x0 += span) {
-    const pt = (t) => ({ x: x0 + span * t, y: top + 4 * sag * t * (1 - t) });
-    ctx.strokeStyle = 'rgba(0,0,0,.28)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x0, top);
-    ctx.quadraticCurveTo(x0 + span / 2, top + 2 * sag, x0 + span, top);
-    ctx.stroke();
-    const n = 7;
-    for (let i = 1; i < n; i++) {
-      const { x, y } = pt(i / n);
-      ctx.fillStyle = colors[i % colors.length];
-      ctx.beginPath();
-      ctx.moveTo(x - 0.16 * PPM, y);
-      ctx.lineTo(x + 0.16 * PPM, y);
-      ctx.lineTo(x, y + 0.32 * PPM);
-      ctx.closePath();
-      ctx.fill();
-    }
-  }
 }
 
 function drawDoor(ctx, W, H, theme) {
@@ -305,6 +278,19 @@ export function signTexture(lines, sign, wM, hM, { radius = 0.18, full = false }
     y += fs;
   }
   return toTexture(c);
+}
+
+/** 看板の文字が何 m の幅になるか（signTexture と同じ大きさ・フォントで測る） */
+export function signTextWidth(lines, hM) {
+  const H = hM * PPM * 2;
+  const ctx = makeCanvas(4, 4).getContext('2d');
+  let max = 0;
+  for (const l of lines) {
+    ctx.font = `${l.weight || 800} ${l.size * H * 0.8}px ${font()}`;
+    ctx.letterSpacing = `${l.spacing || 0}px`;
+    max = Math.max(max, ctx.measureText(String(l.text || '')).width);
+  }
+  return max / (PPM * 2);
 }
 
 function fitText(ctx, text, x, y, maxW) {

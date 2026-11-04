@@ -78,8 +78,9 @@
 
   /* 管理画面のフォーム定義 */
   const FIELDS = [
-    { group: 'イベント', key: 'title', label: 'イベント名', hint: '看板の大きな文字', type: 'text' },
-    { group: 'イベント', key: 'subtitle', label: 'サブタイトル', type: 'text' },
+    { group: 'イベント', key: 'brand', label: 'ブランド名', hint: '店内の看板の上の行・ページ上部のロゴなど（全角15文字・半角30文字まで）', type: 'text', maxUnits: 30, placeholderPath: 'shop.brand' },
+    { group: 'イベント', key: 'title', label: 'イベント名', hint: '看板の大きな文字。長さに合わせて看板の幅が広がります（全角14文字・半角28文字まで）', type: 'text', maxUnits: 28 },
+    { group: 'イベント', key: 'subtitle', label: 'サブタイトル', hint: '看板の下の行（全角20文字・半角40文字まで）', type: 'text', maxUnits: 40 },
     { group: 'イベント', key: 'period', label: '会期', hint: '例: 2026.12.01 – 12.31', type: 'text' },
     { group: 'イベント', key: 'theme_preset', label: 'ベースのテーマ', hint: '下の項目で空欄のものは、このテーマの値になります', type: 'select', options: () => Object.entries(window.THEMES).filter(([k]) => k !== 'event').map(([k, t]) => ({ value: k, label: `${t.name}（${t.title}）` })) },
     { group: '壁', key: 'wall_image', label: '壁紙の画像', hint: '横長の画像（例: 2048×540px）。指定すると柄より優先', type: 'image' },
@@ -182,6 +183,7 @@
 
     const S = window.SHOP;
     S.period = has(f, 'period') ? f.period : original.period;
+    S.brand = has(f, 'brand') ? f.brand : original.brand;
     S.novelty = { ...original.novelty };
     if (has(f, 'novelty_threshold')) S.novelty.threshold = Number(f.novelty_threshold);
     if (has(f, 'novelty_name')) S.novelty.name = f.novelty_name;
@@ -312,5 +314,31 @@
   applyFont('');
   applyAvatars(null);
 
-  window.HaneulEvent = { FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
+  /**
+   * 文字数（看板に収まるかの目安）：全角は 2、半角（英数字・記号・半角カナ）は 1 と数える
+   * 例：イベント名は 28 まで ＝ 全角14文字・半角28文字
+   */
+  function textUnits(str) {
+    let n = 0;
+    for (const ch of String(str || '')) {
+      const c = ch.codePointAt(0);
+      n += c <= 0x7e || (c >= 0xff61 && c <= 0xff9f) ? 1 : 2;
+    }
+    return n;
+  }
+  /** 上限を超えた分を切る */
+  function clampUnits(str, max) {
+    let n = 0;
+    let out = '';
+    for (const ch of String(str || '')) {
+      const c = ch.codePointAt(0);
+      const w = c <= 0x7e || (c >= 0xff61 && c <= 0xff9f) ? 1 : 2;
+      if (n + w > max) break;
+      n += w;
+      out += ch;
+    }
+    return out;
+  }
+
+  window.HaneulEvent = { textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
 })();

@@ -73,18 +73,21 @@ export async function buildRoom(theme) {
   }
 
   /* ---------- 奥の壁：看板・キャラクター・会期 ---------- */
-  const signW = 5.2;
+  // 看板の幅は、イベント名などの長さに合わせて 5.2m〜8.8m で伸び縮みする
   const signH = 1.5;
-  const sign = plane(signW, signH, basic(T.signTexture([
+  const signLines = [
     { text: window.SHOP.brand, size: 0.18, color: theme.sign.sub, spacing: 14 },
     { text: theme.name, size: 0.48 },
     { text: theme.title, size: 0.2, weight: 700 },
-  ], theme.sign, signW, signH), { transparent: true }));
+  ];
+  const signW = Math.min(8.8, Math.max(5.2, T.signTextWidth(signLines, signH) + 0.9));
+  const sign = plane(signW, signH, basic(T.signTexture(signLines, theme.sign, signW, signH), { transparent: true }));
   sign.position.set(0, 3.15, -HALF_D + 0.03);
   group.add(sign);
 
   const plate = plane(2.2, 0.36, basic(T.signTexture([{ text: window.SHOP.period, size: 0.62 }], theme.sign, 2.2, 0.36, { radius: 0.08 }), { transparent: true }));
-  plate.position.set(4.6, 3.35, -HALF_D + 0.03);
+  // 会期の札は看板と重ならない位置へ（看板が広いときは右へずらす）
+  plate.position.set(Math.min(5.65, Math.max(4.6, signW / 2 + 1.2)), 3.35, -HALF_D + 0.03);
   plate.rotation.z = -0.06;
   group.add(plate);
 

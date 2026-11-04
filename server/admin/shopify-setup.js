@@ -28,6 +28,7 @@ async function gql(query, variables) {
 
 const t = (key, name, type) => ({ key, name, type });
 const EVENT_FIELDS = [
+  t('brand', 'ブランド名', 'single_line_text_field'),
   t('title', 'イベント名', 'single_line_text_field'),
   t('subtitle', 'サブタイトル', 'single_line_text_field'),
   t('period', '会期', 'single_line_text_field'),

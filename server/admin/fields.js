@@ -2,7 +2,7 @@
  * イベント設定・棚の配置の入力チェック（サーバー側）
  * キーは js/event.js の FIELDS と同じにしてください。
  */
-const TEXT = ['title', 'subtitle', 'period', 'left_title', 'left_label', 'right_title', 'right_label', 'novelty_name',
+const TEXT = ['brand', 'title', 'subtitle', 'period', 'left_title', 'left_label', 'right_title', 'right_label', 'novelty_name',
   'entrance_kicker', 'entrance_heading', 'entrance_message', 'entrance_button'];
 const MULTILINE = ['entrance_notice']; // 改行を許す（300文字まで）
 const COLOR = ['wall_color', 'wall_pattern_color', 'lower_color', 'trim_color', 'floor_color_1', 'floor_color_2', 'sign_color', 'sign_text_color',
@@ -26,6 +26,17 @@ const ROWS = 3;
 const SLOTS = 5;
 const TABLE_SLOTS = 5;
 
+// 看板に収まる文字数（全角2・半角1で数える。js/event.js の FIELDS の maxUnits と同じ）
+const UNIT_LIMITS = { brand: 30, title: 28, subtitle: 40 };
+function textUnits(str) {
+  let n = 0;
+  for (const ch of String(str || '')) {
+    const c = ch.codePointAt(0);
+    n += c <= 0x7e || (c >= 0xff61 && c <= 0xff9f) ? 1 : 2;
+  }
+  return n;
+}
+
 class InputError extends Error {}
 
 /**
@@ -40,6 +51,7 @@ function cleanEvent(event, imageOk) {
     if (v == null || v === '') { out[k] = ''; continue; }
     if (TEXT.includes(k)) {
       if (typeof v !== 'string' || v.length > 120) throw new InputError(k);
+      if (UNIT_LIMITS[k] && textUnits(v) > UNIT_LIMITS[k]) throw new InputError(`${k}（全角${UNIT_LIMITS[k] / 2}文字・半角${UNIT_LIMITS[k]}文字まで）`);
       out[k] = v.replace(/[\u0000-\u001f]/g, '');
     } else if (MULTILINE.includes(k)) {
       if (typeof v !== 'string' || v.length > 300) throw new InputError(k);
