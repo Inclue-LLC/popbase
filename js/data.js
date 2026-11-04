@@ -29,8 +29,8 @@ window.SHOP = {
  * 空のままなら、このファイルの見本データで動きます。設定方法は docs/shopify-setup.md を参照。
  */
 window.SHOPIFY_CONFIG = {
-  domain: '',             // 例: 'studio-haneul.myshopify.com'
-  storefrontToken: '',    // ヘッドレス チャネルで発行する「公開アクセストークン」（公開してよいトークン）
+  domain: 'popbase.myshopify.com',
+  storefrontToken: '6109cfbfcb2aff80c436826553ae28c9', // Headless チャネルの「公開アクセストークン」（公開してよいトークン）
   apiVersion: '2025-01',
   collection: 'popup',    // 店内に並べるコレクションのハンドル
   eventHandle: 'current', // 使う「POP UPイベント」メタオブジェクトのハンドル
