@@ -23,18 +23,18 @@
 
   /* ショップの基本フォント（日本語に対応した Google Fonts から選ぶ） */
   const FONTS = [
-    { value: '', label: 'M PLUS Rounded 1c（丸ゴシック・初期設定）', family: 'M PLUS Rounded 1c', weights: [400, 500, 700, 800] },
+    { value: '', label: 'Zen Kaku Gothic New（すっきりゴシック・初期設定）', family: 'Zen Kaku Gothic New', weights: [400, 500, 700, 900] },
+    { value: 'mplus-maru', label: 'M PLUS Rounded 1c（丸ゴシック）', family: 'M PLUS Rounded 1c', weights: [400, 500, 700, 800] },
     { value: 'zen-maru', label: 'Zen Maru Gothic（やさしい丸ゴシック）', family: 'Zen Maru Gothic', weights: [400, 500, 700, 900] },
     { value: 'kosugi-maru', label: 'Kosugi Maru（すっきり丸ゴシック）', family: 'Kosugi Maru', weights: [400] },
     { value: 'kiwi-maru', label: 'Kiwi Maru（やわらか丸明朝）', family: 'Kiwi Maru', weights: [400, 500] },
     { value: 'noto-sans', label: 'Noto Sans JP（標準のゴシック）', family: 'Noto Sans JP', weights: [400, 500, 700, 800] },
-    { value: 'zen-kaku', label: 'Zen Kaku Gothic New（すっきりゴシック）', family: 'Zen Kaku Gothic New', weights: [400, 500, 700, 900] },
     { value: 'noto-serif', label: 'Noto Serif JP（明朝・上品）', family: 'Noto Serif JP', weights: [400, 500, 700, 900] },
     { value: 'yusei', label: 'Yusei Magic（マジックで書いた手書き風）', family: 'Yusei Magic', weights: [400] },
     { value: 'hachi-maru', label: 'Hachi Maru Pop（丸いポップ体）', family: 'Hachi Maru Pop', weights: [400] },
     { value: 'dotgothic', label: 'DotGothic16（レトロなドット文字）', family: 'DotGothic16', weights: [400] },
   ];
-  const FALLBACK = "'Hiragino Maru Gothic ProN', 'Hiragino Sans', 'Yu Gothic', system-ui, sans-serif";
+  const FALLBACK = "'Hiragino Sans', 'Yu Gothic', system-ui, sans-serif";
   let fontLoading = Promise.resolve();
   let currentFont = FONTS[0];
 

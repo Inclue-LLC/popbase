@@ -5,7 +5,7 @@
 import * as THREE from '../../vendor/three.module.min.js';
 
 // 看板・値札の文字。店内管理画面で選んだショップのフォント（js/event.js の applyFont）を使う
-const DEFAULT_FONT = "'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Yu Gothic', sans-serif";
+const DEFAULT_FONT = "'Zen Kaku Gothic New', 'Hiragino Sans', 'Yu Gothic', sans-serif";
 export const font = () => window.SHOP?.fontStack || DEFAULT_FONT;
 export const PPM = 128; // 壁・看板の解像度（1m あたりの px）
 

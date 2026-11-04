@@ -9,7 +9,7 @@
   min-height: 420px;
   border-radius: 28px;
   overflow: hidden;
-  background: #1d2033;
+  background: #2a2430;
   box-shadow: 0 20px 50px rgba(30, 26, 45, .22);
   outline-offset: 4px;
   touch-action: none;
@@ -73,7 +73,7 @@ body.world-fs .world {
 .hud-cart-count {
   position: absolute; top: -6px; right: -6px;
   min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
-  background: #e0607e; color: #fff; font-size: .68rem; font-weight: 800; line-height: 18px;
+  background: #d9729a; color: #fff; font-size: .68rem; font-weight: 800; line-height: 18px;
 }
 .hud-cart-count[hidden] { display: none; }
 .hud-cart.bump { animation: bump .4s; }
@@ -83,13 +83,13 @@ body.world-fs .world {
 .prompt-btn {
   display: flex; align-items: center; gap: 10px;
   padding: .6em 1.1em .6em 1.3em; border: 0; border-radius: 999px;
-  background: #fff; color: #3a3346; box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+  background: #fff; color: #2e2729; box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
   font-size: .9rem; white-space: nowrap; max-width: calc(100vw - 48px);
   animation: promptIn .25s ease;
 }
-.prompt-btn b { color: #4a90c8; }
+.prompt-btn b { color: #8a6bd6; }
 .prompt-btn span { overflow: hidden; text-overflow: ellipsis; color: #6f6880; }
-.prompt-btn kbd { font: inherit; font-size: .72rem; padding: .1em .5em; border-radius: 6px; background: #eef4fc; color: #6f6880; }
+.prompt-btn kbd { font: inherit; font-size: .72rem; padding: .1em .5em; border-radius: 6px; background: #f3edfb; color: #6f6880; }
 @keyframes promptIn { from { opacity: 0; transform: translateY(8px); } }
 
 .hud-emotes { right: 12px; bottom: 12px; display: flex; gap: 6px; }

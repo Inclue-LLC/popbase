@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 22 231 248">
+  <!-- POP BASE のマーク（正式なロゴデータが届いたら差し替える） -->
+  <defs>
+    <linearGradient id="pbBack" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#c3b2f2"/>
+      <stop offset=".55" stop-color="#e6c3f0"/>
+      <stop offset="1" stop-color="#f1c6e6"/>
+    </linearGradient>
+    <linearGradient id="pbFront" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6b9d4" stop-opacity=".88"/>
+      <stop offset="1" stop-color="#f59ab7" stop-opacity=".92"/>
+    </linearGradient>
+    <linearGradient id="pbDoor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fdeef2"/>
+      <stop offset="1" stop-color="#fff8f5"/>
+    </linearGradient>
+  </defs>
+  <g transform="skewY(-22.3)">
+    <rect x="0" y="95" width="160" height="125" rx="14" fill="url(#pbBack)"/>
+    <rect x="65" y="145" width="150" height="143" rx="14" fill="url(#pbFront)"/>
+    <path d="M65 288 V191 a27.5 27.5 0 0 1 55 0 V288 Z" fill="url(#pbDoor)"/>
+  </g>
+</svg>

@@ -11,7 +11,7 @@ window.SHOP = {
   brandKana: 'スタジオハヌル',
   // お店の名前（入れ替わる各ポップアップに共通。ページ上部・入口の上の小さい文字・ブラウザのタブに出る）
   title: 'POP BASE',
-  theme: 'sky', // 店内の内装テーマ（js/themes.js のキー：sky / night / holiday / spring）
+  theme: 'base', // 店内の内装テーマ（js/themes.js のキー：base / sky / night / holiday / spring）
   period: '2026.11.20 (金) – 12.25 (金)',
   shippingFee: 600,
   freeShippingThreshold: 5000,

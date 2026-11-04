@@ -9,14 +9,14 @@ const COLOR = ['wall_color', 'wall_pattern_color', 'lower_color', 'trim_color', 
   'entrance_color_top', 'entrance_color_bottom', 'entrance_heading_color', 'entrance_text_color'];
 const IMAGE = ['wall_image', 'floor_image', 'entrance_logo', 'entrance_image'];
 const SELECT = {
-  theme_preset: ['', 'sky', 'night', 'holiday', 'spring'],
+  theme_preset: ['', 'base', 'sky', 'night', 'holiday', 'spring'],
   wall_pattern: ['', 'clouds', 'stars', 'flowers', 'hearts', 'dots', 'stripes', 'gingham', 'none'],
   floor_style: ['', 'wood', 'check', 'tile', 'carpet'],
   light: ['', 'day', 'night'],
   entrance_characters: ['', 'hide'],
   novelty: ['', 'on', 'off'], // 購入特典のあり・なし（'' は名前が入っていればあり）
   // js/event.js の FONTS と同じ値
-  font: ['', 'zen-maru', 'kosugi-maru', 'kiwi-maru', 'noto-sans', 'zen-kaku', 'noto-serif', 'yusei', 'hachi-maru', 'dotgothic'],
+  font: ['', 'mplus-maru', 'zen-maru', 'kosugi-maru', 'kiwi-maru', 'noto-sans', 'zen-kaku', 'noto-serif', 'yusei', 'hachi-maru', 'dotgothic'],
 };
 const NUMBER = ['novelty_threshold'];
 const DATETIME = ['open_at', 'close_at'];     // 'YYYY-MM-DDTHH:MM'（日本時間）

@@ -56,6 +56,8 @@ window.AppReady = (async function () {
     const en = SHOP.entrance || {};
     const heading = en.heading || SHOP.brand;
     $('#entKicker').textContent = en.kicker || SHOP.title;
+    // 上の小さい文字を設定していなければ、お店のロゴ（マーク＋POP BASE）を出す
+    $('#entBrand').classList.toggle('is-text', !!en.kicker);
     $('#entHeading').textContent = heading;
     const logo = $('#entLogo');
     logo.hidden = !en.logo;

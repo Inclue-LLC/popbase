@@ -32,7 +32,7 @@ export class Avatar {
 
     if (isSelf) {
       const ring = new THREE.Mesh(new THREE.RingGeometry(0.38, 0.46, 40),
-        new THREE.MeshBasicMaterial({ color: '#4a90c8', transparent: true, opacity: 0.85, depthWrite: false }));
+        new THREE.MeshBasicMaterial({ color: '#b49be8', transparent: true, opacity: 0.85, depthWrite: false }));
       ring.rotation.x = -Math.PI / 2;
       ring.position.y = 0.015;
       this.group.add(ring);

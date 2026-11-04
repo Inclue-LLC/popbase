@@ -13,6 +13,20 @@
  * light          : 'day' | 'night'（night は店内を暗めにして棚をスポットライトで照らす）
  */
 window.THEMES = {
+  // POP BASE の基本テーマ（ロゴのラベンダー・ピンク・クリーム）
+  base: {
+    name: 'Lavender Base',
+    title: 'POP BASE の基本の内装',
+    wall: { color: '#f4eefb', pattern: 'dots', patternColor: '#ead9f3', lower: '#fff4f1', trim: '#dccef5' },
+    floor: { style: 'tile', colors: ['#fffaf8', '#f6edf1'] },
+    ceiling: '#fffafb',
+    shelf: { board: '#ffffff', edge: '#e6d8ef', back: '#fbf6fd' },
+    sign: { bg: '#ffffff', ink: '#2e2729', sub: '#d9729a', style: 'board' },
+    rug: '#f7c9d8',
+    light: 'day',
+    entrance: { top: '#dccef5', bottom: '#fff4f1', glow: 'rgba(247, 201, 216, .75)' },
+  },
+
   sky: {
     name: 'Sky Walk',
     title: '空のおさんぽ',
@@ -36,7 +50,7 @@ window.THEMES = {
     sign: { bg: '#141838', ink: '#ffe9a0', sub: '#c9b8f0', style: 'neon' },
     rug: '#c9b8f0',
     light: 'night',
-    entrance: { top: '#141838', bottom: '#4a3567' },
+    entrance: { top: '#141838', bottom: '#4a3567', heading: '#ffffff' },
   },
 
   holiday: {
@@ -49,7 +63,7 @@ window.THEMES = {
     sign: { bg: '#c94a4a', ink: '#ffffff', sub: '#ffe9a0', style: 'board' },
     rug: '#2f6b4f',
     light: 'day',
-    entrance: { top: '#2f6b4f', bottom: '#c94a4a' },
+    entrance: { top: '#2f6b4f', bottom: '#c94a4a', heading: '#ffffff' },
   },
 
   spring: {
@@ -87,6 +101,10 @@ window.applyThemeMeta = function applyThemeMeta(key) {
   const root = document.documentElement.style;
   root.setProperty('--theme-top', t.entrance.top);
   root.setProperty('--theme-bottom', t.entrance.bottom);
+  // ピンクのにじみ・見出しの色（テーマで指定したときだけ）
+  for (const [prop, v] of [['--theme-glow', t.entrance.glow], ['--theme-heading', t.entrance.heading]]) {
+    if (v) root.setProperty(prop, v); else root.removeProperty(prop);
+  }
   document.querySelectorAll('[data-bind="themeLabel"]').forEach((el) => { el.textContent = window.SHOP.themeLabel; });
   return k;
 };

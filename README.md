@@ -189,6 +189,7 @@ MAX_PER_IP=100 VISIT_MINUTES=2 WARN_MINUTES=1 npm start
 
 | キー | テーマ | 壁 | 床 |
 | --- | --- | --- | --- |
+| `base` | Lavender Base（POP BASE の基本・初期設定） | ラベンダーの水玉 | クリームのタイル |
 | `sky` | Sky Walk 空のおさんぽ | 雲柄 | 木目 |
 | `night` | Starry Night 星降る夜のおさんぽ | 星柄（夜の照明・ネオン看板） | カーペット |
 | `holiday` | Holiday Party ハヌルのホリデーパーティー | ストライプ＋緑の腰壁 | 赤白チェック |
@@ -236,3 +237,10 @@ docs/shopify-setup.md Shopify の初期設定（技術担当向け）
 - **Shopify 管理画面への組み込み**：今の店内管理画面は独自のログインです。Shopify のアプリとして登録すると、
   Shopify 管理画面の中から（Shopify のアカウントのまま）開けるようにできます。
 - **キャラクターの 3D モデル化**、**フォトスポット**、**イベント時のキャラクター来店（スタッフアバター）** など。
+
+## ブランドデザイン（POP BASE）
+
+- ロゴのマーク: `images/popbase-mark.svg`（ロゴの見本から作った仮のデータ。正式なロゴデータが届いたら同じ名前で差し替える）
+- カラー: ラベンダー `#DCCEF5`・ピンク `#F7C9D8`・クリーム `#FFF4F1`・濃色 `#2E2729`（`css/style.css` の `--brand-*`）
+- 文字: 英字は Poppins、日本語は Zen Kaku Gothic New（ショップのフォントは管理画面で変更可）
+- 店内の初期テーマ: `base`（Lavender Base）

@@ -7,7 +7,9 @@
   <meta name="description" content="POP BASE（ポップベース）は、キャラクターのポップアップが入れ替わるバーチャルショップ。アバターで店内を歩いて、会場限定グッズをお買い物。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="icon" href="images/popbase-mark.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#f7c9d8">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/world.css">
 </head>
@@ -16,7 +18,10 @@
   <div class="entrance" id="entrance">
     <div class="entrance-bg" id="entBg" aria-hidden="true"></div>
     <div class="entrance-inner">
-      <p class="entrance-kicker" id="entKicker"></p>
+      <div class="entrance-brand" id="entBrand">
+        <img src="images/popbase-mark.svg" alt="" width="72" height="77">
+        <p class="entrance-kicker" id="entKicker"></p>
+      </div>
       <h1 class="logo-big"><img class="entrance-logo" id="entLogo" alt="" hidden><span id="entHeading"></span></h1>
       <p class="entrance-theme" id="entMessage"></p>
       <div class="entrance-cast" id="entranceCast"></div>
@@ -58,7 +63,7 @@
   </div>
 
   <header class="site-header">
-    <a class="logo" href="#top" aria-label="トップへ"><span data-bind="title"></span><small data-bind="brand"></small></a>
+    <a class="logo" href="#top" aria-label="トップへ"><img class="logo-mark" src="images/popbase-mark.svg" alt="" width="30" height="32"><span data-bind="title"></span><small data-bind="brand"></small></a>
     <nav class="nav" aria-label="店内案内">
       <a href="#store">店内</a>
       <a href="#info">ご案内</a>
