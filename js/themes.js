@@ -20,7 +20,7 @@ window.THEMES = {
     wall: { color: '#f4eefb', pattern: 'dots', patternColor: '#ead9f3', lower: '#fff4f1', trim: '#dccef5' },
     floor: { style: 'tile', colors: ['#fffaf8', '#f6edf1'] },
     ceiling: '#fffafb',
-    shelf: { board: '#ffffff', edge: '#e6d8ef', back: '#fbf6fd' },
+    shelf: { board: '#f6eee3', edge: '#e4d5c1', back: '#faf5ee' }, // 淡いベージュ（棚・会場限定テーブル・レジの台）
     sign: { bg: '#ffffff', ink: '#2e2729', sub: '#d9729a', style: 'board' },
     rug: '#f7c9d8',
     light: 'day',
