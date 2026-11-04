@@ -18,7 +18,7 @@ const SELECT = {
   font: ['', 'zen-maru', 'kosugi-maru', 'kiwi-maru', 'noto-sans', 'zen-kaku', 'noto-serif', 'yusei', 'hachi-maru', 'dotgothic'],
 };
 const NUMBER = ['novelty_threshold'];
-const JSON_KEYS = ['characters']; // 中身が入れ子のもの（Shopify には JSON として保存）
+const JSON_KEYS = ['characters', 'avatars']; // 中身が入れ子のもの（Shopify には JSON として保存）
 const KEYS = [...TEXT, ...MULTILINE, ...COLOR, ...IMAGE, ...Object.keys(SELECT), ...NUMBER, ...JSON_KEYS];
 // キャラクターの ID（js/data.js の CHARACTERS と同じ。追加はできず、編集のみ）
 const CHARACTER_IDS = ['haru', 'byeol', 'dalbit', 'gomi'];
@@ -59,6 +59,8 @@ function cleanEvent(event, imageOk) {
       out[k] = { id: String(v.id), url: String(v.url) };
     } else if (k === 'characters') {
       out[k] = cleanCharacters(v, imageOk);
+    } else if (k === 'avatars') {
+      out[k] = cleanAvatars(v, imageOk);
     }
   }
   return out;
@@ -96,6 +98,27 @@ function cleanCharacters(value, imageOk) {
     if (item.name || item.en || item.profile || item.color || item.image || item.hidden) out[id] = item;
   }
   return out;
+}
+
+/* アバター：{ hide: [キャラクターID], custom: [{ id: 'c_xxxx', name, image }]（12個まで） } */
+const MAX_CUSTOM_AVATARS = 12;
+function cleanAvatars(value, imageOk) {
+  let v = value;
+  if (typeof v === 'string') { try { v = JSON.parse(v); } catch { throw new InputError('avatars'); } }
+  if (!v || typeof v !== 'object' || Array.isArray(v)) throw new InputError('avatars');
+  const hide = Array.isArray(v.hide) ? [...new Set(v.hide.filter((id) => CHARACTER_IDS.includes(id)))] : [];
+  const custom = Array.isArray(v.custom) ? v.custom : [];
+  if (custom.length > MAX_CUSTOM_AVATARS) throw new InputError('avatars.custom');
+  const seen = new Set();
+  const out = custom.map((a, i) => {
+    if (!a || typeof a !== 'object') throw new InputError(`avatars.custom.${i}`);
+    if (typeof a.id !== 'string' || !/^c_[a-z0-9]{6,16}$/.test(a.id) || seen.has(a.id)) throw new InputError(`avatars.custom.${i}.id`);
+    seen.add(a.id);
+    if (typeof a.name !== 'string' || !a.name.trim() || a.name.length > 12) throw new InputError(`avatars.custom.${i}.name`);
+    if (!imageOk(a.image)) throw new InputError(`avatars.custom.${i}.image`);
+    return { id: a.id, name: a.name.replace(/[\u0000-\u001f]/g, '').trim(), image: { id: String(a.image.id), url: String(a.image.url) } };
+  });
+  return { hide, custom: out };
 }
 
 function cleanLayout(layout) {

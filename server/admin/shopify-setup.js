@@ -65,6 +65,7 @@ const EVENT_FIELDS = [
   t('entrance_text_color', '入口：そのほかの文字の色', 'color'),
   t('entrance_characters', '入口：キャラクター', 'single_line_text_field'),
   t('characters', 'キャラクター（管理画面が書き込みます）', 'json'),
+  t('avatars', 'アバター（管理画面が書き込みます）', 'json'),
   t('layout', '棚の配置（管理画面が書き込みます）', 'json'),
   t('admin_meta', '管理情報（管理画面が書き込みます）', 'json'),
 ];

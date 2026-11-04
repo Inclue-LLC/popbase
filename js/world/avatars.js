@@ -1,7 +1,8 @@
 /*
  * アバター
  * --------------------------------------------------
- * 3D モデルの代わりに、キャラクターの絵を立体の板（常にカメラを向くスプライト）にして歩かせます。
+ * 3D モデルの代わりに、キャラクターの絵（または管理画面で追加したアバターの画像）を
+ * 立体の板（常にカメラを向くスプライト）にして歩かせます。選べるアバターは window.AVATARS（js/event.js）。
  * 名前は「形容詞＋キャラクター名」の組み合わせから選ぶ方式で、自由入力はありません（荒らし対策）。
  * NAMES / EMOTES の数は server/index.js の NAME_COUNT / EMOTE_COUNT と合わせてください。
  */
@@ -16,8 +17,8 @@ const texCache = new Map();
 let shadowTex;
 
 export function displayName(avatarId, nameIndex) {
-  const c = window.CHARACTERS.find((ch) => ch.id === avatarId) || window.CHARACTERS[0];
-  return `${NAMES[nameIndex] || NAMES[0]}${c.name}`;
+  const a = window.HaneulEvent.findAvatar(avatarId);
+  return `${NAMES[nameIndex] || NAMES[0]}${a.name}`;
 }
 
 export class Avatar {
@@ -61,9 +62,12 @@ export class Avatar {
     this.avatar = avatar;
     this.name = name;
     this.label.querySelector('.al-name').textContent = displayName(avatar, name);
-    const c = window.CHARACTERS.find((ch) => ch.id === avatar) || window.CHARACTERS[0];
-    if (!texCache.has(c.id)) texCache.set(c.id, characterTexture(c, 256));
-    const tex = await texCache.get(c.id);
+    // キャラクターならその絵、管理画面で追加したアバターならアップロードした画像
+    const a = window.HaneulEvent.findAvatar(avatar);
+    const src = a.character || { id: a.id, image: a.image };
+    const key = `${a.id}|${src.image || ''}`;
+    if (!texCache.has(key)) texCache.set(key, characterTexture(src, 256));
+    const tex = await texCache.get(key);
     this.sprite.material.map = tex;
     this.sprite.material.needsUpdate = true;
   }

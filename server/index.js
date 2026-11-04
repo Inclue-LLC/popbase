@@ -28,6 +28,10 @@ const ROOT = path.resolve(__dirname, '..');
 
 // クライアント（js/world/avatars.js）と同じ値
 const AVATARS = ['haru', 'byeol', 'dalbit', 'gomi'];
+// 管理画面で追加したアバターの ID（c_ ＋英数字）。見た目は各お客さんのブラウザが公開中の一覧から探し、
+// 一覧にない ID は最初のアバターで表示する
+const CUSTOM_AVATAR = /^c_[a-z0-9]{6,16}$/;
+const avatarOk = (v) => typeof v === 'string' && (AVATARS.includes(v) || CUSTOM_AVATAR.test(v));
 const NAME_COUNT = 12;   // 名前の前半（形容詞）の数
 const EMOTE_COUNT = 6;   // スタンプの数
 const BOUNDS = 6.8;      // 店内の広さ（±m）
@@ -141,7 +145,7 @@ wss.on('connection', (ws, req) => {
       const roomId = pickRoom();
       client = {
         id: nextClientId++, ws, roomId,
-        avatar: AVATARS.includes(msg.avatar) ? msg.avatar : AVATARS[0],
+        avatar: avatarOk(msg.avatar) ? msg.avatar : AVATARS[0],
         name: int(msg.name, NAME_COUNT),
         x: clamp(num(msg.x), -BOUNDS, BOUNDS), z: clamp(num(msg.z, 5.5), -BOUNDS, BOUNDS), ry: num(msg.ry), moving: false,
       };
@@ -163,7 +167,7 @@ wss.on('connection', (ws, req) => {
       broadcast(client.roomId, { t: 'emote', id: client.id, e: int(msg.e, EMOTE_COUNT) }, client.id);
     } else if (msg.t === 'look') {
       // アバターや名前の変更
-      client.avatar = AVATARS.includes(msg.avatar) ? msg.avatar : client.avatar;
+      client.avatar = avatarOk(msg.avatar) ? msg.avatar : client.avatar;
       client.name = int(msg.name, NAME_COUNT);
       broadcast(client.roomId, { t: 'look', id: client.id, avatar: client.avatar, name: client.name }, client.id);
     }

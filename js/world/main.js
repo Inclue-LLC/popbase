@@ -96,7 +96,9 @@ async function main() {
 
   /* ---------- 自分のアバター ---------- */
   let look = saved.get('look', null);
-  const self = new Avatar({ avatar: look?.avatar || 'haru', name: look?.name ?? 0, isSelf: true, labelsEl });
+  // 前に選んだアバターが管理画面で外されていたら、最初のアバターに替える
+  if (look && !window.AVATARS.some((a) => a.id === look.avatar)) look = { ...look, avatar: window.AVATARS[0].id };
+  const self = new Avatar({ avatar: look?.avatar || window.AVATARS[0].id, name: look?.name ?? 0, isSelf: true, labelsEl });
   self.group.position.copy(SPAWN);
   scene.add(self.group);
 
@@ -145,9 +147,11 @@ async function main() {
   const picker = $('#avatarPicker');
   let pick = { avatar: self.avatar, name: self.name };
   function renderPicker() {
-    $('#pickChars').innerHTML = window.CHARACTERS.filter((c) => !c.hidden || c.id === pick.avatar).map((c) => `
-      <button class="pick-char" data-avatar="${c.id}" aria-pressed="${pick.avatar === c.id}" style="--c:${c.color}">
-        ${window.Art.characterSVG(c)}<span>${c.name.replace(/[&<>"']/g, '')}</span></button>`).join('');
+    // 選べるアバター：キャラクター＋管理画面で追加したアバター（window.AVATARS）
+    const escName = (v) => String(v).replace(/[&<>"']/g, '');
+    $('#pickChars').innerHTML = window.AVATARS.map((a) => `
+      <button class="pick-char" data-avatar="${escName(a.id)}" aria-pressed="${pick.avatar === a.id}" style="--c:${a.character ? a.character.color : '#e3e6f0'}">
+        ${window.Art.characterSVG(a.character || { image: a.image })}<span>${escName(a.name)}</span></button>`).join('');
     $('#pickNames').innerHTML = NAMES.map((n, i) => `<option value="${i}">${n}</option>`).join('');
     $('#pickNames').value = String(pick.name);
     $('#pickPreview').textContent = displayName(pick.avatar, pick.name);

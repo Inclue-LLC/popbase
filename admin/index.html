@@ -47,6 +47,7 @@
       <button class="tab" role="tab" data-tab="event" aria-selected="false">内装・イベント</button>
       <button class="tab" role="tab" data-tab="entrance" aria-selected="false">入口の画面</button>
       <button class="tab" role="tab" data-tab="characters" aria-selected="false">キャラクター</button>
+      <button class="tab" role="tab" data-tab="avatars" aria-selected="false">アバター</button>
       <button class="tab" role="tab" data-tab="history" aria-selected="false">公開の履歴</button>
     </nav>
 
@@ -92,9 +93,28 @@
 
         <!-- キャラクター -->
         <div class="panel" data-panel="characters" hidden>
-          <p class="help">ご案内の「キャラクター紹介」・入口・店内の壁の絵・アバター選びに反映されます。空欄の項目は元のままです。
-            「表示しない」にすると、紹介・入口・壁の絵・アバター選びから外れます（商品はそのまま）。</p>
+          <p class="help">ご案内の「キャラクター紹介」・入口・店内の正面の壁の絵に反映されます（どこも同じキャラクターが並びます）。空欄の項目は元のままです。
+            「表示しない」にすると、紹介・入口・壁の絵から外れます（商品はそのまま）。アバターとして選べるかどうかは「アバター」タブで別に設定します。</p>
           <div class="char-editor" id="charEditor"></div>
+        </div>
+
+        <!-- アバター -->
+        <div class="panel" data-panel="avatars" hidden>
+          <p class="help">お客さんが入店するときに選べるアバターです。キャラクター紹介・入口とは別に設定します
+            （キャラクター紹介で表示しないにしたキャラクターも、ここで選べるようにできます）。
+            追加したアバターは、アバター選びと店内（他のお客さんからの見え方）だけに使われます。</p>
+          <section class="av-section">
+            <h3>キャラクターのアバター</h3>
+            <div class="av-builtin" id="avBuiltin"></div>
+          </section>
+          <section class="av-section">
+            <div class="av-head">
+              <h3>追加したアバター <small id="avCount"></small></h3>
+              <label class="btn btn-primary btn-small" id="avAddBtn">＋ 画像からアバターを追加<input type="file" accept="image/png,image/jpeg,image/webp" id="avAddInput" hidden></label>
+            </div>
+            <p class="help">正面を向いた全身または顔の絵で、背景が透明な正方形の PNG（512×512px 程度）がおすすめです。足元が画像の下端に来るようにすると、床にきれいに立ちます。</p>
+            <ul class="av-list" id="avList"></ul>
+          </section>
         </div>
 
         <!-- 公開の履歴 -->
@@ -119,6 +139,15 @@
             <button data-device="sp" aria-pressed="false">スマホ</button>
           </div>
           <p class="preview-note">ここではボタンを押しても入店しません。</p>
+        </div>
+        <!-- アバター選びのプレビュー -->
+        <div class="avatar-preview" id="avatarPreview" hidden>
+          <div class="ap-card">
+            <h3>アバターを選んで入店</h3>
+            <div class="ap-grid" id="apGrid"></div>
+            <p class="ap-name">おなまえの例：<b id="apSample"></b></p>
+          </div>
+          <p class="preview-note">お客さんのアバター選びの画面です（実際の画面では、選んだアバターが店内を歩きます）。</p>
         </div>
         <div class="preview-box" id="previewBox">
           <div class="preview-loading" id="previewLoading">店内を準備しています…</div>

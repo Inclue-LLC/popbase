@@ -105,6 +105,8 @@
 
     /* キャラクター（管理画面の「キャラクター」タブ）。値は { haru: { name, en, profile, color, image, hidden }, ... } */
     { tab: 'characters', group: 'キャラクター', key: 'characters', label: 'キャラクター', type: 'characters' },
+    /* アバター（管理画面の「アバター」タブ）。値は { hide: [キャラクターID], custom: [{ id, name, image }] } */
+    { tab: 'avatars', group: 'アバター', key: 'avatars', label: 'アバター', type: 'avatars' },
 
     /* 入口の画面（管理画面の「入口の画面」タブ） */
     { tab: 'entrance', group: '文字', key: 'entrance_kicker', label: '上の小さい文字', type: 'text', placeholderPath: 'shop.title' },
@@ -185,6 +187,7 @@
     if (has(f, 'novelty_name')) S.novelty.name = f.novelty_name;
     applyFont(f.font);
     applyCharacters(f.characters);
+    applyAvatars(f.avatars);
     // 入口の画面（空欄は初期表示のまま）
     S.entrance = {
       kicker: f.entrance_kicker || '',
@@ -273,8 +276,41 @@
     return out;
   }
 
-  // 何も公開されていなくても、フォントの情報（SHOP.fontStack）は用意しておく
-  applyFont('');
+  /**
+   * アバター選びに出すものの一覧 window.AVATARS を作る
+   *   キャラクター（「アバター」タブで外したものを除く）＋ 管理画面で追加したアバター
+   *   ※ キャラクター紹介・入口での表示/非表示（「キャラクター」タブ）とは別に設定する
+   *   各要素は { id, name, image, character? }（character があればキャラクターの絵、なければ image を使う）
+   */
+  function applyAvatars(value) {
+    let v = value || {};
+    if (typeof v === 'string') { try { v = JSON.parse(v); } catch { v = {}; } }
+    const hide = new Set(Array.isArray(v.hide) ? v.hide : []);
+    const list = window.CHARACTERS.filter((c) => !hide.has(c.id))
+      .map((c) => ({ id: c.id, name: c.name, image: c.image || '', character: c }));
+    for (const a of Array.isArray(v.custom) ? v.custom : []) {
+      const image = imageUrl(a.image);
+      if (a && a.id && a.name && image) list.push({ id: a.id, name: a.name, image });
+    }
+    // すべて外された場合でも、最初のキャラクターは選べるようにする
+    if (!list.length) list.push({ id: window.CHARACTERS[0].id, name: window.CHARACTERS[0].name, image: window.CHARACTERS[0].image || '', character: window.CHARACTERS[0] });
+    window.AVATARS = list;
+    return list;
+  }
 
-  window.HaneulEvent = { FIELDS, FONTS, applyFont, applyCharacters, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
+  /** アバターの ID から表示用の情報を探す（一覧にないもの＝他のお客さんの古い選択などは、キャラクター→最初のアバターの順で代わりに使う） */
+  function findAvatar(id) {
+    const list = window.AVATARS || applyAvatars(null);
+    const hit = list.find((a) => a.id === id);
+    if (hit) return hit;
+    const c = window.CHARACTERS.find((x) => x.id === id);
+    if (c) return { id: c.id, name: c.name, image: c.image || '', character: c };
+    return list[0];
+  }
+
+  // 何も公開されていなくても、フォントの情報（SHOP.fontStack）とアバターの一覧は用意しておく
+  applyFont('');
+  applyAvatars(null);
+
+  window.HaneulEvent = { FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
 })();

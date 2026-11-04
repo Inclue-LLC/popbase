@@ -115,6 +115,7 @@ function renderAll() {
   renderFixtures();
   renderForm();
   renderCharacters();
+  renderAvatars();
   renderHistory();
   renderStatus();
   refreshPreview();
@@ -127,6 +128,7 @@ function normEvent(ev = {}) {
   for (const f of E.FIELDS) {
     const v = ev[f.key];
     if (f.type === 'characters') { out[f.key] = canonicalChars(v); continue; }
+    if (f.type === 'avatars') { out[f.key] = canonicalAvatars(v); continue; }
     out[f.key] = v && typeof v === 'object' ? v.url : (v ?? '');
     if (out[f.key] !== '' && f.type === 'number') out[f.key] = Number(out[f.key]);
   }
@@ -147,6 +149,15 @@ function canonicalChars(v) {
     if (Object.keys(item).length) out[id] = item;
   }
   return JSON.stringify(out);
+}
+function canonicalAvatars(v) {
+  let obj = v;
+  if (typeof obj === 'string') { try { obj = JSON.parse(obj); } catch { obj = {}; } }
+  obj = obj || {};
+  return JSON.stringify({
+    hide: [...(obj.hide || [])].sort(),
+    custom: (obj.custom || []).map((a) => ({ id: a.id, name: a.name, image: E.imageUrl(a.image) })),
+  });
 }
 function renderStatus() {
   const differs = snapshot(state.draft) !== snapshot(state.published);
@@ -171,6 +182,13 @@ function changed({ previewNow = true } = {}) {
 
 async function save() {
   if (state.saving) { state.saveTimer = setTimeout(save, 300); return; }
+  // 名前が空のアバターがあるうちは保存しない（サーバーで受け付けないため）
+  if ((state.draft.event.avatars?.custom || []).some((a) => !String(a.name || '').trim())) {
+    state.dirtyLocal = true;
+    renderStatus();
+    toast('名前が空のアバターがあります。名前を入れると保存されます', { error: true });
+    return;
+  }
   state.saving = true;
   state.dirtyLocal = false;
   renderStatus();
@@ -238,6 +256,9 @@ document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () 
   // 「入口の画面」タブでは、右側を入口のプレビューに切り替える
   const onEntrance = activeTab === 'entrance';
   $('.preview').classList.toggle('is-entrance', onEntrance);
+  $('.preview').classList.toggle('is-avatars', activeTab === 'avatars');
+  $('#avatarPreview').hidden = activeTab !== 'avatars';
+  if (activeTab === 'avatars') renderAvatars();
   $('#entrancePreview').hidden = !onEntrance;
   if (onEntrance) openEntrancePreview();
   else if (wasEntrance) refreshPreview();
@@ -664,6 +685,108 @@ $('#charEditor').addEventListener('click', (e) => {
   const edits = charEdits();
   if (edits[id]) edits[id][reset.dataset.charReset] = '';
   charChanged({ rerender: true });
+});
+
+/* ==========================================================
+   アバター
+   ========================================================== */
+const MAX_AVATARS = 12;
+function avatarEdits() {
+  let v = state.draft.event.avatars;
+  if (typeof v === 'string') { try { v = JSON.parse(v); } catch { v = null; } }
+  if (!v || typeof v !== 'object') v = {};
+  v.hide = Array.isArray(v.hide) ? v.hide : [];
+  v.custom = Array.isArray(v.custom) ? v.custom : [];
+  state.draft.event.avatars = v;
+  return v;
+}
+const newAvatarId = () => `c_${Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(36).padStart(2, '0')).join('').slice(0, 10)}`;
+
+function renderAvatars() {
+  const v = avatarEdits();
+  E.applyCharacters(state.draft.event.characters);
+  const list = E.applyAvatars(v);
+  $('#avBuiltin').innerHTML = E.original.characters.map((o) => {
+    const c = window.CHARACTERS.find((x) => x.id === o.id);
+    const on = !v.hide.includes(o.id);
+    return `<label class="av-chip ${on ? '' : 'is-off'}">
+      <span class="art">${window.Art.characterSVG(c)}</span>
+      <b>${esc(c.name)}</b>
+      <span class="check"><input type="checkbox" data-av-builtin="${esc(o.id)}" ${on ? 'checked' : ''}> アバターとして選べる</span>
+      ${c.hidden ? '<small>キャラクター紹介・入口には<br>表示していません</small>' : ''}
+    </label>`;
+  }).join('');
+  $('#avCount').textContent = `（${v.custom.length} / ${MAX_AVATARS}）`;
+  $('#avAddBtn').classList.toggle('is-disabled', v.custom.length >= MAX_AVATARS);
+  $('#avAddInput').disabled = v.custom.length >= MAX_AVATARS;
+  $('#avList').innerHTML = v.custom.length ? v.custom.map((a, i) => `
+    <li class="av-item" data-i="${i}">
+      <img src="${esc(E.imageUrl(a.image))}" alt="">
+      <input type="text" data-av-name maxlength="12" value="${esc(a.name)}" aria-label="アバターの名前" placeholder="名前（12文字まで）">
+      <span class="av-actions">
+        <button type="button" class="icon" data-av-move="-1" ${i === 0 ? 'disabled' : ''} aria-label="上へ">↑</button>
+        <button type="button" class="icon" data-av-move="1" ${i === v.custom.length - 1 ? 'disabled' : ''} aria-label="下へ">↓</button>
+        <button type="button" class="btn btn-small btn-danger" data-av-delete>削除</button>
+      </span>
+    </li>`).join('') : '<li class="av-empty">まだありません。「画像からアバターを追加」で追加できます。</li>';
+
+  // プレビュー（お客さんのアバター選び）
+  $('#apGrid').innerHTML = list.map((a) => `<span class="pick" style="--c:${a.character ? esc(a.character.color) : '#e3e6f0'}">
+    ${window.Art.characterSVG(a.character || { image: a.image })}<span>${esc(a.name)}</span></span>`).join('');
+  $('#apSample').textContent = `ふわふわの${list[list.length - 1]?.name || ''}`;
+}
+
+$('#avBuiltin').addEventListener('change', (e) => {
+  const id = e.target.dataset.avBuiltin;
+  if (!id) return;
+  const v = avatarEdits();
+  v.hide = e.target.checked ? v.hide.filter((x) => x !== id) : [...new Set([...v.hide, id])];
+  renderAvatars();
+  changed({ previewNow: false });
+});
+$('#avAddInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  const v = avatarEdits();
+  if (v.custom.length >= MAX_AVATARS) { toast(`追加できるのは ${MAX_AVATARS} 個までです`, { error: true }); return; }
+  if (file.size > 8 * 1024 * 1024) { toast('8MB 以下の画像を選んでください', { error: true }); return; }
+  toast('画像をアップロードしています…');
+  try {
+    const img = await api('upload', { method: 'POST', raw: file, type: file.type });
+    v.custom.push({ id: newAvatarId(), name: `アバター${v.custom.length + 1}`, image: img });
+    renderAvatars();
+    changed({ previewNow: false });
+    toast('アバターを追加しました。名前を付けてください');
+    const inputs = document.querySelectorAll('#avList [data-av-name]');
+    inputs[inputs.length - 1]?.select();
+  } catch (err) { toast(err.message, { error: true }); }
+});
+$('#avList').addEventListener('input', (e) => {
+  if (!e.target.matches('[data-av-name]')) return;
+  const i = Number(e.target.closest('[data-i]').dataset.i);
+  const v = avatarEdits();
+  v.custom[i].name = e.target.value;
+  if (!e.target.value.trim()) return; // 空の名前は保存しない（入力中）
+  E.applyAvatars(v);
+  $('#apGrid').querySelectorAll('.pick > span')[window.AVATARS.findIndex((a) => a.id === v.custom[i].id)]?.replaceChildren(e.target.value);
+  changed({ previewNow: false });
+});
+$('#avList').addEventListener('click', (e) => {
+  const item = e.target.closest('[data-i]');
+  if (!item) return;
+  const i = Number(item.dataset.i);
+  const v = avatarEdits();
+  if (e.target.closest('[data-av-delete]')) {
+    if (!confirm(`「${v.custom[i].name}」を削除します。よろしいですか？\n（このアバターで入店中のお客さんは、最初のアバターの見た目になります）`)) return;
+    v.custom.splice(i, 1);
+  } else if (e.target.closest('[data-av-move]')) {
+    const j = i + Number(e.target.closest('[data-av-move]').dataset.avMove);
+    if (j < 0 || j >= v.custom.length) return;
+    [v.custom[i], v.custom[j]] = [v.custom[j], v.custom[i]];
+  } else return;
+  renderAvatars();
+  changed({ previewNow: false });
 });
 
 /* ==========================================================
