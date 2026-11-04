@@ -35,12 +35,9 @@ const EVENT_FIELDS = [
   t('admin_meta', '管理情報（管理画面が書き込みます）', 'json'),
 ];
 
+// 商品ページに出す項目（キャラクター・会場限定・仕様は使わない。会場限定は「テーブルに置く」かタグ limited で決まる）
 const PRODUCT_FIELDS = [
-  // 他社のキャラクターも入れられるよう、自由に入力できる文字にする（ハル・ビョル・タルビ・ゴミは自社のキャラクターとして扱う）
-  { key: 'character', name: 'キャラクター', type: 'single_line_text_field' },
-  { key: 'limited', name: '会場限定', type: 'boolean' },
   { key: 'purchase_limit', name: 'お一人様の購入上限', type: 'number_integer' },
-  { key: 'spec', name: '仕様（サイズ・素材）', type: 'single_line_text_field' },
   { key: 'size', name: '棚での大きさ', type: 'single_line_text_field', validations: [{ name: 'choices', value: JSON.stringify(['大', '中', '小']) }] },
 ];
 
@@ -109,7 +106,12 @@ const PRODUCT_FIELDS = [
       query Defs {
         metafieldDefinitions(first: 50, ownerType: PRODUCT, namespace: "popup") { nodes { id key pinnedPosition } }
       }`);
+    const used = new Set(PRODUCT_FIELDS.map((f) => f.key));
     for (const d of list.metafieldDefinitions.nodes) {
+      if (!used.has(d.key)) {
+        console.log(`・popup.${d.key} は使わなくなりました。不要なら Shopify の「設定 → カスタムデータ → 商品」で削除してください`);
+        continue;
+      }
       if (d.pinnedPosition != null) continue;
       const r = await gql(`
         mutation Pin($id: ID!) {
