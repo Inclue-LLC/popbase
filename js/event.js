@@ -124,6 +124,7 @@
     { group: '床', key: 'floor_style', label: '床の種類', type: 'select', options: () => opt([['', 'テーマのまま'], ['wood', '木目'], ['check', 'チェック'], ['tile', 'タイル'], ['carpet', 'カーペット']]) },
     { group: '床', key: 'floor_color_1', label: '床の色 1', type: 'color', themePath: 'floor.colors.0' },
     { group: '床', key: 'floor_color_2', label: '床の色 2', type: 'color', themePath: 'floor.colors.1' },
+    { group: '床', key: 'rug_color', label: '会場限定テーブルの下の色', hint: 'テーブルの下に敷く楕円の色。指定した色のまま表示します', type: 'color', themePath: 'rug' },
     { group: '看板・照明', key: 'sign_color', label: '看板の色', type: 'color', themePath: 'sign.bg' },
     { group: '看板・照明', key: 'sign_text_color', label: '看板の文字色', type: 'color', themePath: 'sign.ink' },
     { group: '看板・照明', key: 'light', label: '照明', type: 'select', options: () => opt([['', 'テーマのまま'], ['day', '明るい'], ['night', '夜（暗め＋スポットライト）']]) },
@@ -241,6 +242,8 @@
     set(theme.floor, 'style', 'floor_style');
     if (has(f, 'floor_color_1')) theme.floor.colors[0] = f.floor_color_1;
     if (has(f, 'floor_color_2')) theme.floor.colors[1] = f.floor_color_2;
+    // 会場限定テーブルの下の敷物：指定したときは、その色のまま（透けさせない）
+    if (has(f, 'rug_color')) { theme.rug = f.rug_color; theme.rugOpacity = 1; }
     set(theme.sign, 'bg', 'sign_color');
     set(theme.sign, 'ink', 'sign_text_color');
     set(theme, 'light', 'light');
