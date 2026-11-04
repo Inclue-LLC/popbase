@@ -17,7 +17,6 @@
   // 置き場所メタフィールドの値（管理画面の選択肢）→ 店内のゾーン
   const ZONES = { '左の棚': 'left', '右の棚': 'right', '限定テーブル': 'island', '置かない': 'none',
     left: 'left', right: 'right', island: 'island', table: 'island', none: 'none' };
-  const CHARACTER_IDS = { 'ハル': 'haru', 'ビョル': 'byeol', 'タルビ': 'dalbit', 'ゴミ': 'gomi' };
   const SIZES = { '大': 'plush', '中': 'mug', '小': 'keychain' };
 
   const PRODUCT_FIELDS = (withInventory) => `
@@ -26,8 +25,7 @@
     variants(first: 1) { nodes { id availableForSale ${withInventory ? 'quantityAvailable' : ''} price { amount } } }
     metafields(identifiers: [
       { namespace: "popup", key: "zone" }, { namespace: "popup", key: "order" },
-      { namespace: "popup", key: "character" }, { namespace: "popup", key: "limited" },
-      { namespace: "popup", key: "purchase_limit" }, { namespace: "popup", key: "spec" },
+      { namespace: "popup", key: "purchase_limit" },
       { namespace: "popup", key: "size" }
     ]) { key value }`;
 
@@ -58,22 +56,22 @@
   function mapProduct(node, i) {
     const v = node.variants.nodes[0] || {};
     const zone = ZONES[mf(node, 'zone')] || null;
-    const limited = mf(node, 'limited') === 'true' || zone === 'island' || (node.tags || []).includes('limited');
+    // 会場限定：テーブルに置いた商品、またはタグ limited の商品
+    const limited = zone === 'island' || (node.tags || []).includes('limited');
     const qty = typeof v.quantityAvailable === 'number' ? v.quantityAvailable : null;
     const stock = v.availableForSale === false ? 0 : qty != null && qty > 0 ? qty : 99;
-    const charRaw = mf(node, 'character');
     return {
       id: node.handle,
       variantId: v.id,
       name: node.title,
       desc: node.description || '',
-      spec: mf(node, 'spec') || '',
+      spec: '',
       price: Math.round(Number(v.price?.amount || 0)),
       stock,
       limited,
       limit: toInt(mf(node, 'purchase_limit')) || undefined,
       isNew: (node.tags || []).some((t) => t.toLowerCase() === 'new'),
-      character: CHARACTER_IDS[charRaw] || charRaw || '',
+      character: '',
       category: slug(node.productType),
       categoryName: node.productType || 'その他',
       image: node.featuredImage?.url || null,

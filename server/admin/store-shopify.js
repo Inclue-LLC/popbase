@@ -104,8 +104,6 @@ async function products() {
               handle title productType tags totalInventory status
               featuredImage { url(transform: { maxWidth: 300, maxHeight: 300 }) }
               variants(first: 1) { nodes { price } }
-              limited: metafield(namespace: "popup", key: "limited") { value }
-              character: metafield(namespace: "popup", key: "character") { value }
               size: metafield(namespace: "popup", key: "size") { value }
             }
           }
@@ -113,7 +111,6 @@ async function products() {
       }
     }`, { q: `handle:${COLLECTION}` });
   const nodes = data.collections.nodes[0]?.products.nodes || [];
-  const CHAR = { 'ハル': 'haru', 'ビョル': 'byeol', 'タルビ': 'dalbit', 'ゴミ': 'gomi' };
   const SIZE = { '大': 'plush', '中': 'mug', '小': 'keychain' };
   return nodes.map((n) => ({
     id: n.handle,
@@ -121,9 +118,9 @@ async function products() {
     price: Math.round(Number(n.variants.nodes[0]?.price || 0)),
     stock: n.totalInventory ?? 99,
     image: n.featuredImage?.url || null,
-    limited: n.limited?.value === 'true' || (n.tags || []).includes('limited'),
+    limited: (n.tags || []).includes('limited'),
     isNew: (n.tags || []).some((t) => t.toLowerCase() === 'new'),
-    character: CHAR[n.character?.value] || n.character?.value || '',
+    character: '',
     shape: SIZE[n.size?.value] || 'mug',
     category: n.productType || '',
     status: n.status,

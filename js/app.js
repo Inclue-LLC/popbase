@@ -10,7 +10,7 @@ window.AppReady = (async function () {
   const yen = (n) => `¥${n.toLocaleString('ja-JP')}`;
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   const charById = Object.fromEntries(CHARACTERS.map((c) => [c.id, c]));
-  const NO_CHAR = { id: '', name: '', color: '#e3e6f0' };
+  const NO_CHAR = { id: '', name: '', color: '#e6dcf3' }; // キャラクターのない商品（他社の商品など）の背景はラベンダー
   const charOf = (p) => charById[p.character] || NO_CHAR;
   const productById = Object.fromEntries(PRODUCTS.map((p) => [p.id, p]));
 
