@@ -22,7 +22,8 @@ const NUMBER = ['novelty_threshold'];
 const DATETIME = ['open_at', 'close_at'];     // 'YYYY-MM-DDTHH:MM'（日本時間）
 const TIME = ['daily_open', 'daily_close'];   // 'HH:MM'
 const JSON_KEYS = ['characters', 'avatars']; // 中身が入れ子のもの（Shopify には JSON として保存）
-const KEYS = [...TEXT, ...MULTILINE, ...COLOR, ...IMAGE, ...Object.keys(SELECT), ...NUMBER, ...JSON_KEYS, ...DATETIME, ...TIME];
+const HANDLE = ['collection']; // Shopify のコレクションのハンドル（このイベントで店内に並べる商品）
+const KEYS = [...TEXT, ...MULTILINE, ...COLOR, ...IMAGE, ...Object.keys(SELECT), ...NUMBER, ...JSON_KEYS, ...DATETIME, ...TIME, ...HANDLE];
 const schedule = require('../../js/schedule.js');
 // キャラクターの ID（js/data.js の CHARACTERS と同じ。追加はできず、編集のみ）
 const CHARACTER_IDS = ['haru', 'byeol', 'dalbit', 'gomi'];
@@ -88,6 +89,9 @@ function cleanEvent(event, imageOk) {
       out[k] = v;
     } else if (TIME.includes(k)) {
       if (schedule.parseTime(v) == null) throw new InputError(`${k}（時刻の形式）`);
+      out[k] = v;
+    } else if (HANDLE.includes(k)) {
+      if (typeof v !== 'string' || !/^[a-z0-9][a-z0-9-]{0,254}$/.test(v)) throw new InputError(`${k}（コレクション）`);
       out[k] = v;
     } else if (k === 'characters') {
       out[k] = cleanCharacters(v, imageOk);

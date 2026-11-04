@@ -106,6 +106,7 @@
   const FIELDS = [
     { group: 'イベント', key: 'brand', label: 'ブランド名', hint: '店内の看板の上の行・ページ上部のロゴなど（全角15文字・半角30文字まで）', type: 'text', maxUnits: 30, placeholderPath: 'shop.brand' },
     { group: 'イベント', key: 'title', label: 'イベント名', hint: '看板の大きな文字。長さに合わせて看板の幅が広がります（全角14文字・半角28文字まで）', type: 'text', maxUnits: 28 },
+    { group: 'イベント', key: 'collection', label: 'Shopify のコレクション', hint: 'このイベントで店内に並べる商品のコレクション。Shopify で作ったコレクションから選びます', type: 'collection', showIf: () => !!window.ADMIN_SHOPIFY },
     { group: 'イベント', key: 'subtitle', label: 'サブタイトル', hint: '看板の下の行。空欄なら表示しません（全角20文字・半角40文字まで）', type: 'text', maxUnits: 40 },
     { group: '会期・営業時間', key: 'open_at', label: '開始日時', hint: 'この日時になると入店できるようになります（日本時間）', type: 'datetime' },
     { group: '会期・営業時間', key: 'close_at', label: '終了日時', hint: 'この日時で閉店し、店内のお客さんは自動で退店します', type: 'datetime' },
@@ -164,7 +165,7 @@
    *   hide     … 任意。空欄なら店内に表示しない
    */
   const NEED = {
-    brand: ['required'], title: ['required'], open_at: ['required'], close_at: ['required'],
+    brand: ['required'], title: ['required'], open_at: ['required'], close_at: ['required'], collection: ['required'],
     subtitle: ['hide'], entrance_notice: ['hide'],
     novelty: ['default', 'なし'], novelty_name: ['required'],
     product_bg_color: ['default', '初期の色（商品ごとの薄い色）'],

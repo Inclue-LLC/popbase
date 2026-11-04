@@ -6,8 +6,8 @@
  * 管理はすべて Shopify 管理画面で行います（設定手順: docs/shopify-setup.md）。
  *   商品・価格・在庫・画像          … 通常の商品管理
  *   店内での置き場所・並び順など    … 商品メタフィールド（ネームスペース popup）
- *   会期・内装テーマ・壁紙・色・棚の配置 … メタオブジェクト「POP UPイベント」（タイプ popup_event、ハンドル current）
- *                                     ※ 店内管理画面（/admin）から編集・公開します
+ *   イベント（会期・内装・棚の配置・使うコレクション）… 店内管理画面（/admin）で編集・公開し、
+ *                                     このサイトのサーバー（/api/published）から読みます
  *   購入手続き                      … Shopify のチェックアウト
  */
 (function () {
@@ -30,12 +30,9 @@
     ]) { key value }`;
 
   const QUERY = (withInventory) => `
-    query PopupStore($collection: String!, $event: String!) {
+    query PopupStore($collection: String!) {
       collection(handle: $collection) {
         products(first: 100) { nodes { ${PRODUCT_FIELDS(withInventory)} } }
-      }
-      metaobject(handle: { type: "popup_event", handle: $event }) {
-        fields { key value }
       }
     }`;
 
@@ -99,19 +96,13 @@
     };
   }
 
-  /* メタオブジェクト「POP UPイベント」→ イベント設定（js/event.js の形）と棚の配置 */
-  function eventFromMetaobject(mo) {
-    if (!mo) return null;
-    const f = Object.fromEntries(mo.fields.map((x) => [x.key, x.value]));
-    const parse = (v) => { try { return v ? JSON.parse(v) : null; } catch { return null; } };
-    // イベントの設定は 1 つの JSON（settings）。画像は { id, url } なので URL にする
-    const event = window.HaneulEvent.flatten(parse(f.settings) || {});
-    return { event, layout: parse(f.layout) };
-  }
-
-  async function load() {
+  /**
+   * イベントで選んだコレクションの商品を読み込む（window.PRODUCTS）
+   * イベントの設定（内装・棚の配置など）は、このサイトのサーバーから読む（js/source.js）
+   */
+  async function load(collection) {
     if (!enabled) return;
-    const vars = { collection: cfg.collection || 'popup', event: cfg.eventHandle || 'current' };
+    const vars = { collection: collection || cfg.collection || 'popup' };
     let json = await gql(QUERY(true), vars);
     // 在庫数の公開権限（unauthenticated_read_product_inventory）がない場合は在庫数なしで取り直す
     if (json.errors?.some((e) => /quantityAvailable|access/i.test(e.message))) json = await gql(QUERY(false), vars);
@@ -128,12 +119,6 @@
     // 置き場所が未設定の商品は、会場限定→テーブル、それ以外は左右の棚に交互に並べる
     let flip = 0;
     for (const p of products) if (!p.display) p.display = p.limited ? 'island' : (flip++ % 2 ? 'right' : 'left');
-
-    const ev = eventFromMetaobject(json.data?.metaobject);
-    if (ev) {
-      window.HaneulEvent.applyEvent(ev.event);
-      window.HaneulEvent.applyLayout(ev.layout);
-    }
   }
 
   async function checkout(lines) {
