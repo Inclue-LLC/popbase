@@ -35,7 +35,9 @@ window.AppReady = (async function () {
 
   /* ---------- 共通テキスト ---------- */
   document.querySelectorAll('[data-bind]').forEach((el) => { el.textContent = SHOP[el.dataset.bind] ?? ''; });
-  $('#noveltyInfo').textContent = `税込 ${yen(SHOP.novelty.threshold)} 以上お買い上げで「${SHOP.novelty.name}」をプレゼント。`;
+  // 購入特典（管理画面で特典の名前が空欄なら表示しない）
+  if (SHOP.novelty) $('#noveltyInfo').textContent = `税込 ${yen(SHOP.novelty.threshold)} 以上お買い上げで「${SHOP.novelty.name}」をプレゼント。`;
+  else $('#noveltyInfo').closest('.info-card').hidden = true;
   $('#shippingInfo').textContent = `全国一律 ${yen(SHOP.shippingFee)}。${yen(SHOP.freeShippingThreshold)} 以上で送料無料。`;
 
   /* ---------- 入口 ----------
@@ -417,9 +419,11 @@ window.AppReady = (async function () {
       el.hidden = t.count === 0;
     }
 
-    const remain = SHOP.novelty.threshold - t.subtotal;
-    const pct = Math.min(100, (t.subtotal / SHOP.novelty.threshold) * 100);
-    $('#noveltyBar').innerHTML = `
+    const nov = SHOP.novelty;
+    $('#noveltyBar').hidden = !nov;
+    const remain = nov ? nov.threshold - t.subtotal : 0;
+    const pct = nov ? Math.min(100, (t.subtotal / nov.threshold) * 100) : 0;
+    if (nov) $('#noveltyBar').innerHTML = `
       <p>${remain > 0 ? `あと <strong>${yen(remain)}</strong> で特典「${SHOP.novelty.name}」` : `🎉 特典「${SHOP.novelty.name}」が付きます`}</p>
       <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}"><span style="width:${pct}%"></span></div>`;
 
@@ -487,7 +491,7 @@ window.AppReady = (async function () {
     for (const { p, q } of t.lines) p.stock = Math.max(0, p.stock - q);
     const orderNo = `HN-${Date.now().toString(36).toUpperCase().slice(-6)}`;
     $('#doneText').innerHTML = `注文番号 <strong>${orderNo}</strong><br>${t.count} 点・合計 <strong>${yen(t.total)}</strong>` +
-      (t.subtotal >= SHOP.novelty.threshold ? `<br>特典「${SHOP.novelty.name}」を同梱します。` : '');
+      (SHOP.novelty && t.subtotal >= SHOP.novelty.threshold ? `<br>特典「${SHOP.novelty.name}」を同梱します。` : '');
     $('#doneCast').innerHTML = visibleChars().map((c, i) => `<div class="bob" style="animation-delay:${i * 0.2}s">${Art.characterSVG(c)}</div>`).join('');
     state.cart = {};
     saveCart();

@@ -149,6 +149,38 @@
     { tab: 'entrance', group: '色', key: 'entrance_text_color', label: 'そのほかの文字の色', type: 'color', themePath: 'const.#3a3346' },
     { tab: 'entrance', group: '表示', key: 'entrance_characters', label: 'キャラクター', type: 'select', options: () => opt([['', '表示する'], ['hide', '表示しない']]) },
   ];
+  /*
+   * 項目の種類（管理画面に「必須」「任意」と表示する）。必須を変えたいときはここを書き換えてください。
+   * （サーバー側 server/admin/fields.js の REQUIRED も同じにする）
+   *   required … 必須。空欄のままでは公開できない
+   *   default  … 任意。空欄なら [1] の内容を使う
+   *   hide     … 任意。空欄なら店内に表示しない
+   */
+  const NEED = {
+    brand: ['required'], title: ['required'], open_at: ['required'], close_at: ['required'],
+    subtitle: ['hide'], novelty_name: ['hide'], entrance_notice: ['hide'],
+    daily_open: ['default', '24時間営業'], daily_close: ['default', '24時間営業'], period: ['default', '日時から自動で作成'],
+    theme_preset: ['default', 'サイトの初期設定のテーマ'], font: ['default', '初期設定のフォント'],
+    wall_image: ['default', '壁の色と柄'], wall_pattern: ['default', 'テーマの柄'], floor_image: ['default', '床の種類と色'],
+    floor_style: ['default', 'テーマの床'], light: ['default', 'テーマの照明'],
+    left_title: ['default', '初期の看板の文字'], left_label: ['default', '初期の看板の文字'],
+    right_title: ['default', '初期の看板の文字'], right_label: ['default', '初期の看板の文字'],
+    novelty_threshold: ['default', '3,000円'],
+    entrance_kicker: ['default', 'Virtual Pop-up Store'], entrance_heading: ['default', 'ブランド名'],
+    entrance_message: ['default', 'イベント名（＋サブタイトル）'], entrance_button: ['default', '「お店に入る」'],
+    entrance_logo: ['default', '大きい見出しの文字'], entrance_image: ['default', '背景の色'],
+    entrance_characters: ['default', '表示する'],
+    characters: ['default', '元のキャラクター'], avatars: ['default', '4体のキャラクター'],
+  };
+  for (const f of FIELDS) {
+    const [need, fallback] = NEED[f.key] || ['default', f.type === 'color' ? 'テーマの色' : '初期設定'];
+    f.need = need;
+    f.fallback = fallback || '';
+  }
+  const blank = (v) => v == null || (typeof v === 'string' && !v.trim());
+  /** 必須なのに空欄の項目（ラベルの一覧） */
+  const missingRequired = (ev = {}) => FIELDS.filter((f) => f.need === 'required' && blank(ev[f.key]));
+
   const IMAGE_KEYS = FIELDS.filter((f) => f.type === 'image').map((f) => f.key);
 
   // 最初に読み込んだときの値（何度適用しても元に戻せるように保存しておく）
@@ -214,9 +246,10 @@
     S.hours = HS?.hoursText(S.schedule) || '';
     S.brand = has(f, 'brand') ? f.brand : original.brand;
     S.subtitle = has(f, 'subtitle') ? f.subtitle : ''; // 未記入なら表示しない
-    S.novelty = { ...original.novelty };
-    if (has(f, 'novelty_threshold')) S.novelty.threshold = Number(f.novelty_threshold);
-    if (has(f, 'novelty_name')) S.novelty.name = f.novelty_name;
+    // 購入特典：特典の名前が空欄なら表示しない
+    S.novelty = has(f, 'novelty_name')
+      ? { threshold: has(f, 'novelty_threshold') ? Number(f.novelty_threshold) : original.novelty.threshold, name: f.novelty_name }
+      : null;
     applyFont(f.font);
     applyCharacters(f.characters);
     applyAvatars(f.avatars);
@@ -370,5 +403,5 @@
     return out;
   }
 
-  window.HaneulEvent = { textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
+  window.HaneulEvent = { missingRequired, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
 })();

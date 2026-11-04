@@ -228,3 +228,14 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .schedule-status { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: .85rem; }
 .schedule-status[data-state="open"] b { color: var(--ok); }
 .schedule-status[data-state="ended"] b { color: var(--danger); }
+
+/* 必須・任意 */
+.need { display: inline-block; margin-left: 6px; padding: 0 .55em; border-radius: 6px; font-size: .68rem; font-weight: 800; line-height: 1.7; vertical-align: 1px; white-space: nowrap; }
+.need-required { background: #c0392b; color: #fff; }
+.need-default { background: var(--surface-2); color: var(--ink-soft); font-weight: 700; white-space: normal; }
+.need-hide { background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); }
+.need-legend { margin: 0 0 4px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: .78rem; color: var(--ink-soft); line-height: 2; }
+.need-legend .need { margin: 0 4px 0 10px; }
+.need-legend .need:first-child { margin-left: 0; }
+.field .is-missing { border-color: #c0392b !important; background: color-mix(in srgb, #c0392b 6%, var(--surface)); }
+.pill-missing { background: color-mix(in srgb, #c0392b 15%, transparent); color: #c0392b; }

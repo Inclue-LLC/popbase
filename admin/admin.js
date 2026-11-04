@@ -167,7 +167,9 @@ function renderStatus() {
   const saved = state.saving || state.dirtyLocal
     ? '保存しています…'
     : state.draft.updatedAt ? `下書きを保存しました（${fmtTime(state.draft.updatedAt)}${state.draft.updatedBy ? `・${esc(state.draft.updatedBy)}` : ''}）` : '';
-  $('#status').innerHTML = `${pill}<span>${saved}</span>`;
+  const miss = E.missingRequired(state.draft.event);
+  const missPill = miss.length ? `<span class="pill pill-missing">必須項目が未入力（${miss.length}）</span>` : '';
+  $('#status').innerHTML = `${pill}${missPill}<span>${saved}</span>`;
   $('#publishBtn').disabled = !differs || state.saving || state.dirtyLocal;
 }
 
@@ -213,6 +215,15 @@ async function flushSave() {
 
 /* ---------- 公開・取り消し ---------- */
 $('#publishBtn').addEventListener('click', async () => {
+  // 必須項目が空欄なら公開しない
+  const miss = E.missingRequired(state.draft.event);
+  if (miss.length) {
+    toast(`必須項目が未入力です：${miss.map((f) => f.label).join('・')}`, { error: true });
+    document.querySelector('.tab[data-tab="event"]').click();
+    renderForm();
+    document.getElementById(`f_${miss[0].key}`)?.focus();
+    return;
+  }
   await flushSave();
   if (!confirm('公開すると、お客さんのサイトにすぐ反映されます。公開しますか？')) return;
   try {
@@ -528,13 +539,14 @@ function renderForm() {
   for (const [tab, sel] of Object.entries(FORMS)) {
     const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab);
     const groups = [...new Set(fields.map((f) => f.group))];
-    $(sel).innerHTML = groups.map((g) => `
+    $(sel).innerHTML = NEED_LEGEND + groups.map((g) => `
       <fieldset class="fgroup"><legend>${esc(g)}</legend>
         ${fields.filter((f) => f.group === g).map((f) => fieldHtml(f, ev[f.key], placeholders)).join('')}
         ${g === '会期・営業時間' ? '<p class="schedule-status" id="scheduleStatus"></p>' : ''}
       </fieldset>`).join('');
   }
   renderScheduleStatus();
+  markMissing();
 }
 
 /** この設定で今お店が開いているか（日本時間） */
@@ -559,6 +571,25 @@ function renderScheduleStatus() {
 }
 setInterval(() => { if (state.draft) renderScheduleStatus(); }, 30000);
 
+/** 必須・任意の表示 */
+function needBadge(f) {
+  if (f.need === 'required') return '<span class="need need-required">必須</span>';
+  if (f.need === 'hide') return '<span class="need need-hide">任意・空欄なら非表示</span>';
+  return `<span class="need need-default">任意・空欄なら${esc(f.fallback)}</span>`;
+}
+const NEED_LEGEND = `<p class="need-legend">
+  <span class="need need-required">必須</span> 入れないと公開できません
+  <span class="need need-default">任意・空欄なら○○</span> 空欄なら○○を使います
+  <span class="need need-hide">任意・空欄なら非表示</span> 空欄なら店内に出しません</p>`;
+
+/** 必須で空欄の欄に印を付ける */
+function markMissing() {
+  for (const f of E.missingRequired({})) {
+    const el = document.getElementById(`f_${f.key}`);
+    if (el) el.classList.toggle('is-missing', !String(state.draft.event[f.key] ?? '').trim());
+  }
+}
+
 function unitLabel(v, max) {
   const n = E.textUnits(v);
   return `残り 全角${Math.floor((max - n) / 2)}文字（半角${max - n}）`;
@@ -566,11 +597,12 @@ function unitLabel(v, max) {
 
 function fieldHtml(f, value, placeholders) {
   const id = `f_${f.key}`;
-  const label = `<label for="${id}">${esc(f.label)}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`;
+  const label = `<label for="${id}">${esc(f.label)}${needBadge(f)}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`;
   const defaultColorLabel = f.tab === 'entrance' ? '初期の色' : 'テーマの色';
   let input = '';
   if (f.type === 'text' || f.type === 'number') {
-    const ph = f.placeholderPath ? themeDefault(f.placeholderPath) : placeholders[f.key];
+    let ph = f.placeholderPath ? themeDefault(f.placeholderPath) : placeholders[f.key];
+    if (f.need === 'required' && ph) ph = `例：${ph}`; // 必須の欄は、入力済みに見えないよう「例：」を付ける
     input = `<input id="${id}" data-key="${f.key}" type="${f.type}" value="${esc(value ?? '')}" placeholder="${esc(ph ?? '')}" ${f.type === 'number' ? 'min="0" step="100"' : 'maxlength="120"'}>`;
     // 文字数の上限がある項目は、残りを表示（全角2・半角1で数える）
     if (f.maxUnits) input = `<span class="unit-row">${input}<span class="unit-count" data-count-for="${f.key}">${unitLabel(value, f.maxUnits)}</span></span>`;
@@ -618,6 +650,7 @@ for (const sel of Object.values(FORMS)) {
       if (c) c.textContent = unitLabel(v, f.maxUnits);
     }
     state.draft.event[key] = v;
+    if (f.need === 'required') markMissing();
     if (f.type === 'datetime' || f.type === 'time') renderScheduleStatus();
     if (f.type === 'color') {
       const note = e.target.parentElement.querySelector('.color-note');

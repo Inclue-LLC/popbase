@@ -40,6 +40,12 @@ function textUnits(str) {
   return n;
 }
 
+// 必須項目（js/event.js の NEED で required のものと同じにする）。公開するときに確認する
+const REQUIRED = { brand: 'ブランド名', title: 'イベント名', open_at: '開始日時', close_at: '終了日時' };
+function missingRequired(event = {}) {
+  return Object.entries(REQUIRED).filter(([k]) => event[k] == null || String(event[k]).trim() === '').map(([, label]) => label);
+}
+
 class InputError extends Error {}
 
 /**
@@ -173,4 +179,4 @@ function flatten(event) {
   return out;
 }
 
-module.exports = { KEYS, TEXT, MULTILINE, COLOR, IMAGE, SELECT, NUMBER, JSON_KEYS, cleanEvent, cleanLayout, flatten, InputError };
+module.exports = { REQUIRED, missingRequired, KEYS, TEXT, MULTILINE, COLOR, IMAGE, SELECT, NUMBER, JSON_KEYS, cleanEvent, cleanLayout, flatten, InputError };

@@ -15,7 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 const auth = require('./auth');
-const { InputError } = require('./fields');
+const { InputError, missingRequired } = require('./fields');
 const local = require('./store-local');
 const shopify = require('./store-shopify');
 
@@ -113,6 +113,9 @@ async function handle(req, res, urlPath) {
     }
     if (route === 'publish' && req.method === 'POST') {
       const { rev } = await readJson(req);
+      // 必須項目が空欄なら公開しない
+      const missing = missingRequired((await store.getState()).draft.event || {});
+      if (missing.length) return json(res, 400, { error: `必須項目が未入力です：${missing.join('・')}` });
       const pub = await store.publish(user, rev);
       // 会期・営業時間をすぐ入店管理に反映
       try { require('../visit').setSchedule((await store.getPublished()).event || {}); } catch (e) { console.error(e); }
