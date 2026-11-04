@@ -348,6 +348,13 @@ export async function productTexture(p) {
     ctx.globalCompositeOperation = 'saturation';
     ctx.fillStyle = '#888';
     ctx.fillRect(0, 0, S, S);
+    // 背景が透明な画像（PNG）の透明な部分が灰色で塗られないよう、元の形で切り抜き直す
+    if (img) {
+      ctx.globalCompositeOperation = 'destination-in';
+      const w = aspect >= 1 ? S : S * aspect;
+      const h = aspect >= 1 ? S / aspect : S;
+      ctx.drawImage(img, (S - w) / 2, S - h, w, h);
+    }
     ctx.globalCompositeOperation = 'source-over';
   }
   if (p.isNew) {
