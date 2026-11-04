@@ -114,6 +114,7 @@ function renderAll() {
   renderPalette();
   renderFixtures();
   renderForm();
+  renderCharacters();
   renderHistory();
   renderStatus();
   refreshPreview();
@@ -125,10 +126,27 @@ function normEvent(ev = {}) {
   const out = {};
   for (const f of E.FIELDS) {
     const v = ev[f.key];
+    if (f.type === 'characters') { out[f.key] = canonicalChars(v); continue; }
     out[f.key] = v && typeof v === 'object' ? v.url : (v ?? '');
     if (out[f.key] !== '' && f.type === 'number') out[f.key] = Number(out[f.key]);
   }
   return out;
+}
+// キャラクターの設定を比較用にそろえる（空の項目は無視、画像は URL で比べる）
+function canonicalChars(v) {
+  let obj = v;
+  if (typeof obj === 'string') { try { obj = JSON.parse(obj); } catch { obj = {}; } }
+  const out = {};
+  for (const id of Object.keys(obj || {}).sort()) {
+    const c = obj[id] || {};
+    const item = {};
+    for (const k of ['name', 'en', 'profile', 'color', 'image', 'hidden']) {
+      const val = k === 'image' ? E.imageUrl(c[k]) : c[k];
+      if (val) item[k] = val;
+    }
+    if (Object.keys(item).length) out[id] = item;
+  }
+  return JSON.stringify(out);
 }
 function renderStatus() {
   const differs = snapshot(state.draft) !== snapshot(state.published);
@@ -211,13 +229,65 @@ $('#previewLink').addEventListener('click', async (e) => {
 });
 
 /* ---------- タブ ---------- */
+let activeTab = 'layout';
 document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', String(x === t)));
   document.querySelectorAll('.panel').forEach((p) => { p.hidden = p.dataset.panel !== t.dataset.tab; });
+  const wasEntrance = activeTab === 'entrance';
+  activeTab = t.dataset.tab;
+  // 「入口の画面」タブでは、右側を入口のプレビューに切り替える
+  const onEntrance = activeTab === 'entrance';
+  $('.preview').classList.toggle('is-entrance', onEntrance);
+  $('#entrancePreview').hidden = !onEntrance;
+  if (onEntrance) openEntrancePreview();
+  else if (wasEntrance) refreshPreview();
+  if (activeTab === 'characters' && preview) {
+    preview.setView('back');
+    document.querySelectorAll('#previewViews button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.view === 'back')));
+  }
 }));
+
+/* ---------- 入口の画面のプレビュー（実際のサイトを iframe で小さく表示） ---------- */
+const DEVICES = { pc: [1280, 800], sp: [390, 844] };
+let device = 'pc';
+function openEntrancePreview() {
+  const frame = $('#epFrame');
+  if (!frame.src) frame.src = '/?entrance-preview=1';
+  fitEntrance();
+  postEntrance();
+}
+function fitEntrance() {
+  const [dw, dh] = DEVICES[device];
+  const w = $('.preview').clientWidth;
+  const maxH = device === 'sp' ? Math.max(360, window.innerHeight - 260) : Infinity;
+  const scale = Math.min(w / dw, maxH / dh);
+  const stage = $('#epStage');
+  stage.style.width = `${Math.round(dw * scale)}px`;
+  stage.style.height = `${Math.round(dh * scale)}px`;
+  const frame = $('#epFrame');
+  frame.style.width = `${dw}px`;
+  frame.style.height = `${dh}px`;
+  frame.style.transform = `scale(${scale})`;
+}
+function postEntrance() {
+  const win = $('#epFrame').contentWindow;
+  if (win && state.draft) win.postMessage({ type: 'haneul:entrance', event: state.draft.event }, location.origin);
+}
+window.addEventListener('message', (e) => {
+  if (e.origin === location.origin && e.source === $('#epFrame').contentWindow && e.data?.type === 'haneul:entrance-ready') postEntrance();
+});
+window.addEventListener('resize', () => { if (activeTab === 'entrance') fitEntrance(); });
+$('#epDevices').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-device]');
+  if (!b) return;
+  device = b.dataset.device;
+  document.querySelectorAll('#epDevices button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  fitEntrance();
+});
 
 /* ---------- プレビュー ---------- */
 function refreshPreview() {
+  if (activeTab === 'entrance') { postEntrance(); return; }
   if (!preview) return;
   E.applyEvent(state.draft.event);
   E.applyLayout(currentLayout());
@@ -418,29 +488,40 @@ document.addEventListener('keydown', (e) => {
    内装・イベント
    ========================================================== */
 function themeDefault(path) {
-  const base = window.THEMES[state.draft.event.theme_preset] || window.THEMES[E.original.theme];
+  const ev = state.draft.event;
+  const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
+  if (path.startsWith('const.')) return path.slice(6);
+  if (path === 'shop.themeLabel') return `${ev.title || base.name} ― ${ev.subtitle || base.title}`;
+  if (path.startsWith('shop.')) return E.original[path.slice(5)];
   if (path.startsWith('layout.')) return path.split('.').slice(1).reduce((o, k) => o?.[k], E.original.layout);
   return path.split('.').reduce((o, k) => o?.[k], base);
 }
 
+const FORMS = { event: '#eventForm', entrance: '#entranceForm' };
 function renderForm() {
   const ev = state.draft.event;
-  const groups = [...new Set(E.FIELDS.map((f) => f.group))];
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
   const placeholders = { title: base.name, subtitle: base.title, period: E.original.period, novelty_threshold: E.original.novelty.threshold, novelty_name: E.original.novelty.name };
-  $('#eventForm').innerHTML = groups.map((g) => `
-    <fieldset class="fgroup"><legend>${esc(g)}</legend>
-      ${E.FIELDS.filter((f) => f.group === g).map((f) => fieldHtml(f, ev[f.key], placeholders)).join('')}
-    </fieldset>`).join('');
+  for (const [tab, sel] of Object.entries(FORMS)) {
+    const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab);
+    const groups = [...new Set(fields.map((f) => f.group))];
+    $(sel).innerHTML = groups.map((g) => `
+      <fieldset class="fgroup"><legend>${esc(g)}</legend>
+        ${fields.filter((f) => f.group === g).map((f) => fieldHtml(f, ev[f.key], placeholders)).join('')}
+      </fieldset>`).join('');
+  }
 }
 
 function fieldHtml(f, value, placeholders) {
   const id = `f_${f.key}`;
   const label = `<label for="${id}">${esc(f.label)}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`;
+  const defaultColorLabel = f.tab === 'entrance' ? '初期の色' : 'テーマの色';
   let input = '';
   if (f.type === 'text' || f.type === 'number') {
     const ph = f.placeholderPath ? themeDefault(f.placeholderPath) : placeholders[f.key];
     input = `<input id="${id}" data-key="${f.key}" type="${f.type}" value="${esc(value ?? '')}" placeholder="${esc(ph ?? '')}" ${f.type === 'number' ? 'min="0" step="100"' : 'maxlength="120"'}>`;
+  } else if (f.type === 'textarea') {
+    input = `<textarea id="${id}" data-key="${f.key}" maxlength="300" rows="2">${esc(value ?? '')}</textarea>`;
   } else if (f.type === 'select') {
     const opts = f.options();
     const first = f.key === 'theme_preset' ? [{ value: '', label: `サイトの初期設定（${window.THEMES[E.original.theme]?.name || ''}）` }] : [];
@@ -450,8 +531,8 @@ function fieldHtml(f, value, placeholders) {
     const def = themeDefault(f.themePath) || '#ffffff';
     const v = value || def;
     input = `<span class="color-row"><input id="${id}" data-key="${f.key}" type="color" value="${esc(v)}">
-      <span class="color-note">${value ? esc(value) : 'テーマの色'}</span>
-      ${value ? `<button type="button" class="btn btn-small btn-ghost" data-reset="${f.key}">テーマの色に戻す</button>` : ''}</span>`;
+      <span class="color-note">${value ? esc(value) : defaultColorLabel}</span>
+      ${value ? `<button type="button" class="btn btn-small btn-ghost" data-reset="${f.key}">${defaultColorLabel}に戻す</button>` : ''}</span>`;
   } else if (f.type === 'image') {
     const url = E.imageUrl(value);
     input = `<span class="image-row">
@@ -462,46 +543,127 @@ function fieldHtml(f, value, placeholders) {
   return `<div class="field">${label}${input}</div>`;
 }
 
-$('#eventForm').addEventListener('input', (e) => {
-  const key = e.target.dataset.key;
+for (const sel of Object.values(FORMS)) {
+  const form = $(sel);
+  form.addEventListener('input', (e) => {
+    const key = e.target.dataset.key;
+    if (!key) return;
+    const f = E.FIELDS.find((x) => x.key === key);
+    let v = e.target.value;
+    if (f.type === 'number') v = v === '' ? '' : Math.max(0, Math.round(Number(v)));
+    state.draft.event[key] = v;
+    if (f.type === 'color') {
+      const note = e.target.parentElement.querySelector('.color-note');
+      if (note) note.textContent = v;
+    }
+    changed();
+  });
+  form.addEventListener('change', async (e) => {
+    const key = e.target.dataset.key;
+    // テーマや色の変更で「テーマの色」の表示が変わるので描き直す
+    if (key === 'theme_preset' || e.target.type === 'color') { renderForm(); return; }
+    const input = e.target.closest('[data-upload]');
+    if (!input || !input.files[0]) return;
+    const file = input.files[0];
+    if (file.size > 8 * 1024 * 1024) { toast('8MB 以下の画像を選んでください', { error: true }); return; }
+    toast('画像をアップロードしています…');
+    try {
+      const img = await api('upload', { method: 'POST', raw: file, type: file.type });
+      state.draft.event[input.dataset.upload] = img;
+      renderForm();
+      changed();
+      toast('画像を設定しました');
+    } catch (err) {
+      toast(err.message, { error: true });
+    }
+  });
+  form.addEventListener('click', (e) => {
+    const reset = e.target.closest('[data-reset]');
+    if (!reset) return;
+    state.draft.event[reset.dataset.reset] = '';
+    renderForm();
+    changed();
+  });
+}
+
+/* ==========================================================
+   キャラクター
+   ========================================================== */
+const charEdits = () => {
+  const v = state.draft.event.characters;
+  if (!v || typeof v !== 'object') state.draft.event.characters = {};
+  return state.draft.event.characters;
+};
+
+function renderCharacters() {
+  const edits = charEdits();
+  E.applyCharacters(edits); // window.CHARACTERS に反映した結果で表示する
+  $('#charEditor').innerHTML = E.original.characters.map((o) => {
+    const v = edits[o.id] || {};
+    const c = window.CHARACTERS.find((x) => x.id === o.id);
+    const img = E.imageUrl(v.image);
+    return `<div class="char-card ${v.hidden ? 'is-hidden' : ''}" data-char="${esc(o.id)}">
+      <div class="char-art">
+        <span class="art" style="background:color-mix(in srgb, ${esc(c.color)} 25%, transparent)">${window.Art.characterSVG(c)}</span>
+        <label class="btn btn-small">画像を選ぶ<input type="file" accept="image/png,image/jpeg,image/webp" data-char-upload hidden></label>
+        ${img ? '<button type="button" class="btn btn-small btn-ghost" data-char-reset="image">元の絵に戻す</button>' : ''}
+      </div>
+      <div class="char-fields">
+        <div class="field"><label>名前</label><input type="text" data-char-key="name" maxlength="20" value="${esc(v.name || '')}" placeholder="${esc(o.name)}"></div>
+        <div class="field"><label>英語名</label><input type="text" data-char-key="en" maxlength="30" value="${esc(v.en || '')}" placeholder="${esc(o.en)}"></div>
+        <div class="field"><label>プロフィール</label><textarea data-char-key="profile" maxlength="200" rows="2" placeholder="${esc(o.profile)}">${esc(v.profile || '')}</textarea></div>
+        <div class="field"><label>色</label><span class="color-row"><input type="color" data-char-key="color" value="${esc(v.color || o.color)}">
+          <span class="color-note">${v.color ? esc(v.color) : '元の色'}</span>
+          ${v.color ? '<button type="button" class="btn btn-small btn-ghost" data-char-reset="color">元の色に戻す</button>' : ''}</span></div>
+        <div class="field"><label>表示</label><label class="check"><input type="checkbox" data-char-key="hidden" ${v.hidden ? 'checked' : ''}> 表示しない</label></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function charChanged({ rerender = false } = {}) {
+  if (rerender) renderCharacters();
+  changed();
+}
+
+$('#charEditor').addEventListener('input', (e) => {
+  const key = e.target.dataset.charKey;
   if (!key) return;
-  const f = E.FIELDS.find((x) => x.key === key);
-  let v = e.target.value;
-  if (f.type === 'number') v = v === '' ? '' : Math.max(0, Math.round(Number(v)));
-  state.draft.event[key] = v;
-  if (f.type === 'color') {
+  const id = e.target.closest('[data-char]').dataset.char;
+  const edits = charEdits();
+  edits[id] ||= {};
+  edits[id][key] = key === 'hidden' ? e.target.checked : e.target.value;
+  if (key === 'color') {
     const note = e.target.parentElement.querySelector('.color-note');
-    if (note) note.textContent = v;
+    if (note) note.textContent = e.target.value;
   }
-  changed();
+  E.applyCharacters(edits);
+  charChanged();
 });
-$('#eventForm').addEventListener('change', (e) => {
-  const key = e.target.dataset.key;
-  // テーマや色の変更で「テーマの色」の表示が変わるので描き直す
-  if (key === 'theme_preset' || e.target.type === 'color') renderForm();
-});
-$('#eventForm').addEventListener('click', (e) => {
-  const reset = e.target.closest('[data-reset]');
-  if (!reset) return;
-  state.draft.event[reset.dataset.reset] = '';
-  renderForm();
-  changed();
-});
-$('#eventForm').addEventListener('change', async (e) => {
-  const input = e.target.closest('[data-upload]');
-  if (!input || !input.files[0]) return;
-  const file = input.files[0];
+$('#charEditor').addEventListener('change', async (e) => {
+  const card = e.target.closest('[data-char]');
+  if (!card) return;
+  if (e.target.dataset.charKey === 'hidden' || e.target.dataset.charKey === 'color') { renderCharacters(); return; }
+  if (!e.target.matches('[data-char-upload]') || !e.target.files[0]) return;
+  const file = e.target.files[0];
   if (file.size > 8 * 1024 * 1024) { toast('8MB 以下の画像を選んでください', { error: true }); return; }
   toast('画像をアップロードしています…');
   try {
     const img = await api('upload', { method: 'POST', raw: file, type: file.type });
-    state.draft.event[input.dataset.upload] = img;
-    renderForm();
-    changed();
+    const edits = charEdits();
+    edits[card.dataset.char] ||= {};
+    edits[card.dataset.char].image = img;
+    charChanged({ rerender: true });
     toast('画像を設定しました');
-  } catch (err) {
-    toast(err.message, { error: true });
-  }
+  } catch (err) { toast(err.message, { error: true }); }
+});
+$('#charEditor').addEventListener('click', (e) => {
+  const reset = e.target.closest('[data-char-reset]');
+  if (!reset) return;
+  const id = reset.closest('[data-char]').dataset.char;
+  const edits = charEdits();
+  if (edits[id]) edits[id][reset.dataset.charReset] = '';
+  charChanged({ rerender: true });
 });
 
 /* ==========================================================

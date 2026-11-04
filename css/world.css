@@ -157,7 +157,7 @@ body.world-fs .world {
   background: color-mix(in srgb, var(--c) 22%, var(--surface));
   font-weight: 700; font-size: .85rem;
 }
-.pick-char svg { width: 100%; max-width: 76px; height: auto; }
+.pick-char svg, .pick-char .char-img { width: 100%; max-width: 76px; height: auto; }
 .pick-char[aria-pressed="true"] { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent); }
 .pick-name { display: grid; gap: 6px; font-size: .85rem; color: var(--ink-soft); text-align: left; }
 .pick-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }

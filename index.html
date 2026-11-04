@@ -12,17 +12,19 @@
   <link rel="stylesheet" href="css/world.css">
 </head>
 <body>
-  <!-- 入口 -->
+  <!-- 入口（内容は店内管理画面の「入口の画面」で編集。js/app.js の renderEntrance で表示） -->
   <div class="entrance" id="entrance">
-    <div class="sky" aria-hidden="true">
+    <div class="entrance-bg" id="entBg" aria-hidden="true"></div>
+    <div class="sky" id="entSky" aria-hidden="true">
       <span class="cloud c1"></span><span class="cloud c2"></span><span class="cloud c3"></span>
     </div>
     <div class="entrance-inner">
-      <p class="entrance-kicker" data-bind="title"></p>
-      <h1 class="logo-big"><span data-bind="brand"></span></h1>
-      <p class="entrance-theme" data-bind="themeLabel"></p>
+      <p class="entrance-kicker" id="entKicker"></p>
+      <h1 class="logo-big"><img class="entrance-logo" id="entLogo" alt="" hidden><span id="entHeading"></span></h1>
+      <p class="entrance-theme" id="entMessage"></p>
       <div class="entrance-cast" id="entranceCast"></div>
-      <p class="entrance-period" data-bind="period"></p>
+      <p class="entrance-period" id="entPeriod"></p>
+      <p class="entrance-notice" id="entNotice" hidden></p>
       <button class="btn btn-primary btn-lg" id="enterBtn">お店に入る</button>
     </div>
     <div class="door door-left" aria-hidden="true"></div>

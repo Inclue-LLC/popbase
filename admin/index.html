@@ -45,6 +45,8 @@
     <nav class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="layout" aria-selected="true">商品の配置</button>
       <button class="tab" role="tab" data-tab="event" aria-selected="false">内装・イベント</button>
+      <button class="tab" role="tab" data-tab="entrance" aria-selected="false">入口の画面</button>
+      <button class="tab" role="tab" data-tab="characters" aria-selected="false">キャラクター</button>
       <button class="tab" role="tab" data-tab="history" aria-selected="false">公開の履歴</button>
     </nav>
 
@@ -81,6 +83,20 @@
           <form class="event-form" id="eventForm" onsubmit="return false"></form>
         </div>
 
+        <!-- 入口の画面 -->
+        <div class="panel" data-panel="entrance" hidden>
+          <p class="help">お客さんが最初に見る「お店に入る」前の画面です。空欄の項目は初期表示（イベント名・テーマの色など）のままになります。
+            右のプレビューは実際の画面と同じ表示です。</p>
+          <form class="event-form" id="entranceForm" onsubmit="return false"></form>
+        </div>
+
+        <!-- キャラクター -->
+        <div class="panel" data-panel="characters" hidden>
+          <p class="help">ご案内の「キャラクター紹介」・入口・店内の壁の絵・アバター選びに反映されます。空欄の項目は元のままです。
+            「表示しない」にすると、紹介・入口・壁の絵・アバター選びから外れます（商品はそのまま）。</p>
+          <div class="char-editor" id="charEditor"></div>
+        </div>
+
         <!-- 公開の履歴 -->
         <div class="panel" data-panel="history" hidden>
           <div class="history-summary" id="historySummary"></div>
@@ -94,7 +110,16 @@
       </section>
 
       <!-- 3D プレビュー -->
-      <section class="preview" aria-label="店内のプレビュー">
+      <section class="preview" aria-label="プレビュー">
+        <!-- 入口の画面のプレビュー（実際のサイトを小さく表示） -->
+        <div class="entrance-preview" id="entrancePreview" hidden>
+          <div class="ep-stage" id="epStage"><iframe id="epFrame" title="入口の画面のプレビュー" tabindex="-1"></iframe></div>
+          <div class="preview-views" id="epDevices">
+            <button data-device="pc" aria-pressed="true">PC</button>
+            <button data-device="sp" aria-pressed="false">スマホ</button>
+          </div>
+          <p class="preview-note">ここではボタンを押しても入店しません。</p>
+        </div>
         <div class="preview-box" id="previewBox">
           <div class="preview-loading" id="previewLoading">店内を準備しています…</div>
         </div>

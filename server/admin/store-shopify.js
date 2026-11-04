@@ -12,7 +12,7 @@
  *   SHOPIFY_API_VERSION    既定 2025-01
  *   SHOPIFY_COLLECTION     店内に並べるコレクションのハンドル（既定 popup）
  */
-const { KEYS, IMAGE, cleanEvent, cleanLayout, flatten } = require('./fields');
+const { KEYS, IMAGE, JSON_KEYS, cleanEvent, cleanLayout, flatten } = require('./fields');
 
 const DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
 const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN;
@@ -57,6 +57,7 @@ async function readEntry(handle) {
     const x = f[k];
     if (!x || x.value == null) { event[k] = ''; continue; }
     if (IMAGE.includes(k)) event[k] = x.reference?.image?.url ? { id: x.value, url: x.reference.image.url } : '';
+    else if (JSON_KEYS.includes(k)) { try { event[k] = JSON.parse(x.value); } catch { event[k] = ''; } }
     else event[k] = x.value;
   }
   let layout = null;
@@ -71,6 +72,7 @@ async function writeEntry(handle, event, layout, meta) {
     const v = event[k];
     let value = '';
     if (IMAGE.includes(k)) value = v && typeof v === 'object' ? v.id : '';
+    else if (JSON_KEYS.includes(k)) value = v && typeof v === 'object' ? JSON.stringify(v) : '';
     else value = v == null ? '' : String(v);
     return { key: k, value };
   });

@@ -49,8 +49,22 @@ const EVENT_FIELDS = [
   t('left_label', '左の棚の看板（日本語）', 'single_line_text_field'),
   t('right_title', '右の棚の看板（英字）', 'single_line_text_field'),
   t('right_label', '右の棚の看板（日本語）', 'single_line_text_field'),
+  t('font', 'ショップの基本フォント', 'single_line_text_field'),
   t('novelty_threshold', '特典の条件金額', 'number_integer'),
   t('novelty_name', '特典の名前', 'single_line_text_field'),
+  t('entrance_kicker', '入口：上の小さい文字', 'single_line_text_field'),
+  t('entrance_heading', '入口：大きい見出し', 'single_line_text_field'),
+  t('entrance_message', '入口：見出しの下の文字', 'single_line_text_field'),
+  t('entrance_notice', '入口：お知らせ', 'multi_line_text_field'),
+  t('entrance_button', '入口：ボタンの文字', 'single_line_text_field'),
+  t('entrance_logo', '入口：ロゴ画像', 'file_reference'),
+  t('entrance_image', '入口：背景の画像', 'file_reference'),
+  t('entrance_color_top', '入口：背景の色（上）', 'color'),
+  t('entrance_color_bottom', '入口：背景の色（下）', 'color'),
+  t('entrance_heading_color', '入口：大きい見出しの色', 'color'),
+  t('entrance_text_color', '入口：そのほかの文字の色', 'color'),
+  t('entrance_characters', '入口：キャラクター', 'single_line_text_field'),
+  t('characters', 'キャラクター（管理画面が書き込みます）', 'json'),
   t('layout', '棚の配置（管理画面が書き込みます）', 'json'),
   t('admin_meta', '管理情報（管理画面が書き込みます）', 'json'),
 ];
@@ -80,7 +94,31 @@ const PRODUCT_FIELDS = [
   });
   const moErr = mo.metaobjectDefinitionCreate.userErrors;
   if (moErr.length && !moErr.some((e) => e.code === 'TAKEN')) throw new Error(moErr.map((e) => e.message).join(' / '));
-  console.log(moErr.length ? '・POP UPイベント の定義はすでにあります' : '・POP UPイベント の定義を作成しました');
+  if (!moErr.length) console.log('・POP UPイベント の定義を作成しました');
+  else {
+    // すでにある定義に、足りないフィールド（新しく追加した項目）だけを追加する
+    const cur = await gql(`
+      query Existing($type: String!) {
+        metaobjectDefinitionByType(type: $type) { id fieldDefinitions { key } }
+      }`, { type: 'popup_event' });
+    const def = cur.metaobjectDefinitionByType;
+    const have = new Set(def.fieldDefinitions.map((f) => f.key));
+    const missing = EVENT_FIELDS.filter((f) => !have.has(f.key));
+    if (missing.length) {
+      const up = await gql(`
+        mutation Update($id: ID!, $definition: MetaobjectDefinitionUpdateInput!) {
+          metaobjectDefinitionUpdate(id: $id, definition: $definition) {
+            metaobjectDefinition { id }
+            userErrors { field message code }
+          }
+        }`, { id: def.id, definition: { fieldDefinitions: missing.map((f) => ({ create: f })) } });
+      const upErr = up.metaobjectDefinitionUpdate.userErrors;
+      if (upErr.length) throw new Error(upErr.map((e) => e.message).join(' / '));
+      console.log(`・POP UPイベント の定義に ${missing.length} 項目を追加しました（${missing.map((f) => f.key).join(', ')}）`);
+    } else {
+      console.log('・POP UPイベント の定義はすでにあります（追加する項目はありません）');
+    }
+  }
 
   for (const f of PRODUCT_FIELDS) {
     const r = await gql(`

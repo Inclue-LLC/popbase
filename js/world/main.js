@@ -28,6 +28,8 @@ const CLICK_STEP = 3;
 
 async function main() {
   await window.AppReady;
+  // 管理画面の「入口の画面」プレビューでは店内は使わない
+  if (new URLSearchParams(location.search).has('entrance-preview')) return;
   const root = $('#world');
   const labelsEl = $('#worldLabels');
 
@@ -59,10 +61,7 @@ async function main() {
 
   // 看板の文字に丸ゴシックを使うため、フォントの読み込みを少し待つ
   try {
-    await Promise.race([
-      Promise.all(['800 20px "M PLUS Rounded 1c"', '500 20px "M PLUS Rounded 1c"', '700 20px "M PLUS Rounded 1c"'].map((f) => document.fonts.load(f))),
-      new Promise((r) => setTimeout(r, 2500)),
-    ]);
+    await window.HaneulEvent.fontReady();
   } catch { /* noop */ }
 
   /* ---------- 店内（テーマ） ---------- */
@@ -146,9 +145,9 @@ async function main() {
   const picker = $('#avatarPicker');
   let pick = { avatar: self.avatar, name: self.name };
   function renderPicker() {
-    $('#pickChars').innerHTML = window.CHARACTERS.map((c) => `
+    $('#pickChars').innerHTML = window.CHARACTERS.filter((c) => !c.hidden || c.id === pick.avatar).map((c) => `
       <button class="pick-char" data-avatar="${c.id}" aria-pressed="${pick.avatar === c.id}" style="--c:${c.color}">
-        ${window.Art.characterSVG(c)}<span>${c.name}</span></button>`).join('');
+        ${window.Art.characterSVG(c)}<span>${c.name.replace(/[&<>"']/g, '')}</span></button>`).join('');
     $('#pickNames').innerHTML = NAMES.map((n, i) => `<option value="${i}">${n}</option>`).join('');
     $('#pickNames').value = String(pick.name);
     $('#pickPreview').textContent = displayName(pick.avatar, pick.name);
@@ -314,8 +313,9 @@ async function main() {
     if (best !== nearest) {
       nearest = best;
       promptEl.hidden = !best;
-      if (best) promptBtn.innerHTML = `<b>${best.type === 'product' ? 'この商品を見る' : best.label}</b>` +
-        (best.type === 'product' ? `<span>${best.label}　¥${best.price.toLocaleString('ja-JP')}</span>` : '') +
+      const escHtml = (v) => String(v).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+      if (best) promptBtn.innerHTML = `<b>${best.type === 'product' ? 'この商品を見る' : escHtml(best.label)}</b>` +
+        (best.type === 'product' ? `<span>${escHtml(best.label)}　¥${best.price.toLocaleString('ja-JP')}</span>` : '') +
         '<kbd>Enter</kbd>';
     }
 

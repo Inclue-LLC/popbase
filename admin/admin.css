@@ -170,3 +170,21 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 }
 .toast.show { transform: translate(-50%, 0); opacity: 1; }
 .toast.error { background: var(--danger); color: #fff; }
+
+/* 入口の画面のプレビュー */
+.entrance-preview { display: grid; gap: 8px; }
+.ep-stage { position: relative; overflow: hidden; border-radius: var(--radius); background: var(--surface-2); margin: 0 auto; box-shadow: 0 0 0 1.5px var(--line); }
+.ep-stage iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; background: #fff; pointer-events: auto; }
+.preview.is-entrance .preview-box, .preview.is-entrance #previewViews, .preview.is-entrance > .preview-note { display: none; }
+.field textarea { width: 100%; min-height: 64px; padding: .45em .7em; border-radius: 8px; border: 1.5px solid var(--line); background: var(--surface); resize: vertical; font: inherit; color: inherit; }
+
+/* キャラクター */
+.char-editor { display: grid; gap: 14px; }
+.char-card { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 16px; border: 1.5px solid var(--line); border-radius: 12px; padding: 14px; }
+.char-card.is-hidden { opacity: .6; }
+@media (max-width: 640px) { .char-card { grid-template-columns: 1fr; } }
+.char-art { display: grid; gap: 6px; justify-items: center; align-content: start; }
+.char-art .art { width: 110px; height: 110px; border-radius: 14px; display: grid; place-items: center; padding: 6px; }
+.char-art .art svg, .char-art .art img { width: 100%; height: 100%; object-fit: contain; }
+.char-fields { display: grid; gap: 10px; }
+.char-fields .field { grid-template-columns: 110px minmax(0, 1fr); }

@@ -92,6 +92,7 @@ export class Preview {
       this.pending = null;
       this.loadingEl.hidden = false;
       try {
+        await window.HaneulEvent.fontReady(); // 看板の文字を選んだフォントで描くため
         const built = await buildRoom(window.THEMES[key]);
         if (this.room) { this.scene.remove(this.room.group); disposeRoom(this.room.group); }
         this.room = built;

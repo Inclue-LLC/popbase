@@ -59,6 +59,8 @@ function serveStatic(req, res) {
       'content-type': MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream',
       'cache-control': top === 'vendor' || top === 'images' ? 'public, max-age=86400' : 'no-cache',
       'x-content-type-options': 'nosniff',
+      // 管理画面は他のサイトの枠（iframe）に埋め込ませない
+      ...(top === 'admin' ? { 'x-frame-options': 'DENY', 'content-security-policy': "frame-ancestors 'none'" } : {}),
     });
     fs.createReadStream(filePath).pipe(res);
   });

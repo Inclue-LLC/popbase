@@ -4,7 +4,9 @@
  */
 import * as THREE from '../../vendor/three.module.min.js';
 
-export const FONT = "'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Yu Gothic', sans-serif";
+// 看板・値札の文字。店内管理画面で選んだショップのフォント（js/event.js の applyFont）を使う
+const DEFAULT_FONT = "'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Yu Gothic', sans-serif";
+export const font = () => window.SHOP?.fontStack || DEFAULT_FONT;
 export const PPM = 128; // 壁・看板の解像度（1m あたりの px）
 
 const imageCache = new Map();
@@ -206,7 +208,7 @@ function drawDoor(ctx, W, H, theme) {
   rr(ctx, W / 2 - 1.1 * PPM, y - 0.62 * PPM, 2.2 * PPM, 0.42 * PPM, 20);
   ctx.fill();
   ctx.fillStyle = theme.sign.ink;
-  ctx.font = `800 ${0.22 * PPM}px ${FONT}`;
+  ctx.font = `800 ${0.22 * PPM}px ${font()}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('ENTRANCE', W / 2, y - 0.41 * PPM);
@@ -289,7 +291,7 @@ export function signTexture(lines, sign, wM, hM, { radius = 0.18 } = {}) {
   let y = H / 2 - (total * H) / 2;
   for (const l of lines) {
     const fs = l.size * H;
-    ctx.font = `${l.weight || 800} ${fs * 0.8}px ${FONT}`;
+    ctx.font = `${l.weight || 800} ${fs * 0.8}px ${font()}`;
     ctx.fillStyle = l.color || sign.ink;
     if (sign.style === 'neon') { ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 18; }
     if (l.spacing) ctx.letterSpacing = `${l.spacing}px`;
@@ -325,14 +327,14 @@ export function tagTexture(name, price, { soldOut = false } = {}) {
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
   ctx.fillStyle = '#6f6880';
-  ctx.font = `500 34px ${FONT}`;
+  ctx.font = `500 34px ${font()}`;
   let label = name.replace(/【.*?】/g, '').trim();
   while (ctx.measureText(label).width > 300 && label.length > 2) label = label.slice(0, -1);
   if (label !== name.replace(/【.*?】/g, '').trim()) label += '…';
   ctx.fillText(label, 26, 64);
   ctx.textAlign = 'right';
   ctx.fillStyle = soldOut ? '#c0392b' : '#3a3346';
-  ctx.font = `800 42px ${FONT}`;
+  ctx.font = `800 42px ${font()}`;
   ctx.fillText(soldOut ? 'SOLD OUT' : `¥${price.toLocaleString('ja-JP')}`, 488, 64);
   return toTexture(c);
 }
@@ -363,7 +365,7 @@ export async function productTexture(p) {
     ctx.fillStyle = '#ffd76a';
     ctx.fill();
     ctx.fillStyle = '#5a4300';
-    ctx.font = `800 34px ${FONT}`;
+    ctx.font = `800 34px ${font()}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('NEW', S - 82, 40);
@@ -373,9 +375,15 @@ export async function productTexture(p) {
 
 /** キャラクター（アバター・壁の絵） */
 export async function characterTexture(character, size = 256) {
-  const img = await svgImage(window.Art.characterSVG(character), size, size);
+  const img = character.image ? await loadImage(character.image) : await svgImage(window.Art.characterSVG(character), size, size);
   const c = makeCanvas(size, size);
-  if (img) c.getContext('2d').drawImage(img, 0, 0, size, size);
+  if (img) {
+    // 縦横比を保って、下揃えで収める
+    const k = Math.min(size / img.width, size / img.height);
+    const w = img.width * k;
+    const h = img.height * k;
+    c.getContext('2d').drawImage(img, (size - w) / 2, size - h, w, h);
+  }
   return toTexture(c);
 }
 

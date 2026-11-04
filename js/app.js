@@ -8,6 +8,7 @@ window.AppReady = (async function () {
   const shopify = window.ShopifyData?.enabled ? window.ShopifyData : null;
   const $ = (sel, root = document) => root.querySelector(sel);
   const yen = (n) => `¥${n.toLocaleString('ja-JP')}`;
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   const charById = Object.fromEntries(CHARACTERS.map((c) => [c.id, c]));
   const NO_CHAR = { id: '', name: '', color: '#e3e6f0' };
   const charOf = (p) => charById[p.character] || NO_CHAR;
@@ -40,17 +41,60 @@ window.AppReady = (async function () {
   $('#noveltyInfo').textContent = `税込 ${yen(SHOP.novelty.threshold)} 以上お買い上げで「${SHOP.novelty.name}」をプレゼント。`;
   $('#shippingInfo').textContent = `全国一律 ${yen(SHOP.shippingFee)}。${yen(SHOP.freeShippingThreshold)} 以上で送料無料。`;
 
-  /* ---------- 入口 ---------- */
-  $('#entranceCast').innerHTML = CHARACTERS.map((c, i) =>
-    `<div class="bob" style="animation-delay:${i * 0.25}s">${Art.characterSVG(c)}</div>`).join('');
+  /* ---------- 入口 ----------
+   * 文字・画像・色は店内管理画面の「入口の画面」で設定（SHOP.entrance。js/event.js の applyEvent で反映）。
+   * 管理画面のプレビュー（?entrance-preview=1）では、管理画面から届いた下書きをその場で表示する。 */
+  const entrancePreview = new URLSearchParams(location.search).has('entrance-preview');
+  const visibleChars = () => CHARACTERS.filter((c) => !c.hidden);
+
+  function renderEntrance() {
+    $('#entranceCast').innerHTML = visibleChars().map((c, i) =>
+      `<div class="bob" style="animation-delay:${i * 0.25}s">${Art.characterSVG(c)}</div>`).join('');
+    const el = $('#entrance');
+    if (!el) return;
+    const en = SHOP.entrance || {};
+    const heading = en.heading || SHOP.brand;
+    $('#entKicker').textContent = en.kicker || SHOP.title;
+    $('#entHeading').textContent = heading;
+    const logo = $('#entLogo');
+    logo.hidden = !en.logo;
+    $('#entHeading').hidden = !!en.logo;
+    if (en.logo) { logo.src = en.logo; logo.alt = heading; }
+    $('#entMessage').textContent = en.message || SHOP.themeLabel || '';
+    $('#entPeriod').textContent = SHOP.period || '';
+    $('#entNotice').textContent = en.notice || '';
+    $('#entNotice').hidden = !en.notice;
+    $('#enterBtn').textContent = en.button || 'お店に入る';
+    $('#entranceCast').hidden = en.characters === 'hide';
+    const bg = $('#entBg');
+    bg.style.backgroundImage = en.image ? `url("${String(en.image).replace(/["\\\n]/g, '')}")` : '';
+    el.classList.toggle('has-image', !!en.image);
+    el.style.setProperty('--ent-ink', en.textColor || '');
+    el.style.setProperty('--ent-heading', en.headingColor || '');
+    if (!en.textColor) el.style.removeProperty('--ent-ink');
+    if (!en.headingColor) el.style.removeProperty('--ent-heading');
+    el.classList.add('is-ready');
+  }
+  renderEntrance();
 
   const entrance = $('#entrance');
-  if (sessionStorageSafe('entered')) entrance.remove();
+  if (sessionStorageSafe('entered') && !entrancePreview) entrance.remove();
   $('#enterBtn')?.addEventListener('click', () => {
+    if (entrancePreview) return; // 管理画面のプレビューでは入店しない
     entrance.classList.add('open');
     try { sessionStorage.setItem('haneul:entered', '1'); } catch { /* noop */ }
     setTimeout(() => entrance.remove(), 1400);
   });
+  if (entrancePreview) {
+    // 管理画面（同じサイトの親ウィンドウ）から届いた下書きを表示する
+    window.addEventListener('message', (e) => {
+      if (e.origin !== location.origin || e.source !== window.parent || e.data?.type !== 'haneul:entrance') return;
+      window.HaneulEvent.applyEvent(e.data.event || {});
+      renderEntrance();
+      renderCast();
+    });
+    window.parent?.postMessage({ type: 'haneul:entrance-ready' }, location.origin);
+  }
   function sessionStorageSafe(key) {
     try { return sessionStorage.getItem(`haneul:${key}`) === '1'; } catch { return false; }
   }
@@ -260,7 +304,7 @@ window.AppReady = (async function () {
     const orderNo = `HN-${Date.now().toString(36).toUpperCase().slice(-6)}`;
     $('#doneText').innerHTML = `注文番号 <strong>${orderNo}</strong><br>${t.count} 点・合計 <strong>${yen(t.total)}</strong>` +
       (t.subtotal >= SHOP.novelty.threshold ? `<br>特典「${SHOP.novelty.name}」を同梱します。` : '');
-    $('#doneCast').innerHTML = CHARACTERS.map((c, i) => `<div class="bob" style="animation-delay:${i * 0.2}s">${Art.characterSVG(c)}</div>`).join('');
+    $('#doneCast').innerHTML = visibleChars().map((c, i) => `<div class="bob" style="animation-delay:${i * 0.2}s">${Art.characterSVG(c)}</div>`).join('');
     state.cart = {};
     if (t.coupon) { state.coupon = { ...t.coupon, date: 'used' }; store.set('coupon', state.coupon); }
     saveCart();
@@ -336,11 +380,14 @@ window.AppReady = (async function () {
   });
 
   /* ---------- キャラクター紹介 ---------- */
-  $('#castGrid').innerHTML = CHARACTERS.map((c) => `
+  function renderCast() {
+    $('#castGrid').innerHTML = visibleChars().map((c) => `
     <div class="cast-card" style="--c:${c.color}">
       ${Art.characterSVG(c)}
-      <div><h4>${c.name}<small>${c.en}</small></h4><p>${c.profile}</p></div>
+      <div><h4>${esc(c.name)}<small>${esc(c.en)}</small></h4><p>${esc(c.profile)}</p></div>
     </div>`).join('');
+  }
+  renderCast();
 
   /* ---------- トースト ---------- */
   let toastTimer;

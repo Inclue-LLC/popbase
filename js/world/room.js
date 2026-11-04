@@ -125,7 +125,7 @@ export async function buildRoom(theme) {
   plate.rotation.z = -0.06;
   group.add(plate);
 
-  const chars = window.CHARACTERS;
+  const chars = window.CHARACTERS.filter((c) => !c.hidden); // 管理画面で「表示しない」にしたキャラクターは除く
   for (let i = 0; i < chars.length; i++) {
     const c = chars[i];
     const x = (i - (chars.length - 1) / 2) * 1.35;

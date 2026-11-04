@@ -21,6 +21,61 @@
 
   const opt = (pairs) => pairs.map(([value, label]) => ({ value, label }));
 
+  /* ショップの基本フォント（日本語に対応した Google Fonts から選ぶ） */
+  const FONTS = [
+    { value: '', label: 'M PLUS Rounded 1c（丸ゴシック・初期設定）', family: 'M PLUS Rounded 1c', weights: [400, 500, 700, 800] },
+    { value: 'zen-maru', label: 'Zen Maru Gothic（やさしい丸ゴシック）', family: 'Zen Maru Gothic', weights: [400, 500, 700, 900] },
+    { value: 'kosugi-maru', label: 'Kosugi Maru（すっきり丸ゴシック）', family: 'Kosugi Maru', weights: [400] },
+    { value: 'kiwi-maru', label: 'Kiwi Maru（やわらか丸明朝）', family: 'Kiwi Maru', weights: [400, 500] },
+    { value: 'noto-sans', label: 'Noto Sans JP（標準のゴシック）', family: 'Noto Sans JP', weights: [400, 500, 700, 800] },
+    { value: 'zen-kaku', label: 'Zen Kaku Gothic New（すっきりゴシック）', family: 'Zen Kaku Gothic New', weights: [400, 500, 700, 900] },
+    { value: 'noto-serif', label: 'Noto Serif JP（明朝・上品）', family: 'Noto Serif JP', weights: [400, 500, 700, 900] },
+    { value: 'yusei', label: 'Yusei Magic（マジックで書いた手書き風）', family: 'Yusei Magic', weights: [400] },
+    { value: 'hachi-maru', label: 'Hachi Maru Pop（丸いポップ体）', family: 'Hachi Maru Pop', weights: [400] },
+    { value: 'dotgothic', label: 'DotGothic16（レトロなドット文字）', family: 'DotGothic16', weights: [400] },
+  ];
+  const FALLBACK = "'Hiragino Maru Gothic ProN', 'Hiragino Sans', 'Yu Gothic', system-ui, sans-serif";
+  let fontLoading = Promise.resolve();
+  let currentFont = FONTS[0];
+
+  /** フォントを読み込んで、サイトの文字（CSS の --shop-font）と 3D 店内の看板の文字に使う */
+  function applyFont(key) {
+    const def = FONTS.find((x) => x.value === (key || '')) || FONTS[0];
+    currentFont = def;
+    window.SHOP.font = def.value;
+    window.SHOP.fontStack = `'${def.family}', ${FALLBACK}`;
+    const root = document.documentElement.style;
+    let link = document.getElementById('haneul-font');
+    if (!def.value) {
+      // 初期設定のフォントは index.html で読み込み済み
+      root.removeProperty('--shop-font');
+      link?.remove();
+      fontLoading = Promise.resolve();
+      return;
+    }
+    const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(def.family).replace(/%20/g, '+')}:wght@${def.weights.join(';')}&display=swap`;
+    if (link?.getAttribute('href') !== href) {
+      link?.remove();
+      link = document.createElement('link');
+      link.id = 'haneul-font';
+      link.rel = 'stylesheet';
+      link.href = href;
+      fontLoading = new Promise((resolve) => { link.onload = resolve; link.onerror = resolve; });
+      document.head.appendChild(link);
+    }
+    root.setProperty('--shop-font', window.SHOP.fontStack);
+  }
+
+  /** フォントの読み込みが終わるまで待つ（3D の看板を描く前に使う。最大 3 秒） */
+  async function fontReady() {
+    const def = currentFont;
+    const wait = (async () => {
+      await fontLoading;
+      await Promise.all([500, 700, 800].map((w) => document.fonts.load(`${w} 20px "${def.family}"`).catch(() => {})));
+    })();
+    await Promise.race([wait, new Promise((r) => setTimeout(r, 3000))]);
+  }
+
   /* 管理画面のフォーム定義 */
   const FIELDS = [
     { group: 'イベント', key: 'title', label: 'イベント名', hint: '看板の大きな文字', type: 'text' },
@@ -44,18 +99,57 @@
     { group: '棚の看板', key: 'left_label', label: '左の棚（日本語）', type: 'text', placeholderPath: 'layout.left.label' },
     { group: '棚の看板', key: 'right_title', label: '右の棚（英字）', type: 'text', placeholderPath: 'layout.right.title' },
     { group: '棚の看板', key: 'right_label', label: '右の棚（日本語）', type: 'text', placeholderPath: 'layout.right.label' },
+    { group: 'フォント', key: 'font', label: 'ショップの基本フォント', hint: '入口・メニュー・商品詳細・店内の看板や値札の文字に使います', type: 'select', options: () => FONTS.map((x) => ({ value: x.value, label: x.label })) },
     { group: '購入特典', key: 'novelty_threshold', label: '特典の条件金額（円）', type: 'number' },
     { group: '購入特典', key: 'novelty_name', label: '特典の名前', type: 'text' },
+
+    /* キャラクター（管理画面の「キャラクター」タブ）。値は { haru: { name, en, profile, color, image, hidden }, ... } */
+    { tab: 'characters', group: 'キャラクター', key: 'characters', label: 'キャラクター', type: 'characters' },
+
+    /* 入口の画面（管理画面の「入口の画面」タブ） */
+    { tab: 'entrance', group: '文字', key: 'entrance_kicker', label: '上の小さい文字', type: 'text', placeholderPath: 'shop.title' },
+    { tab: 'entrance', group: '文字', key: 'entrance_heading', label: '大きい見出し', hint: 'ロゴ画像を設定した場合は、画像の代替テキストになります', type: 'text', placeholderPath: 'shop.brand' },
+    { tab: 'entrance', group: '文字', key: 'entrance_message', label: '見出しの下の文字', hint: '空欄ならイベント名とサブタイトル', type: 'text', placeholderPath: 'shop.themeLabel' },
+    { tab: 'entrance', group: '文字', key: 'entrance_notice', label: 'お知らせ', hint: '会期の下に表示（例: 12/1 新作入荷！）。空欄なら表示しません', type: 'textarea' },
+    { tab: 'entrance', group: '文字', key: 'entrance_button', label: 'ボタンの文字', type: 'text', placeholderPath: 'const.お店に入る' },
+    { tab: 'entrance', group: '画像', key: 'entrance_logo', label: 'ロゴ画像', hint: '大きい見出しの代わりに表示。背景が透明な PNG がおすすめ', type: 'image' },
+    { tab: 'entrance', group: '画像', key: 'entrance_image', label: '背景の画像', hint: '画面いっぱいに表示（例: 1920×1080px）。設定すると背景の色と雲の飾りは表示しません', type: 'image' },
+    { tab: 'entrance', group: '色', key: 'entrance_color_top', label: '背景の色（上）', type: 'color', themePath: 'entrance.top' },
+    { tab: 'entrance', group: '色', key: 'entrance_color_bottom', label: '背景の色（下）', type: 'color', themePath: 'entrance.bottom' },
+    { tab: 'entrance', group: '色', key: 'entrance_heading_color', label: '大きい見出しの色', type: 'color', themePath: 'const.#ffffff' },
+    { tab: 'entrance', group: '色', key: 'entrance_text_color', label: 'そのほかの文字の色', type: 'color', themePath: 'const.#3a3346' },
+    { tab: 'entrance', group: '表示', key: 'entrance_characters', label: 'キャラクター', type: 'select', options: () => opt([['', '表示する'], ['hide', '表示しない']]) },
   ];
   const IMAGE_KEYS = FIELDS.filter((f) => f.type === 'image').map((f) => f.key);
 
   // 最初に読み込んだときの値（何度適用しても元に戻せるように保存しておく）
   const original = {
+    title: window.SHOP.title,
+    brand: window.SHOP.brand,
     theme: window.SHOP.theme,
     period: window.SHOP.period,
     novelty: { ...window.SHOP.novelty },
     layout: JSON.parse(JSON.stringify(window.STORE_LAYOUT)),
+    characters: JSON.parse(JSON.stringify(window.CHARACTERS)),
   };
+
+  /** キャラクターの変更（名前・英語名・プロフィール・色・画像・表示しない）を反映する */
+  function applyCharacters(value) {
+    let over = value || {};
+    if (typeof over === 'string') { try { over = JSON.parse(over); } catch { over = {}; } }
+    for (const c of window.CHARACTERS) {
+      const o = original.characters.find((x) => x.id === c.id);
+      const v = over[c.id] || {};
+      Object.assign(c, o, {
+        name: v.name || o.name,
+        en: v.en || o.en,
+        profile: v.profile || o.profile,
+        color: v.color || o.color,
+        image: imageUrl(v.image) || o.image || '',
+        hidden: !!v.hidden,
+      });
+    }
+  }
 
   const imageUrl = (v) => (v && typeof v === 'object' ? v.url : v) || '';
   const has = (f, k) => f[k] != null && f[k] !== '';
@@ -80,6 +174,8 @@
     set(theme.sign, 'bg', 'sign_color');
     set(theme.sign, 'ink', 'sign_text_color');
     set(theme, 'light', 'light');
+    set(theme.entrance, 'top', 'entrance_color_top');
+    set(theme.entrance, 'bottom', 'entrance_color_bottom');
     window.THEMES.event = theme;
 
     const S = window.SHOP;
@@ -87,6 +183,21 @@
     S.novelty = { ...original.novelty };
     if (has(f, 'novelty_threshold')) S.novelty.threshold = Number(f.novelty_threshold);
     if (has(f, 'novelty_name')) S.novelty.name = f.novelty_name;
+    applyFont(f.font);
+    applyCharacters(f.characters);
+    // 入口の画面（空欄は初期表示のまま）
+    S.entrance = {
+      kicker: f.entrance_kicker || '',
+      heading: f.entrance_heading || '',
+      message: f.entrance_message || '',
+      notice: f.entrance_notice || '',
+      button: f.entrance_button || '',
+      logo: imageUrl(f.entrance_logo),
+      image: imageUrl(f.entrance_image),
+      headingColor: f.entrance_heading_color || '',
+      textColor: f.entrance_text_color || '',
+      characters: f.entrance_characters || '',
+    };
 
     const L = window.STORE_LAYOUT;
     for (const side of ['left', 'right']) {
@@ -162,5 +273,8 @@
     return out;
   }
 
-  window.HaneulEvent = { FIELDS, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
+  // 何も公開されていなくても、フォントの情報（SHOP.fontStack）は用意しておく
+  applyFont('');
+
+  window.HaneulEvent = { FIELDS, FONTS, applyFont, applyCharacters, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
 })();

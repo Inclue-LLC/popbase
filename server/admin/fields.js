@@ -2,17 +2,26 @@
  * イベント設定・棚の配置の入力チェック（サーバー側）
  * キーは js/event.js の FIELDS と同じにしてください。
  */
-const TEXT = ['title', 'subtitle', 'period', 'left_title', 'left_label', 'right_title', 'right_label', 'novelty_name'];
-const COLOR = ['wall_color', 'wall_pattern_color', 'lower_color', 'trim_color', 'floor_color_1', 'floor_color_2', 'sign_color', 'sign_text_color'];
-const IMAGE = ['wall_image', 'floor_image'];
+const TEXT = ['title', 'subtitle', 'period', 'left_title', 'left_label', 'right_title', 'right_label', 'novelty_name',
+  'entrance_kicker', 'entrance_heading', 'entrance_message', 'entrance_button'];
+const MULTILINE = ['entrance_notice']; // 改行を許す（300文字まで）
+const COLOR = ['wall_color', 'wall_pattern_color', 'lower_color', 'trim_color', 'floor_color_1', 'floor_color_2', 'sign_color', 'sign_text_color',
+  'entrance_color_top', 'entrance_color_bottom', 'entrance_heading_color', 'entrance_text_color'];
+const IMAGE = ['wall_image', 'floor_image', 'entrance_logo', 'entrance_image'];
 const SELECT = {
   theme_preset: ['', 'sky', 'night', 'holiday', 'spring'],
   wall_pattern: ['', 'clouds', 'stars', 'flowers', 'hearts', 'dots', 'stripes', 'gingham', 'none'],
   floor_style: ['', 'wood', 'check', 'tile', 'carpet'],
   light: ['', 'day', 'night'],
+  entrance_characters: ['', 'hide'],
+  // js/event.js の FONTS と同じ値
+  font: ['', 'zen-maru', 'kosugi-maru', 'kiwi-maru', 'noto-sans', 'zen-kaku', 'noto-serif', 'yusei', 'hachi-maru', 'dotgothic'],
 };
 const NUMBER = ['novelty_threshold'];
-const KEYS = [...TEXT, ...COLOR, ...IMAGE, ...Object.keys(SELECT), ...NUMBER];
+const JSON_KEYS = ['characters']; // 中身が入れ子のもの（Shopify には JSON として保存）
+const KEYS = [...TEXT, ...MULTILINE, ...COLOR, ...IMAGE, ...Object.keys(SELECT), ...NUMBER, ...JSON_KEYS];
+// キャラクターの ID（js/data.js の CHARACTERS と同じ。追加はできず、編集のみ）
+const CHARACTER_IDS = ['haru', 'byeol', 'dalbit', 'gomi'];
 const ROWS = 3;
 const SLOTS = 5;
 const TABLE_SLOTS = 5;
@@ -32,6 +41,9 @@ function cleanEvent(event, imageOk) {
     if (TEXT.includes(k)) {
       if (typeof v !== 'string' || v.length > 120) throw new InputError(k);
       out[k] = v.replace(/[\u0000-\u001f]/g, '');
+    } else if (MULTILINE.includes(k)) {
+      if (typeof v !== 'string' || v.length > 300) throw new InputError(k);
+      out[k] = v.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f]/g, '');
     } else if (COLOR.includes(k)) {
       if (!/^#[0-9a-f]{6}$/i.test(v)) throw new InputError(k);
       out[k] = v.toLowerCase();
@@ -45,7 +57,43 @@ function cleanEvent(event, imageOk) {
     } else if (IMAGE.includes(k)) {
       if (!imageOk(v)) throw new InputError(k);
       out[k] = { id: String(v.id), url: String(v.url) };
+    } else if (k === 'characters') {
+      out[k] = cleanCharacters(v, imageOk);
     }
+  }
+  return out;
+}
+
+function cleanCharacters(value, imageOk) {
+  let v = value;
+  if (typeof v === 'string') { try { v = JSON.parse(v); } catch { throw new InputError('characters'); } }
+  if (!v || typeof v !== 'object' || Array.isArray(v)) throw new InputError('characters');
+  const out = {};
+  for (const id of CHARACTER_IDS) {
+    const c = v[id];
+    if (!c || typeof c !== 'object') continue;
+    const text = (x, max, multi = false) => {
+      if (x == null || x === '') return '';
+      if (typeof x !== 'string' || x.length > max) throw new InputError(`characters.${id}`);
+      return multi ? x.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f]/g, '') : x.replace(/[\u0000-\u001f]/g, '');
+    };
+    const item = {
+      name: text(c.name, 20),
+      en: text(c.en, 30),
+      profile: text(c.profile, 200, true),
+      color: '',
+      image: '',
+      hidden: c.hidden === true,
+    };
+    if (c.color) {
+      if (!/^#[0-9a-f]{6}$/i.test(c.color)) throw new InputError(`characters.${id}.color`);
+      item.color = c.color.toLowerCase();
+    }
+    if (c.image) {
+      if (!imageOk(c.image)) throw new InputError(`characters.${id}.image`);
+      item.image = { id: String(c.image.id), url: String(c.image.url) };
+    }
+    if (item.name || item.en || item.profile || item.color || item.image || item.hidden) out[id] = item;
   }
   return out;
 }
@@ -73,4 +121,4 @@ function flatten(event) {
   return out;
 }
 
-module.exports = { KEYS, TEXT, COLOR, IMAGE, SELECT, NUMBER, cleanEvent, cleanLayout, flatten, InputError };
+module.exports = { KEYS, TEXT, MULTILINE, COLOR, IMAGE, SELECT, NUMBER, JSON_KEYS, cleanEvent, cleanLayout, flatten, InputError };

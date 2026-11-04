@@ -60,7 +60,12 @@
     return `<g transform="translate(${x} ${y}) scale(${s}) translate(-50 -50)">${bodies[c.kind](c)}</g>`;
   }
 
+  // 管理画面でイラストを画像に差し替えた場合は、その画像を表示する
   function characterSVG(c, cls = '') {
+    if (c.image) {
+      const src = String(c.image).replace(/["<>]/g, '');
+      return `<img class="char-img ${cls}" src="${src}" alt="" aria-hidden="true" loading="lazy">`;
+    }
     return `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true">${character(c)}</svg>`;
   }
 
