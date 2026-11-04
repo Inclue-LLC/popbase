@@ -5,20 +5,21 @@
  * すでにある場合はそのままにします。必要な環境変数は store-shopify.js と同じです。
  * Admin API の権限: write_metaobject_definitions, write_metaobjects, read_products, write_products（メタフィールド定義用）, write_files, read_files
  */
-const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN;
-const DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
+const auth = require('./shopify-token');
+
+const DOMAIN = auth.DOMAIN;
 const VERSION = process.env.SHOPIFY_API_VERSION || '2025-01';
 const ENDPOINT = process.env.SHOPIFY_ADMIN_URL || `https://${DOMAIN}/admin/api/${VERSION}/graphql.json`;
 
-if (!process.env.SHOPIFY_ADMIN_URL && (!TOKEN || !DOMAIN)) {
-  console.error('SHOPIFY_STORE_DOMAIN と SHOPIFY_ADMIN_TOKEN を設定してから実行してください');
+if (!process.env.SHOPIFY_ADMIN_URL && !auth.configured) {
+  console.error('SHOPIFY_STORE_DOMAIN と、SHOPIFY_CLIENT_ID / SHOPIFY_CLIENT_SECRET（または SHOPIFY_ADMIN_TOKEN）を設定してから実行してください');
   process.exit(1);
 }
 
 async function gql(query, variables) {
   const res = await fetch(ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': TOKEN || '' },
+    headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': await auth.getToken() },
     body: JSON.stringify({ query, variables }),
   });
   const json = await res.json();

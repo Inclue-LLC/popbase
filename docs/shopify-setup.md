@@ -38,27 +38,33 @@ window.SHOPIFY_CONFIG = {
 
 公開アクセストークンはブラウザに公開される前提のものなので、サイトに書いて問題ありません。
 
-## 2. 店内管理画面用：Admin API のトークン（秘密のトークン）
+## 2. 店内管理画面用：Admin API の鍵（秘密の鍵）
 
-1. Shopify 管理画面 → **設定 → アプリと販売チャネル → アプリを開発**（または Shopify の開発者ダッシュボード）でアプリを作成
-2. **Admin API の権限** に次を付ける
-   - `read_products`
-   - `read_metaobjects`, `write_metaobjects`
+2026年から、ストアの管理画面で「カスタムアプリ」を新しく作ることはできなくなり、**Dev Dashboard** でアプリを作る方法に変わりました。
+このサイトのサーバーは、アプリの **クライアント ID とシークレット** を使って、必要なときに Shopify からアクセストークンを受け取ります（期限が切れる前に自動で取り直します）。
+
+1. Shopify 管理画面 → **設定 → アプリ → 「アプリを開発」**（または Dev Dashboard）で、アプリを作成（名前の例: `POP BASE 店内管理`）
+2. アプリの **バージョン（設定）** で、Admin API のスコープ（権限）に次を付けて、バージョンを公開（リリース）する
+   - `read_products`, `write_products`
+   - `read_metaobjects`, `write_metaobjects`, `write_metaobject_definitions`
    - `read_files`, `write_files`
-   - 初期設定スクリプト（次の手順3）を使う場合は、加えて `write_metaobject_definitions`, `write_products`
-3. アプリをインストールし、**Admin API アクセストークン**（`shpat_` で始まる）を取得
-4. **サーバーの環境変数**に設定する（ファイルには書かない）
+3. アプリを **このストア（popbase.myshopify.com）にインストール** する
+4. アプリの **設定** 画面にある **クライアント ID** と **シークレット** を、サーバーの環境変数に設定する（ファイル・チャットには書かない）
 
 | 環境変数 | 例 |
 | --- | --- |
-| `SHOPIFY_STORE_DOMAIN` | `your-store.myshopify.com` |
-| `SHOPIFY_ADMIN_TOKEN` | `shpat_xxxxxxxx` |
+| `SHOPIFY_STORE_DOMAIN` | `popbase.myshopify.com` |
+| `SHOPIFY_CLIENT_ID` | アプリのクライアント ID |
+| `SHOPIFY_CLIENT_SECRET` | アプリのシークレット |
 | `SHOPIFY_COLLECTION` | `popup`（省略可） |
 
-> **重要**：Admin API のトークンはストアのほぼすべてを操作できる鍵です。
+> 以前の方法で作ったアプリの `shpat_` で始まるトークンがある場合は、`SHOPIFY_CLIENT_ID` / `SHOPIFY_CLIENT_SECRET` の代わりに `SHOPIFY_ADMIN_TOKEN` に設定しても動きます。
+
+> **重要**：シークレットとトークンは、ストアのほぼすべてを操作できる鍵です。
 > `js/data.js` など、ブラウザに届くファイルには**絶対に**書かないでください。GitHub にも入れないでください。
 
-この2つが設定されていると、店内管理画面の保存先が自動で Shopify になります（画面右上に「保存先：Shopify」と表示されます）。
+これらが設定されていると、店内管理画面の保存先が自動で Shopify になります（画面右上に「保存先：Shopify」と表示されます）。
+うまくつながらないときは、サーバーのログに「Shopify のアクセストークンを取得できませんでした」と理由が出ます。
 
 ## 3. 定義を作る（自動）
 

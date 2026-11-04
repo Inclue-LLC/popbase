@@ -8,14 +8,15 @@
  *
  * 環境変数（サーバーだけに設定。ブラウザには出しません）:
  *   SHOPIFY_STORE_DOMAIN   例: your-store.myshopify.com
- *   SHOPIFY_ADMIN_TOKEN    Admin API のアクセストークン
+ *   SHOPIFY_CLIENT_ID / SHOPIFY_CLIENT_SECRET  Dev Dashboard のアプリ（または SHOPIFY_ADMIN_TOKEN。shopify-token.js）
  *   SHOPIFY_API_VERSION    既定 2025-01
  *   SHOPIFY_COLLECTION     店内に並べるコレクションのハンドル（既定 popup）
  */
 const { KEYS, IMAGE, JSON_KEYS, cleanEvent, cleanLayout, flatten } = require('./fields');
 
-const DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
-const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN;
+const auth = require('./shopify-token');
+
+const DOMAIN = auth.DOMAIN;
 const VERSION = process.env.SHOPIFY_API_VERSION || '2025-01';
 const COLLECTION = process.env.SHOPIFY_COLLECTION || 'popup';
 // テスト用に API の URL を差し替えられるようにしている
@@ -25,12 +26,14 @@ const TYPE = 'popup_event';
 class Conflict extends Error {}
 class ShopifyError extends Error {}
 
-async function gql(query, variables = {}) {
+async function gql(query, variables = {}, retried = false) {
   const res = await fetch(ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': TOKEN },
+    headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': await auth.getToken() },
     body: JSON.stringify({ query, variables }),
   });
+  // 期限切れなどでトークンが使えなくなったら、1 回だけ取り直す
+  if (res.status === 401 && auth.method === 'client' && !retried) { auth.invalidate(); return gql(query, variables, true); }
   if (!res.ok) throw new ShopifyError(`Shopify Admin API ${res.status}`);
   const json = await res.json();
   if (json.errors?.length) throw new ShopifyError(json.errors.map((e) => e.message).join(' / '));
@@ -133,7 +136,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 module.exports = {
   mode: 'shopify',
   label: `Shopify（${DOMAIN}）`,
-  enabled: !!(DOMAIN && TOKEN),
+  enabled: auth.configured,
 
   async getState() {
     const [cur, draft, list] = await Promise.all([readEntry('current'), readEntry('draft'), products()]);
