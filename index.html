@@ -32,6 +32,15 @@
       </div>
       <button class="btn btn-primary btn-lg" id="enterBtn">お店に入る</button>
 
+      <!-- 入店するときのアバター選び（js/app.js） -->
+      <div class="entrance-pick" id="entPick" hidden>
+        <p class="ep-title" id="entPickTitle">アバターを選んでください</p>
+        <div class="ep-grid" id="entPickGrid" role="radiogroup" aria-labelledby="entPickTitle"></div>
+        <p class="ep-note">他のお客さんには、選んだアバターが表示されます。店内でも変えられます。</p>
+        <button class="btn btn-primary btn-lg" id="entPickGo">この姿で入店する</button>
+        <button class="link-btn" id="entPickBack" type="button">もどる</button>
+      </div>
+
       <!-- 満員のときの待機（js/app.js） -->
       <div class="entrance-wait" id="entWait" hidden role="status" aria-live="polite">
         <p class="ew-title">ただいま満員です</p>
@@ -83,10 +92,11 @@
 
         <div class="avatar-picker" id="avatarPicker" hidden>
           <div class="picker-card" role="dialog" aria-labelledby="pickTitle">
-            <h3 id="pickTitle">アバターを選んで入店</h3>
+            <h3 id="pickTitle">アバターを変える</h3>
             <div class="pick-chars" id="pickChars"></div>
             <p class="pick-note">他のお客さんには、選んだアバターが表示されます。</p>
-            <button class="btn btn-primary" id="pickGo">この姿で入店する</button>
+            <button class="btn btn-primary" id="pickGo">この姿にする</button>
+            <button class="link-btn" id="pickCancel" type="button">やめる</button>
           </div>
         </div>
         <div class="world-fallback" id="worldFallback" hidden>

@@ -103,9 +103,47 @@ window.AppReady = (async function () {
     Visit.start();
   }
 
+  /* ---------- 入店するときのアバター選び ---------- */
+  const LOOK_KEY = 'haneul:look';
+  const savedLook = () => { try { return JSON.parse(localStorage.getItem(LOOK_KEY) || 'null'); } catch { return null; } };
+  let pickSel = null;
+  function renderEntrancePick() {
+    const escAttr = (v) => String(v).replace(/[&<>"']/g, '');
+    $('#entPickGrid').innerHTML = window.AVATARS.map((a) => `
+      <button type="button" class="pick-char" role="radio" data-avatar="${escAttr(a.id)}" aria-checked="${a.id === pickSel}"
+        style="--c:${a.character ? a.character.color : '#e3e6f0'}">
+        ${Art.characterSVG(a.character || { image: a.image })}<span>${esc(a.name)}</span></button>`).join('');
+  }
+  function openEntrancePick() {
+    const last = savedLook()?.avatar;
+    pickSel = window.AVATARS.some((a) => a.id === last) ? last : window.AVATARS[0].id;
+    renderEntrancePick();
+    entrance.classList.add('is-picking');
+    $('#entPick').hidden = false;
+    $('#entPickGo').focus({ preventScroll: true });
+  }
+  function closeEntrancePick() {
+    entrance.classList.remove('is-picking');
+    $('#entPick').hidden = true;
+  }
+
   if (!entrancePreview) {
     enterBtn.addEventListener('click', () => {
       $('#entEnded').hidden = true;
+      openEntrancePick();
+    });
+    $('#entPickGrid').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-avatar]');
+      if (!b) return;
+      pickSel = b.dataset.avatar;
+      renderEntrancePick();
+    });
+    $('#entPickBack').addEventListener('click', () => { closeEntrancePick(); enterBtn.focus(); });
+    $('#entPickGo').addEventListener('click', () => {
+      try { localStorage.setItem(LOOK_KEY, JSON.stringify({ avatar: pickSel })); } catch { /* noop */ }
+      // 店内（js/world/main.js）に選んだアバターを知らせる
+      document.dispatchEvent(new CustomEvent('haneul:look', { detail: { avatar: pickSel } }));
+      closeEntrancePick();
       requestEntry();
     });
 

@@ -141,10 +141,16 @@ async function main() {
   });
   // 入店できたら（再接続のときも）、自分のアバターで店内に現れる
   function tryJoin() {
-    if (!look || Visit.state !== 'inside') return;
+    if (Visit.state !== 'inside') return;
     const p = self.group.position;
-    Visit.send({ t: 'join', avatar: look.avatar, x: p.x, z: p.z });
+    Visit.send({ t: 'join', avatar: self.avatar, x: p.x, z: p.z });
   }
+  // 入口でアバターを選んだとき（js/app.js から）
+  document.addEventListener('haneul:look', (e) => {
+    look = { avatar: e.detail.avatar };
+    self.setLook(look.avatar);
+    tryJoin();
+  });
   Visit.on('admitted', (info) => { if (info.offline) setStatus('offline'); tryJoin(); });
   Visit.on('resumed', tryJoin);
   Visit.on('timeout', () => { clearPeers(); setStatus('offline'); self.group.position.copy(SPAWN); });
@@ -171,18 +177,17 @@ async function main() {
     picker.hidden = false;
     $('#pickGo').focus({ preventScroll: true });
   }
+  // 店内でアバターを変える（入店時は入口で選ぶ）
   $('#pickGo').addEventListener('click', () => {
-    const first = !look;
     look = { avatar: pick.avatar };
     saved.set('look', look);
     self.setLook(look.avatar);
     picker.hidden = true;
     root.focus({ preventScroll: true });
-    if (first) tryJoin();
-    else Visit.send({ t: 'look', avatar: look.avatar });
+    tryJoin(); // 入店中なら、他のお客さんの画面でも見た目が変わる
   });
+  $('#pickCancel').addEventListener('click', () => { picker.hidden = true; root.focus({ preventScroll: true }); });
   $('#lookBtn').addEventListener('click', openPicker);
-  if (!look) openPicker();
 
   /* ---------- スタンプ ---------- */
   $('#emotes').innerHTML = EMOTES.map((e, i) => `<button class="emote-btn" data-emote="${i}" aria-label="スタンプ ${i + 1}">${e}</button>`).join('');

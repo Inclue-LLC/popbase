@@ -392,3 +392,24 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .visit-timer b { font-variant-numeric: tabular-nums; font-size: 1.15em; margin-left: .2em; }
 .visit-timer.is-urgent { background: #c0392b; color: #fff; border-color: #c0392b; animation: timerPulse 1s infinite; }
 @keyframes timerPulse { 50% { transform: translateX(-50%) scale(1.06); } }
+
+/* ---------- 入店するときのアバター選び ---------- */
+.entrance.is-picking { overflow-y: auto; align-items: start; }
+.entrance.is-picking .entrance-inner { padding: 16px 0 32px; }
+.entrance.is-picking #enterBtn, .entrance.is-picking #entranceCast,
+.entrance.is-picking #entNotice, .entrance.is-picking #entEnded { display: none; }
+.entrance-pick {
+  margin: 0 auto; max-width: 560px; padding: 18px 18px 14px; border-radius: 24px;
+  background: rgba(255, 255, 255, .9); color: #3a3346; box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+}
+.ep-title { margin: 0 0 12px; font-weight: 800; font-size: 1.05rem; }
+.ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 10px; margin-bottom: 10px; }
+.ep-grid .pick-char {
+  display: grid; justify-items: center; gap: 2px; padding: 8px 4px 6px;
+  border-radius: 16px; border: 2px solid transparent;
+  background: color-mix(in srgb, var(--c) 22%, #fff); font-weight: 700; font-size: .85rem; color: #3a3346;
+}
+.ep-grid .pick-char svg, .ep-grid .pick-char .char-img { width: 100%; max-width: 72px; height: auto; aspect-ratio: 1; }
+.ep-grid .pick-char[aria-checked="true"] { border-color: #4a90c8; box-shadow: 0 0 0 3px rgba(74, 144, 200, .3); }
+.ep-note { margin: 0 0 12px; font-size: .78rem; color: #6f6880; }
+.entrance-pick .link-btn { margin-top: 8px; }
