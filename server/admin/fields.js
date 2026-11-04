@@ -6,7 +6,7 @@ const TEXT = ['brand', 'title', 'subtitle', 'period', 'left_title', 'left_label'
   'entrance_kicker', 'entrance_heading', 'entrance_message', 'entrance_button'];
 const MULTILINE = ['entrance_notice']; // 改行を許す（300文字まで）
 const COLOR = ['wall_color', 'wall_pattern_color', 'lower_color', 'trim_color', 'floor_color_1', 'floor_color_2', 'sign_color', 'sign_text_color',
-  'entrance_color_top', 'entrance_color_bottom', 'entrance_heading_color', 'entrance_text_color'];
+  'entrance_color_top', 'entrance_color_bottom', 'entrance_heading_color', 'entrance_text_color', 'product_bg_color'];
 const IMAGE = ['wall_image', 'floor_image', 'entrance_logo', 'entrance_image'];
 const SELECT = {
   theme_preset: ['', 'base', 'sky', 'night', 'holiday', 'spring'],
