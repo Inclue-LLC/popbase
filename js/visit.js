@@ -129,7 +129,7 @@
 
     /** 自分から退店（席をすぐ空ける） */
     leave() {
-      V.send({ t: 'bye' });
+      if (V.ws?.readyState === WebSocket.OPEN) V.ws.send(JSON.stringify({ t: 'bye' }));
       store.set(null);
       V.state = 'ended';
       V.wanted = false;

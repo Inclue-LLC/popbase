@@ -165,6 +165,8 @@ function onConnection(ws) {
       else { queue.push(t.token); send(t, queueInfo(t)); }
       return;
     }
+    // 自分から退店・待機をやめる（席や順番をすぐ空ける）
+    if (msg.t === 'bye') { if (t && t.state !== 'gone') release(t); return; }
     if (!t || t.state !== 'inside') return;
 
     if (msg.t === 'join') {
@@ -187,9 +189,6 @@ function onConnection(ws) {
     } else if (msg.t === 'look' && t.joined) {
       t.avatar = avatarOk(msg.avatar) ? msg.avatar : t.avatar;
       broadcast({ t: 'look', id: t.id, avatar: t.avatar }, t);
-    } else if (msg.t === 'bye') {
-      // 自分から退店（席をすぐ空ける）
-      release(t);
     }
   });
 
