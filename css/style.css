@@ -240,7 +240,9 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .product-detail { display: grid; grid-template-columns: 1fr 1fr; }
 @media (max-width: 680px) { .product-detail { grid-template-columns: 1fr; } }
 .pd-image { background: color-mix(in srgb, var(--c) 30%, var(--surface)); aspect-ratio: 1; }
-.pd-image svg, .pd-image img { width: 100%; height: 100%; object-fit: cover; }
+.pd-image svg { width: 100%; height: 100%; }
+/* 商品写真（Shopify）は棚用に余白を少なくしているので、詳細画面では周りに余白をとって小さめに見せる */
+.pd-image img { display: block; width: 100%; height: 100%; object-fit: contain; padding: 14%; box-sizing: border-box; }
 .pd-body { padding: 28px; display: flex; flex-direction: column; gap: 6px; }
 .pd-body h3 { font-size: 1.25rem; padding-right: 32px; }
 .pd-body p { margin: 0; }
@@ -269,7 +271,8 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .cart-items { list-style: none; margin: 0; padding: 0; overflow: auto; flex: 1; display: grid; align-content: start; gap: 12px; }
 .cart-item { display: grid; grid-template-columns: 72px 1fr auto; gap: 12px; align-items: start; }
 .ci-image { width: 72px; height: 72px; border-radius: 14px; overflow: hidden; background: color-mix(in srgb, var(--c) 30%, var(--surface)); }
-.ci-image svg, .ci-image img { width: 100%; height: 100%; }
+.ci-image svg { width: 100%; height: 100%; }
+.ci-image img { display: block; width: 100%; height: 100%; object-fit: contain; padding: 10%; box-sizing: border-box; }
 .ci-body p { margin: 0; }
 .ci-name { font-size: .86rem; font-weight: 700; line-height: 1.4; }
 .ci-price { font-size: .85rem; color: var(--ink-soft); margin-bottom: 4px !important; }
