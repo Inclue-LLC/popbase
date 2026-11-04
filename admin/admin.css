@@ -291,3 +291,34 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .ev-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .el-empty { padding: 40px 24px; text-align: center; border-radius: 20px; background: var(--surface); border: 1.5px dashed var(--line); color: var(--ink-soft); }
 .el-empty h2 { color: var(--ink); margin-bottom: 8px; }
+
+/* ---------- ヘッダーを 1 行に（すっきり） ---------- */
+.topbar { flex-wrap: nowrap; gap: 12px; padding: 8px 16px; min-height: 52px; }
+.brand { flex: none; gap: 8px; }
+.brand strong { font-size: 1rem; white-space: nowrap; }
+.storage { white-space: nowrap; }
+.status { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; font-size: .8rem; }
+.status .pill { flex: none; white-space: nowrap; }
+.status .saved { overflow: hidden; text-overflow: ellipsis; }
+.top-actions { flex: none; flex-wrap: nowrap; gap: 6px; }
+.top-actions .btn { padding: .4em 1em; font-size: .85rem; }
+.user { max-width: 11em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1380px) { .storage { display: none; } }
+@media (max-width: 1180px) { .user { display: none; } }
+
+.eventbar { flex-wrap: nowrap; gap: 10px; padding: 6px 16px; background: var(--surface-2); }
+.eventbar #backToList { flex: none; white-space: nowrap; }
+.eventbar-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.eventbar select { flex: 0 1 520px; min-width: 0; padding: .35em .6em; font-size: .88rem; }
+.event-info { flex: none; white-space: nowrap; }
+.event-info .pill { margin: 0; }
+.eventbar-actions { flex: none; flex-wrap: nowrap; }
+.eventbar-actions .btn { white-space: nowrap; }
+
+/* 狭い画面では折り返す */
+@media (max-width: 900px) {
+  .topbar, .eventbar { flex-wrap: wrap; }
+  .status { flex-basis: 100%; order: 3; }
+  .eventbar select { flex-basis: 100%; }
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pill-active { background: #c9b5f5; color: #2e2729; } }

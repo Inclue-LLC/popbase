@@ -146,7 +146,7 @@ function eventStatus(x) {
 function eventLabel(x) {
   const HS = window.HaneulSchedule;
   const when = x.open_at ? HS.periodText({ open_at: x.open_at, close_at: x.close_at }) : '会期未設定';
-  return `${x.title || '（イベント名なし）'}　${when}　［${eventStatus(x)[1]}${x.active ? '・お客さんに表示中' : ''}］`;
+  return `${x.title || '（イベント名なし）'}（${when}）${x.active ? '　● 表示中' : ''}`;
 }
 function renderEventBar() {
   $('#eventSel').innerHTML = state.events.map((x) =>
@@ -154,8 +154,9 @@ function renderEventBar() {
   const cur = state.events.find((x) => x.id === state.eventId);
   if (!cur) { $('#eventInfo').innerHTML = ''; return; }
   const [cls, label] = eventStatus(cur);
-  $('#eventInfo').innerHTML = `<span class="pill pill-${cls}">${label}</span>` +
-    (cur.active ? 'いまお客さんのサイトに表示されています' : cur.published ? '会期になると自動でお客さんのサイトに表示されます' : '「公開する」を押すと、会期に合わせて表示されます');
+  // 状態だけを短く出し、説明は印にマウスを乗せると出す
+  const note = cur.active ? 'いまお客さんのサイトに表示されています' : cur.published ? '会期になると自動でお客さんのサイトに表示されます' : '「公開する」を押すと、会期に合わせて表示されます';
+  $('#eventInfo').innerHTML = `<span class="pill pill-${cls}" title="${note}">${label}</span>${cur.active ? ' <span class="pill pill-active" title="' + note + '">表示中</span>' : ''}`;
   $('#deleteEventBtn').disabled = !!cur.active;
   $('#deleteEventBtn').title = cur.active ? 'お客さんに表示中のイベントは削除できません' : '';
 }
@@ -349,14 +350,15 @@ function canonicalAvatars(v) {
 function renderStatus() {
   const differs = snapshot(state.draft) !== snapshot(state.published);
   const pill = differs
-    ? '<span class="pill pill-dirty">未公開の変更があります</span>'
-    : '<span class="pill pill-clean">公開中と同じ内容です</span>';
+    ? '<span class="pill pill-dirty">未公開の変更あり</span>'
+    : '<span class="pill pill-clean">公開済みと同じ</span>';
   const saved = state.saving || state.dirtyLocal
     ? '保存しています…'
-    : state.draft.updatedAt ? `下書きを保存しました（${fmtTime(state.draft.updatedAt)}${state.draft.updatedBy ? `・${esc(state.draft.updatedBy)}` : ''}）` : '';
+    : state.draft.updatedAt ? `保存済み ${fmtTime(state.draft.updatedAt)}` : '';
+  const savedTitle = state.draft.updatedAt ? `下書きを保存しました（${fmtTime(state.draft.updatedAt)}${state.draft.updatedBy ? `・${state.draft.updatedBy}` : ''}）` : '';
   const miss = E.missingRequired(state.draft.event);
-  const missPill = miss.length ? `<span class="pill pill-missing">必須項目が未入力（${miss.length}）</span>` : '';
-  $('#status').innerHTML = `${pill}${missPill}<span>${saved}</span>`;
+  const missPill = miss.length ? `<span class="pill pill-missing" title="${esc(miss.map((f) => f.label).join('・'))}">必須の未入力 ${miss.length}</span>` : '';
+  $('#status').innerHTML = `${pill}${missPill}<span class="saved" title="${esc(savedTitle)}">${saved}</span>`;
   $('#publishBtn').disabled = !differs || state.saving || state.dirtyLocal;
 }
 
