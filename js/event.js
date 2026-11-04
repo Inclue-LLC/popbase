@@ -67,13 +67,35 @@
   }
 
   /** フォントの読み込みが終わるまで待つ（3D の看板を描く前に使う。最大 3 秒） */
-  async function fontReady() {
+  /**
+   * フォントの読み込みが終わるまで待つ（3D の看板・値札を描く前に使う。最大 5 秒）
+   * 日本語の Google Fonts は文字のグループごとにファイルが分かれていて、使う文字のファイルだけを読み込む。
+   * 文字を指定しないと英数字のファイルしか読まれず、漢字が別のフォントで描かれてしまうため、
+   * 店内に描く文字（看板・商品名・キャラクター名など）をすべて渡して、その分のファイルを読み込んでおく。
+   */
+  async function fontReady(extraText = '') {
     const def = currentFont;
+    const text = `${shopText()}${extraText}`;
     const wait = (async () => {
       await fontLoading;
-      await Promise.all([500, 700, 800].map((w) => document.fonts.load(`${w} 20px "${def.family}"`).catch(() => {})));
+      await Promise.all([500, 700, 800].map((w) => document.fonts.load(`${w} 20px "${def.family}"`, text).catch(() => {})));
     })();
-    await Promise.race([wait, new Promise((r) => setTimeout(r, 3000))]);
+    await Promise.race([wait, new Promise((r) => setTimeout(r, 5000))]);
+  }
+
+  /** 店内に描く文字をまとめる（重複は除く） */
+  function shopText() {
+    const S = window.SHOP || {};
+    const L = window.STORE_LAYOUT || {};
+    const t = window.THEMES?.event || window.THEMES?.[S.theme] || {};
+    const parts = [
+      S.brand, S.period, S.hours, S.subtitle, t.name,
+      L.left?.title, L.left?.label, L.right?.title, L.right?.label, L.island?.title, L.island?.label,
+      ...(window.PRODUCTS || []).map((p) => `${p.name}¥${p.price}`),
+      ...(window.CHARACTERS || []).map((c) => c.name),
+      'REGISTER お会計 カートを見る EXIT LIMITED 会場限定テーブル SOLD OUT NEW ¥0123456789,…',
+    ];
+    return [...new Set(parts.filter(Boolean).join('').replace(/\s/g, ''))].join('');
   }
 
   /* 管理画面のフォーム定義 */
@@ -81,7 +103,11 @@
     { group: 'イベント', key: 'brand', label: 'ブランド名', hint: '店内の看板の上の行・ページ上部のロゴなど（全角15文字・半角30文字まで）', type: 'text', maxUnits: 30, placeholderPath: 'shop.brand' },
     { group: 'イベント', key: 'title', label: 'イベント名', hint: '看板の大きな文字。長さに合わせて看板の幅が広がります（全角14文字・半角28文字まで）', type: 'text', maxUnits: 28 },
     { group: 'イベント', key: 'subtitle', label: 'サブタイトル', hint: '看板の下の行。空欄なら表示しません（全角20文字・半角40文字まで）', type: 'text', maxUnits: 40 },
-    { group: 'イベント', key: 'period', label: '会期', hint: '例: 2026.12.01 – 12.31', type: 'text' },
+    { group: '会期・営業時間', key: 'open_at', label: '開始日時', hint: 'この日時になると入店できるようになります（日本時間）', type: 'datetime' },
+    { group: '会期・営業時間', key: 'close_at', label: '終了日時', hint: 'この日時で閉店し、店内のお客さんは自動で退店します', type: 'datetime' },
+    { group: '会期・営業時間', key: 'daily_open', label: '毎日の開店時刻', hint: '閉店時刻とセットで設定。空欄なら会期中は24時間営業', type: 'time' },
+    { group: '会期・営業時間', key: 'daily_close', label: '毎日の閉店時刻', hint: '閉店5分前から店内にタイマーを表示し、時間になると自動で退店', type: 'time' },
+    { group: '会期・営業時間', key: 'period', label: '会期の表示文', hint: '看板の札・入口・ご案内に出す文。空欄なら上の日時から自動で作ります', type: 'text', placeholderPath: 'schedule.period' },
     { group: 'イベント', key: 'theme_preset', label: 'ベースのテーマ', hint: '下の項目で空欄のものは、このテーマの値になります', type: 'select', options: () => Object.entries(window.THEMES).filter(([k]) => k !== 'event').map(([k, t]) => ({ value: k, label: `${t.name}（${t.title}）` })) },
     { group: '壁', key: 'wall_image', label: '壁紙の画像', hint: '横長の画像（例: 2048×540px）。指定すると柄より優先', type: 'image' },
     { group: '壁', key: 'wall_color', label: '壁の色', type: 'color', themePath: 'wall.color' },
@@ -181,7 +207,11 @@
     window.THEMES.event = theme;
 
     const S = window.SHOP;
-    S.period = has(f, 'period') ? f.period : original.period;
+    // 会期と営業時間（js/schedule.js）。表示文が空欄なら日時から自動で作る
+    S.schedule = { open_at: f.open_at || '', close_at: f.close_at || '', daily_open: f.daily_open || '', daily_close: f.daily_close || '' };
+    const HS = window.HaneulSchedule;
+    S.period = has(f, 'period') ? f.period : (HS?.periodText(S.schedule) || original.period);
+    S.hours = HS?.hoursText(S.schedule) || '';
     S.brand = has(f, 'brand') ? f.brand : original.brand;
     S.subtitle = has(f, 'subtitle') ? f.subtitle : ''; // 未記入なら表示しない
     S.novelty = { ...original.novelty };

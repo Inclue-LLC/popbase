@@ -8,7 +8,8 @@
  *     'queued'   { pos, ahead, waiting, estimateMinutes }   待機中の順番（変わるたびに）
  *     'admitted' { crowded, visitMinutes, warnMinutes }      入店できた
  *     'timer'    { deadline（このブラウザの時刻 ms）| null } 残り時間が決まった／なくなった
- *     'timeout'  時間切れで退出
+ *     'timeout'  時間切れ・閉店で退出（{ reason: 'visit' | 'closed', opensAt }）
+ *     'closed'   営業時間外で入店できない（{ state: 'before'|'closed'|'ended', opensAt }）
  *     'left'     自分で退店した（店内の EXIT から）
  *     'message'  店内の同時接続のメッセージ（join / leave / move / emote / look / welcome）
  *     'status'   'connecting' | 'online' | 'offline'
@@ -45,7 +46,7 @@
     /** 入店を申し込む（入店券があれば、その続きから） */
     start() {
       V.wanted = true;
-      if (V.state === 'ended') V.state = 'idle';
+      if (V.state === 'ended' || V.state === 'closed') V.state = 'idle';
       const url = resolveUrl();
       if (!url) return V.goOffline();
       if (V.ws && V.ws.readyState <= 1) { V.ws.send(JSON.stringify({ t: 'hello', token: store.get() })); return; }
@@ -102,18 +103,27 @@
         const wasInside = V.state === 'inside';
         V.state = 'inside';
         V.info = m;
+        V.reason = m.reason || 'visit';
         V.setDeadline(m.remaining);
         emit('status', 'online');
         if (!wasInside) emit('admitted', m);
         else emit('resumed', m);
       } else if (m.t === 'timer') {
+        V.reason = m.reason || 'visit';
         V.setDeadline(m.remaining);
+      } else if (m.t === 'closed') {
+        // 営業時間外（入店・待機できない）
+        store.set(null);
+        V.state = 'closed';
+        V.wanted = false;
+        V.setDeadline(null);
+        emit('closed', m);
       } else if (m.t === 'timeout') {
         store.set(null);
         V.state = 'ended';
         V.wanted = false;
         V.setDeadline(null);
-        emit('timeout');
+        emit('timeout', m);
       } else {
         emit('message', m);
       }

@@ -109,7 +109,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .entrance-theme { font-weight: 700; margin: .2rem 0 1rem; }
 .entrance-cast { display: flex; justify-content: center; gap: clamp(4px, 2vw, 18px); margin: 0 auto 1rem; }
 .entrance-cast svg, .entrance-cast .char-img { width: clamp(60px, 16vw, 110px); height: auto; }
-.entrance-period { font-weight: 700; margin: 0 0 1.4rem; }
+.entrance-period { font-weight: 700; margin: 0 0 1.4rem; white-space: pre-line; }
 .door {
   position: absolute; top: 0; bottom: 0; width: 50%; z-index: 3;
   background:
@@ -373,3 +373,13 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .exit-card strong { color: var(--pink); }
 .exit-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .btn-danger { background: #c0392b; color: #fff; }
+
+/* ---------- 営業時間外の入口 ---------- */
+.entrance-status {
+  margin: 0 auto 8px; max-width: 420px; padding: 16px 22px; border-radius: 22px;
+  background: rgba(255, 255, 255, .88); color: #3a3346; box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+}
+.entrance-status p { margin: 0; }
+.es-title { font-weight: 800; font-size: 1.1rem; }
+.es-text { margin-top: 4px !important; font-weight: 700; color: #4a90c8; }
+.entrance.is-closed #enterBtn, .entrance.is-closed #entPick { display: none; }

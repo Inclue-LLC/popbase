@@ -104,6 +104,13 @@ setInterval(() => {
 }, 30000);
 wss.on('connection', (ws) => { ws.isAlive = true; ws.on('pong', () => { ws.isAlive = true; }); });
 
+// 公開中の会期・営業時間をサーバーの入店管理に反映（起動時と30秒ごと。管理画面で公開したときはすぐ）
+async function refreshSchedule() {
+  try { visit.setSchedule((await adminApi.store.getPublished()).event || {}); } catch (e) { console.error('[schedule]', e.message); }
+}
+refreshSchedule();
+setInterval(refreshSchedule, 30000).unref?.();
+
 server.listen(PORT, () => {
   console.log(`STUDIO HANEUL pop-up: http://localhost:${PORT}  （同時接続: ws://localhost:${PORT}/ws）`);
   console.log(`入場制限: ${visit.CAP} 人まで。混雑中のお買い物時間 ${visit.VISIT_MS / 60e3} 分（終了 ${visit.WARN_MS / 60e3} 分前からタイマー表示）`);

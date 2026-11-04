@@ -221,3 +221,10 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 /* 文字数の上限がある項目 */
 .unit-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
 .unit-count { font-size: .72rem; color: var(--ink-soft); white-space: nowrap; }
+
+/* 会期・営業時間 */
+.dt-row { display: flex; gap: 8px; align-items: center; }
+.dt-row input { padding: .45em .7em; border-radius: 8px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; }
+.schedule-status { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: .85rem; }
+.schedule-status[data-state="open"] b { color: var(--ok); }
+.schedule-status[data-state="ended"] b { color: var(--danger); }

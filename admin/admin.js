@@ -513,6 +513,7 @@ function themeDefault(path) {
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
   if (path.startsWith('const.')) return path.slice(6);
   if (path === 'shop.brand') return ev.brand || E.original.brand;
+  if (path === 'schedule.period') return window.HaneulSchedule.periodText(ev) || E.original.period;
   if (path === 'shop.themeLabel') return ev.subtitle ? `${ev.title || base.name} ― ${ev.subtitle}` : (ev.title || base.name);
   if (path.startsWith('shop.')) return E.original[path.slice(5)];
   if (path.startsWith('layout.')) return path.split('.').slice(1).reduce((o, k) => o?.[k], E.original.layout);
@@ -530,9 +531,33 @@ function renderForm() {
     $(sel).innerHTML = groups.map((g) => `
       <fieldset class="fgroup"><legend>${esc(g)}</legend>
         ${fields.filter((f) => f.group === g).map((f) => fieldHtml(f, ev[f.key], placeholders)).join('')}
+        ${g === '会期・営業時間' ? '<p class="schedule-status" id="scheduleStatus"></p>' : ''}
       </fieldset>`).join('');
   }
+  renderScheduleStatus();
 }
+
+/** この設定で今お店が開いているか（日本時間） */
+function renderScheduleStatus() {
+  const el = $('#scheduleStatus');
+  if (!el) return;
+  const HS = window.HaneulSchedule;
+  const ev = state.draft.event;
+  const st = HS.status(ev);
+  const hours = HS.hoursText(ev);
+  const text = {
+    open: `営業中${st.closesAt ? `（${HS.whenText(st.closesAt)} 閉店）` : '（閉店時刻の設定なし）'}`,
+    before: `開店前（${st.opensAt ? HS.whenText(st.opensAt) : ''} オープン）`,
+    closed: `営業時間外（次は ${st.opensAt ? HS.whenText(st.opensAt) : ''} オープン）`,
+    ended: '会期終了（入店できません）',
+  }[st.state];
+  el.innerHTML = `この設定で公開すると、今は <b>${esc(text)}</b>${hours ? `　${esc(hours)}` : '　24時間営業'}`;
+  // 「会期の表示文」の薄い文字（空欄のときに使われる文）も更新
+  const per = $('#f_period');
+  if (per) per.placeholder = HS.periodText(ev) || E.original.period;
+  el.dataset.state = st.state;
+}
+setInterval(() => { if (state.draft) renderScheduleStatus(); }, 30000);
 
 function unitLabel(v, max) {
   const n = E.textUnits(v);
@@ -549,6 +574,9 @@ function fieldHtml(f, value, placeholders) {
     input = `<input id="${id}" data-key="${f.key}" type="${f.type}" value="${esc(value ?? '')}" placeholder="${esc(ph ?? '')}" ${f.type === 'number' ? 'min="0" step="100"' : 'maxlength="120"'}>`;
     // 文字数の上限がある項目は、残りを表示（全角2・半角1で数える）
     if (f.maxUnits) input = `<span class="unit-row">${input}<span class="unit-count" data-count-for="${f.key}">${unitLabel(value, f.maxUnits)}</span></span>`;
+  } else if (f.type === 'datetime' || f.type === 'time') {
+    input = `<span class="dt-row"><input id="${id}" data-key="${f.key}" type="${f.type === 'datetime' ? 'datetime-local' : 'time'}" step="60" value="${esc(value ?? '')}">
+      ${value ? `<button type="button" class="btn btn-small btn-ghost" data-reset="${f.key}">消す</button>` : ''}</span>`;
   } else if (f.type === 'textarea') {
     input = `<textarea id="${id}" data-key="${f.key}" maxlength="300" rows="2">${esc(value ?? '')}</textarea>`;
   } else if (f.type === 'select') {
@@ -590,6 +618,7 @@ for (const sel of Object.values(FORMS)) {
       if (c) c.textContent = unitLabel(v, f.maxUnits);
     }
     state.draft.event[key] = v;
+    if (f.type === 'datetime' || f.type === 'time') renderScheduleStatus();
     if (f.type === 'color') {
       const note = e.target.parentElement.querySelector('.color-note');
       if (note) note.textContent = v;

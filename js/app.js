@@ -58,7 +58,7 @@ window.AppReady = (async function () {
     $('#entHeading').hidden = !!en.logo;
     if (en.logo) { logo.src = en.logo; logo.alt = heading; }
     $('#entMessage').textContent = en.message || SHOP.themeLabel || '';
-    $('#entPeriod').textContent = SHOP.period || '';
+    $('#entPeriod').textContent = [SHOP.period, SHOP.hours].filter(Boolean).join('\n');
     $('#entNotice').textContent = en.notice || '';
     $('#entNotice').hidden = !en.notice;
     $('#enterBtn').textContent = en.button || 'お店に入る';
@@ -95,6 +95,9 @@ window.AppReady = (async function () {
     if (ended === 'exit') {
       $('#entEndedTitle').textContent = 'ご来店ありがとうございました';
       $('#entEndedText').textContent = 'またのお越しをお待ちしています。';
+    } else if (ended === 'closed') {
+      $('#entEndedTitle').textContent = '閉店時間になりました';
+      $('#entEndedText').textContent = 'ご来店ありがとうございました。カートの中身は空になりました。';
     } else if (ended) {
       $('#entEndedTitle').textContent = 'お買い物時間が終了しました';
       $('#entEndedText').textContent = 'ご来店ありがとうございました。カートの中身は空になりました。';
@@ -170,7 +173,17 @@ window.AppReady = (async function () {
         setTimeout(() => toast(`混雑中のため、お買い物時間は ${info.visitMinutes} 分です（終了 ${info.warnMinutes} 分前からタイマーが出ます）`), wasWaiting ? 2600 : 600);
       }
     });
-    Visit.on('timeout', () => {
+    Visit.on('closed', () => {
+      // サーバーが「営業時間外」と判断したとき（開店前・営業終了・会期終了）
+      entrance.classList.remove('is-hidden', 'open', 'is-waiting', 'is-picking');
+      $('#entWait').hidden = true;
+      $('#entPick').hidden = true;
+      enterBtn.disabled = false;
+      enterBtn.textContent = enterLabel();
+      serverClosedAt = Date.now();
+      renderStoreStatus();
+    });
+    Visit.on('timeout', (m = {}) => {
       // 時間切れ：開いている画面を閉じ、カートを空にして入口へ
       document.querySelectorAll('.modal.is-open, .drawer.is-open').forEach((el) => closeLayer(el));
       state.cart = {};
@@ -178,7 +191,8 @@ window.AppReady = (async function () {
       try { sessionStorage.removeItem('haneul:entered'); } catch { /* noop */ }
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       document.body.classList.remove('world-fs', 'no-scroll');
-      showEntrance({ ended: 'timeout' });
+      showEntrance({ ended: m.reason === 'closed' ? 'closed' : 'timeout' });
+      renderStoreStatus();
     });
     Visit.on('timer', () => updateTimer());
 
@@ -189,6 +203,48 @@ window.AppReady = (async function () {
       requestEntry();
     }
   }
+
+  /* ---------- 会期・営業時間（js/schedule.js）：入口と店内の表示 ---------- */
+  const HS = window.HaneulSchedule;
+  let lastOpen = null;
+  let serverClosedAt = 0; // サーバーから「営業時間外」と言われた時刻（1分間はそれに従う）
+  function renderStoreStatus() {
+    if (entrancePreview) return;
+    const serverSaysClosed = Visit.state === 'closed' && Date.now() - serverClosedAt < 60e3;
+    const st = HS.status(SHOP.schedule || {});
+    const open = st.state === 'open' && !serverSaysClosed;
+    entrance.classList.toggle('is-closed', !open);
+    $('#entStatus').hidden = open;
+    if (!open) {
+      const s2 = serverSaysClosed && st.state === 'open' ? { state: 'closed' } : st;
+      const when = s2.opensAt ? HS.whenText(s2.opensAt) : '';
+      if (s2.state === 'before') {
+        $('#entStatusTitle').textContent = 'まもなくオープン';
+        $('#entStatusText').textContent = `${when} オープン`;
+      } else if (s2.state === 'closed') {
+        $('#entStatusTitle').textContent = '本日の営業は終了しました';
+        $('#entStatusText').textContent = when ? `次は ${when} オープンです` : '';
+      } else {
+        $('#entStatusTitle').textContent = 'このポップアップは終了しました';
+        $('#entStatusText').textContent = 'たくさんのご来店ありがとうございました';
+      }
+    }
+    // 開店時刻になったら、入口で待っている人に知らせる
+    if (lastOpen === false && open && !entrance.classList.contains('is-hidden')) toast('オープンしました！ ご入店いただけます');
+    lastOpen = open;
+    // 店内の右上：今日の閉店時刻
+    const hh = $('#hudHours');
+    if (hh) {
+      const closes = st.state === 'open' ? st.closesAt : null;
+      hh.hidden = !closes;
+      if (closes) {
+        const w = HS.whenText(closes);
+        hh.textContent = w.startsWith('今日') ? `本日 ${HS.timeText(closes)} 閉店` : `${w} 閉店`;
+      }
+    }
+  }
+  renderStoreStatus();
+  setInterval(renderStoreStatus, 15000);
 
   /* ---------- お買い物時間の残り（終了5分前から表示） ---------- */
   let warned = { five: false, one: false };
@@ -201,9 +257,16 @@ window.AppReady = (async function () {
     if (rem > warnMs) { el.hidden = true; return; }
     el.hidden = false;
     const sec = Math.ceil(rem / 1000);
+    const closing = Visit.reason === 'closing';
+    el.firstChild.textContent = closing ? '閉店まで ' : 'お買い物時間 残り ';
     $('#visitTimerText').textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
     el.classList.toggle('is-urgent', rem <= 60e3);
-    if (!warned.five) { warned.five = true; toast(`お買い物時間は残り ${Math.ceil(rem / 60e3)} 分です。お会計はお早めにお願いします`); }
+    if (!warned.five) {
+      warned.five = true;
+      toast(closing
+        ? `まもなく閉店です（あと ${Math.ceil(rem / 60e3)} 分）。お会計はお早めにお願いします`
+        : `お買い物時間は残り ${Math.ceil(rem / 60e3)} 分です。お会計はお早めにお願いします`);
+    }
     if (!warned.one && rem <= 60e3) { warned.one = true; toast('残り1分です。時間になると自動で退店し、カートは空になります'); }
   }
   setInterval(updateTimer, 500);

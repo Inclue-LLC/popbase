@@ -114,6 +114,8 @@ async function handle(req, res, urlPath) {
     if (route === 'publish' && req.method === 'POST') {
       const { rev } = await readJson(req);
       const pub = await store.publish(user, rev);
+      // 会期・営業時間をすぐ入店管理に反映
+      try { require('../visit').setSchedule((await store.getPublished()).event || {}); } catch (e) { console.error(e); }
       console.log(`[admin] ${user} が公開しました (${pub.publishedAt})`);
       return json(res, 200, pub);
     }

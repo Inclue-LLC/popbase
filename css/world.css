@@ -178,3 +178,9 @@ body.world-fs .world {
   .hud-top { flex-wrap: wrap; }
   .hud-btn { font-size: .76rem; padding: .35em .75em; }
 }
+
+.hud-left { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.hud-hours {
+  padding: .3em .9em; border-radius: 999px; background: rgba(20, 22, 40, .6); color: #fff;
+  font-size: .78rem; font-weight: 700; backdrop-filter: blur(6px);
+}

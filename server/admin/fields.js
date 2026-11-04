@@ -18,8 +18,11 @@ const SELECT = {
   font: ['', 'zen-maru', 'kosugi-maru', 'kiwi-maru', 'noto-sans', 'zen-kaku', 'noto-serif', 'yusei', 'hachi-maru', 'dotgothic'],
 };
 const NUMBER = ['novelty_threshold'];
+const DATETIME = ['open_at', 'close_at'];     // 'YYYY-MM-DDTHH:MM'（日本時間）
+const TIME = ['daily_open', 'daily_close'];   // 'HH:MM'
 const JSON_KEYS = ['characters', 'avatars']; // 中身が入れ子のもの（Shopify には JSON として保存）
-const KEYS = [...TEXT, ...MULTILINE, ...COLOR, ...IMAGE, ...Object.keys(SELECT), ...NUMBER, ...JSON_KEYS];
+const KEYS = [...TEXT, ...MULTILINE, ...COLOR, ...IMAGE, ...Object.keys(SELECT), ...NUMBER, ...JSON_KEYS, ...DATETIME, ...TIME];
+const schedule = require('../../js/schedule.js');
 // キャラクターの ID（js/data.js の CHARACTERS と同じ。追加はできず、編集のみ）
 const CHARACTER_IDS = ['haru', 'byeol', 'dalbit', 'gomi'];
 const ROWS = 3;
@@ -69,11 +72,25 @@ function cleanEvent(event, imageOk) {
     } else if (IMAGE.includes(k)) {
       if (!imageOk(v)) throw new InputError(k);
       out[k] = { id: String(v.id), url: String(v.url) };
+    } else if (DATETIME.includes(k)) {
+      if (schedule.parseDateTime(v) == null) throw new InputError(`${k}（日時の形式）`);
+      out[k] = v;
+    } else if (TIME.includes(k)) {
+      if (schedule.parseTime(v) == null) throw new InputError(`${k}（時刻の形式）`);
+      out[k] = v;
     } else if (k === 'characters') {
       out[k] = cleanCharacters(v, imageOk);
     } else if (k === 'avatars') {
       out[k] = cleanAvatars(v, imageOk);
     }
+  }
+  // 日時の前後関係
+  if (out.open_at && out.close_at && schedule.parseDateTime(out.close_at) <= schedule.parseDateTime(out.open_at)) {
+    throw new InputError('終了日時は開始日時より後にしてください');
+  }
+  if (!!out.daily_open !== !!out.daily_close) throw new InputError('毎日の開店時刻と閉店時刻は両方入れてください（24時間営業なら両方空欄）');
+  if (out.daily_open && schedule.parseTime(out.daily_close) <= schedule.parseTime(out.daily_open)) {
+    throw new InputError('毎日の閉店時刻は開店時刻より後にしてください');
   }
   return out;
 }

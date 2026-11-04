@@ -87,7 +87,12 @@ export async function buildRoom(theme) {
   sign.position.set(0, 3.15, -HALF_D + 0.03);
   group.add(sign);
 
-  const plate = plane(2.2, 0.36, basic(T.signTexture([{ text: window.SHOP.period, size: 0.62 }], theme.sign, 2.2, 0.36, { radius: 0.08 }), { transparent: true }));
+  // 会期の札（営業時間があれば2行）
+  const hours = window.SHOP.hours || '';
+  const plateH = hours ? 0.56 : 0.36;
+  const plate = plane(2.2, plateH, basic(T.signTexture(hours
+    ? [{ text: window.SHOP.period, size: 0.42 }, { text: hours, size: 0.34, weight: 700 }]
+    : [{ text: window.SHOP.period, size: 0.62 }], theme.sign, 2.2, plateH, { radius: 0.08 }), { transparent: true }));
   // 会期の札は看板と重ならない位置へ（看板が広いときは右へずらす）
   plate.position.set(Math.min(5.65, Math.max(4.6, signW / 2 + 1.2)), 3.35, -HALF_D + 0.03);
   plate.rotation.z = -0.06;
