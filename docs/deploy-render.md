@@ -39,8 +39,7 @@ Render は、GitHub のリポジトリの決まったブランチを公開しま
 3. ログインできたら、Render の「Environment」で **`ADMIN_INITIAL_PASSWORD` を削除** して保存します
    （アカウントは保存済みなので、消してもログインできます）
 
-> 仮のアドレスのままだと、他のお客さんのアバターが見えない「ひとりで見ています」の表示になります（同時接続は popbase.jp だけ許可しているため）。
-> 仮のアドレスで同時接続も試したいときは、「Environment」の `ALLOWED_ORIGINS` の最後に `,https://popbase-xxxx.onrender.com` を足してください。
+> 仮のアドレスでも、同時接続（他のお客さんのアバター）と入場制限は popbase.jp と同じように動きます。
 
 ## 4. popbase.jp をつなぐ
 

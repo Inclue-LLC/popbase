@@ -87,12 +87,21 @@ const server = http.createServer(async (req, res) => {
   }
   serveStatic(req, res);
 });
-const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 1024 });
+/*
+ * 接続してよいサイトか（Origin）。このサーバー自身のアドレス（popbase.jp でも Render の仮のアドレスでも）は常に許可し、
+ * それ以外は ALLOWED_ORIGINS にあるものだけ。断るときは接続の時点で断る（つないでから切ると、ブラウザがつなぎ直しを繰り返すため）
+ */
+function originAllowed(origin, host) {
+  if (!ALLOWED_ORIGINS.length) return true;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  try { return !!host && new URL(origin).host === host; } catch { return false; }
+}
+const wss = new WebSocketServer({
+  server, path: '/ws', maxPayload: 1024,
+  verifyClient: ({ origin, req }) => originAllowed(origin || '', req.headers.host),
+});
 
 wss.on('connection', (ws, req) => {
-  const origin = req.headers.origin || '';
-  if (ALLOWED_ORIGINS.length && !ALLOWED_ORIGINS.includes(origin)) return ws.close(1008, 'origin');
-
   const ip = clientIp(req);
   if ((ipCount.get(ip) || 0) >= MAX_PER_IP) return ws.close(1008, 'too many');
   ipCount.set(ip, (ipCount.get(ip) || 0) + 1);

@@ -59,7 +59,8 @@
       try { ws = new WebSocket(url); } catch { V.retry(url); return; }
       V.ws = ws;
       ws.onopen = () => {
-        V.failures = 0;
+        // 失敗の回数は、サーバーから返事（入店・待機）が来たときに 0 に戻す
+        // （つながってすぐ切られる場合に、つなぎ直しを無限に繰り返さないため）
         ws.send(JSON.stringify({ t: 'hello', token: store.get() }));
       };
       ws.onmessage = (e) => {
@@ -92,6 +93,7 @@
     },
 
     handle(m) {
+      if (m.t === 'queue' || m.t === 'admitted') V.failures = 0;
       if (m.t === 'queue') {
         store.set(m.token);
         V.state = 'queued';

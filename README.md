@@ -78,7 +78,7 @@ npm run admin:user -- staff01
 | `WARN_MINUTES` | 5 | 終了何分前から残り時間のタイマーを出すか |
 | `RECONNECT_SECONDS` | 30 | 再読み込み・通信の切れ目で、店内の場所・待機の順番・残り時間を預かる秒数 |
 | `MAX_PER_IP` | 6 | 同じ IP からの同時接続の上限 |
-| `ALLOWED_ORIGINS` | なし | 接続を許可するサイトの URL（カンマ区切り）。本番では設定を推奨 |
+| `ALLOWED_ORIGINS` | なし | 接続を許可するサイトの URL（カンマ区切り）。このサーバー自身のアドレスは常に許可。本番では設定を推奨 |
 | `SHOPIFY_STORE_DOMAIN` / `SHOPIFY_ADMIN_TOKEN` | なし | 設定すると店内管理画面の保存先が Shopify になる（[手順](docs/shopify-setup.md)） |
 | `SESSION_SECRET` | 自動生成 | 管理画面のログイン Cookie の署名鍵。サーバーを複数台にする場合は同じ値を設定 |
 | `COOKIE_SECURE` | なし | `1` で Cookie を HTTPS 限定にする（本番は HTTPS で公開し、`1` を推奨） |
