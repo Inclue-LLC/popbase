@@ -513,7 +513,7 @@ function themeDefault(path) {
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
   if (path.startsWith('const.')) return path.slice(6);
   if (path === 'shop.brand') return ev.brand || E.original.brand;
-  if (path === 'shop.themeLabel') return `${ev.title || base.name} ― ${ev.subtitle || base.title}`;
+  if (path === 'shop.themeLabel') return ev.subtitle ? `${ev.title || base.name} ― ${ev.subtitle}` : (ev.title || base.name);
   if (path.startsWith('shop.')) return E.original[path.slice(5)];
   if (path.startsWith('layout.')) return path.split('.').slice(1).reduce((o, k) => o?.[k], E.original.layout);
   return path.split('.').reduce((o, k) => o?.[k], base);
@@ -523,7 +523,7 @@ const FORMS = { event: '#eventForm', entrance: '#entranceForm' };
 function renderForm() {
   const ev = state.draft.event;
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
-  const placeholders = { title: base.name, subtitle: base.title, period: E.original.period, novelty_threshold: E.original.novelty.threshold, novelty_name: E.original.novelty.name };
+  const placeholders = { title: base.name, subtitle: '（空欄なら表示しません）', period: E.original.period, novelty_threshold: E.original.novelty.threshold, novelty_name: E.original.novelty.name };
   for (const [tab, sel] of Object.entries(FORMS)) {
     const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab);
     const groups = [...new Set(fields.map((f) => f.group))];

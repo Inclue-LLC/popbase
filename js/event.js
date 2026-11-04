@@ -80,7 +80,7 @@
   const FIELDS = [
     { group: 'イベント', key: 'brand', label: 'ブランド名', hint: '店内の看板の上の行・ページ上部のロゴなど（全角15文字・半角30文字まで）', type: 'text', maxUnits: 30, placeholderPath: 'shop.brand' },
     { group: 'イベント', key: 'title', label: 'イベント名', hint: '看板の大きな文字。長さに合わせて看板の幅が広がります（全角14文字・半角28文字まで）', type: 'text', maxUnits: 28 },
-    { group: 'イベント', key: 'subtitle', label: 'サブタイトル', hint: '看板の下の行（全角20文字・半角40文字まで）', type: 'text', maxUnits: 40 },
+    { group: 'イベント', key: 'subtitle', label: 'サブタイトル', hint: '看板の下の行。空欄なら表示しません（全角20文字・半角40文字まで）', type: 'text', maxUnits: 40 },
     { group: 'イベント', key: 'period', label: '会期', hint: '例: 2026.12.01 – 12.31', type: 'text' },
     { group: 'イベント', key: 'theme_preset', label: 'ベースのテーマ', hint: '下の項目で空欄のものは、このテーマの値になります', type: 'select', options: () => Object.entries(window.THEMES).filter(([k]) => k !== 'event').map(([k, t]) => ({ value: k, label: `${t.name}（${t.title}）` })) },
     { group: '壁', key: 'wall_image', label: '壁紙の画像', hint: '横長の画像（例: 2048×540px）。指定すると柄より優先', type: 'image' },
@@ -163,7 +163,6 @@
     const theme = JSON.parse(JSON.stringify(window.THEMES[baseKey] || Object.values(window.THEMES)[0]));
     const set = (obj, key, field) => { if (has(f, field)) obj[key] = f[field]; };
     set(theme, 'name', 'title');
-    set(theme, 'title', 'subtitle');
     if (imageUrl(f.wall_image)) theme.wall.image = imageUrl(f.wall_image);
     set(theme.wall, 'color', 'wall_color');
     set(theme.wall, 'pattern', 'wall_pattern');
@@ -184,6 +183,7 @@
     const S = window.SHOP;
     S.period = has(f, 'period') ? f.period : original.period;
     S.brand = has(f, 'brand') ? f.brand : original.brand;
+    S.subtitle = has(f, 'subtitle') ? f.subtitle : ''; // 未記入なら表示しない
     S.novelty = { ...original.novelty };
     if (has(f, 'novelty_threshold')) S.novelty.threshold = Number(f.novelty_threshold);
     if (has(f, 'novelty_name')) S.novelty.name = f.novelty_name;

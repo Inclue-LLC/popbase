@@ -81,7 +81,9 @@ window.applyThemeMeta = function applyThemeMeta(key) {
   const k = window.THEMES[key] ? key : Object.keys(window.THEMES)[0];
   const t = window.THEMES[k];
   window.SHOP.theme = k;
-  window.SHOP.themeLabel = `${t.name} ― ${t.title}`;
+  // 入口の「イベント名 ― サブタイトル」。サブタイトルは管理画面で入力したときだけ（テーマの title は使わない）
+  const sub = window.SHOP.subtitle || '';
+  window.SHOP.themeLabel = sub ? `${t.name} ― ${sub}` : t.name;
   const root = document.documentElement.style;
   root.setProperty('--theme-top', t.entrance.top);
   root.setProperty('--theme-bottom', t.entrance.bottom);
