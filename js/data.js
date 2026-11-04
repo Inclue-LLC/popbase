@@ -14,7 +14,8 @@ window.SHOP = {
   period: '2026.11.20 (金) – 12.25 (金)',
   shippingFee: 600,
   freeShippingThreshold: 5000,
-  novelty: { threshold: 3000, name: 'オリジナルステッカー（全4種ランダム）' },
+  // 購入特典（店内管理画面の「購入特典」で設定。なしなら null）例: { threshold: 3000, name: 'オリジナルステッカー' }
+  novelty: null,
   // 同時接続サーバーの URL。空ならこのサイトと同じサーバーの /ws につなぎます（npm start で起動したとき）
   multiplayerUrl: '',
 };

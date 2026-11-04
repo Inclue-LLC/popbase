@@ -55,6 +55,7 @@ const EVENT_FIELDS = [
   t('right_title', '右の棚の看板（英字）', 'single_line_text_field'),
   t('right_label', '右の棚の看板（日本語）', 'single_line_text_field'),
   t('font', 'ショップの基本フォント', 'single_line_text_field'),
+  t('novelty', '購入特典のあり・なし', 'single_line_text_field'),
   t('novelty_threshold', '特典の条件金額', 'number_integer'),
   t('novelty_name', '特典の名前', 'single_line_text_field'),
   t('entrance_kicker', '入口：上の小さい文字', 'single_line_text_field'),

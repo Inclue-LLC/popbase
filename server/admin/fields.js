@@ -14,6 +14,7 @@ const SELECT = {
   floor_style: ['', 'wood', 'check', 'tile', 'carpet'],
   light: ['', 'day', 'night'],
   entrance_characters: ['', 'hide'],
+  novelty: ['', 'on', 'off'], // 購入特典のあり・なし（'' は名前が入っていればあり）
   // js/event.js の FONTS と同じ値
   font: ['', 'zen-maru', 'kosugi-maru', 'kiwi-maru', 'noto-sans', 'zen-kaku', 'noto-serif', 'yusei', 'hachi-maru', 'dotgothic'],
 };
@@ -42,8 +43,12 @@ function textUnits(str) {
 
 // 必須項目（js/event.js の NEED で required のものと同じにする）。公開するときに確認する
 const REQUIRED = { brand: 'ブランド名', title: 'イベント名', open_at: '開始日時', close_at: '終了日時' };
+const blank = (v) => v == null || String(v).trim() === '';
 function missingRequired(event = {}) {
-  return Object.entries(REQUIRED).filter(([k]) => event[k] == null || String(event[k]).trim() === '').map(([, label]) => label);
+  const miss = Object.entries(REQUIRED).filter(([k]) => blank(event[k])).map(([, label]) => label);
+  // 購入特典を「あり」にしたときは、特典の名前も必須
+  if (event.novelty === 'on' && blank(event.novelty_name)) miss.push('特典の名前');
+  return miss;
 }
 
 class InputError extends Error {}

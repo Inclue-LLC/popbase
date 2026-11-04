@@ -535,13 +535,13 @@ const FORMS = { event: '#eventForm', entrance: '#entranceForm' };
 function renderForm() {
   const ev = state.draft.event;
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
-  const placeholders = { title: base.name, subtitle: '（空欄なら表示しません）', period: E.original.period, novelty_threshold: E.original.novelty.threshold, novelty_name: E.original.novelty.name };
+  const placeholders = { title: base.name, subtitle: '（空欄なら表示しません）', period: E.original.period, novelty_threshold: E.NOVELTY_THRESHOLD, novelty_name: 'オリジナルステッカー' };
   for (const [tab, sel] of Object.entries(FORMS)) {
-    const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab);
+    const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab && (!f.showIf || f.showIf(ev)));
     const groups = [...new Set(fields.map((f) => f.group))];
     $(sel).innerHTML = NEED_LEGEND + groups.map((g) => `
       <fieldset class="fgroup"><legend>${esc(g)}</legend>
-        ${fields.filter((f) => f.group === g).map((f) => fieldHtml(f, ev[f.key], placeholders)).join('')}
+        ${fields.filter((f) => f.group === g).map((f) => fieldHtml(f, f.value ? f.value(ev) : ev[f.key], placeholders)).join('')}
         ${g === '会期・営業時間' ? '<p class="schedule-status" id="scheduleStatus"></p>' : ''}
       </fieldset>`).join('');
   }
@@ -584,9 +584,9 @@ const NEED_LEGEND = `<p class="need-legend">
 
 /** 必須で空欄の欄に印を付ける */
 function markMissing() {
-  for (const f of E.missingRequired({})) {
-    const el = document.getElementById(`f_${f.key}`);
-    if (el) el.classList.toggle('is-missing', !String(state.draft.event[f.key] ?? '').trim());
+  const miss = new Set(E.missingRequired(state.draft.event).map((f) => f.key));
+  for (const f of E.FIELDS.filter((x) => x.need === 'required')) {
+    document.getElementById(`f_${f.key}`)?.classList.toggle('is-missing', miss.has(f.key));
   }
 }
 
@@ -661,7 +661,8 @@ for (const sel of Object.values(FORMS)) {
   form.addEventListener('change', async (e) => {
     const key = e.target.dataset.key;
     // テーマや色の変更で「テーマの色」の表示が変わるので描き直す
-    if (key === 'theme_preset' || e.target.type === 'color') { renderForm(); return; }
+    // 購入特典の「なし／あり」で、条件金額と名前の欄を出し入れする
+    if (key === 'theme_preset' || key === 'novelty' || e.target.type === 'color') { renderForm(); return; }
     const input = e.target.closest('[data-upload]');
     if (!input || !input.files[0]) return;
     const file = input.files[0];
