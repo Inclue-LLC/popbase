@@ -12,7 +12,7 @@
  *   SHOPIFY_API_VERSION    既定 2025-01
  *   SHOPIFY_COLLECTION     店内に並べるコレクションのハンドル（既定 popup）
  */
-const { KEYS, IMAGE, JSON_KEYS, cleanEvent, cleanLayout, flatten } = require('./fields');
+const { KEYS, IMAGE, cleanEvent, cleanLayout, flatten } = require('./fields');
 
 const auth = require('./shopify-token');
 
@@ -55,13 +55,15 @@ async function readEntry(handle) {
   const mo = data.metaobjectByHandle;
   if (!mo) return null;
   const f = Object.fromEntries(mo.fields.map((x) => [x.key, x]));
+  // イベントの設定は 1 つの JSON（settings）にまとめて保存している（画像は { id, url }）
+  let saved = {};
+  try { saved = f.settings?.value ? JSON.parse(f.settings.value) : {}; } catch { saved = {}; }
   const event = {};
   for (const k of KEYS) {
-    const x = f[k];
-    if (!x || x.value == null) { event[k] = ''; continue; }
-    if (IMAGE.includes(k)) event[k] = x.reference?.image?.url ? { id: x.value, url: x.reference.image.url } : '';
-    else if (JSON_KEYS.includes(k)) { try { event[k] = JSON.parse(x.value); } catch { event[k] = ''; } }
-    else event[k] = x.value;
+    const v = saved[k];
+    if (v == null) event[k] = '';
+    else if (IMAGE.includes(k)) event[k] = v && typeof v === 'object' && v.url ? { id: v.id, url: v.url } : '';
+    else event[k] = v;
   }
   let layout = null;
   let meta = {};
@@ -71,16 +73,17 @@ async function readEntry(handle) {
 }
 
 async function writeEntry(handle, event, layout, meta) {
-  const fields = KEYS.map((k) => {
+  const settings = {};
+  for (const k of KEYS) {
     const v = event[k];
-    let value = '';
-    if (IMAGE.includes(k)) value = v && typeof v === 'object' ? v.id : '';
-    else if (JSON_KEYS.includes(k)) value = v && typeof v === 'object' ? JSON.stringify(v) : '';
-    else value = v == null ? '' : String(v);
-    return { key: k, value };
-  });
-  fields.push({ key: 'layout', value: JSON.stringify(layout) });
-  fields.push({ key: 'admin_meta', value: JSON.stringify(meta) });
+    if (v == null || v === '') continue;
+    settings[k] = IMAGE.includes(k) ? (v && typeof v === 'object' ? { id: v.id, url: v.url } : undefined) : v;
+  }
+  const fields = [
+    { key: 'settings', value: JSON.stringify(settings) },
+    { key: 'layout', value: JSON.stringify(layout) },
+    { key: 'admin_meta', value: JSON.stringify(meta) },
+  ];
   const data = await gql(`
     mutation Upsert($handle: MetaobjectHandleInput!, $metaobject: MetaobjectUpsertInput!) {
       metaobjectUpsert(handle: $handle, metaobject: $metaobject) {

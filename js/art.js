@@ -113,10 +113,17 @@
       ${character(c, 100, 120, 0.62)}`,
   };
 
+  // 画像がなく、自社のキャラクターでもない商品（他社のキャラクターなど）は「画像準備中」の絵にする
+  const NO_IMAGE = `
+      <rect x="40" y="40" width="120" height="132" rx="18" fill="#f6f0fb" stroke="#e3d8f0" stroke-width="3"/>
+      <path d="M78 96 l20 -9 v26 l-20 9 z M96 104 l22 -10 v30 l-22 10 z" fill="#dccef5"/>
+      <text x="100" y="152" text-anchor="middle" font-size="13" font-weight="700" fill="#9a8fa6" font-family="sans-serif">NO IMAGE</text>`;
+
   function productSVG(p) {
     const c = window.CHARACTERS.find((ch) => ch.id === p.character);
     if (p.image) return `<img src="${p.image}" alt="" loading="lazy">`;
-    return `<svg viewBox="0 0 200 200" aria-hidden="true">${shapes[p.shape](c)}</svg>`;
+    const shape = shapes[p.shape] || shapes.mug;
+    return `<svg viewBox="0 0 200 200" aria-hidden="true">${c ? shape(c) : NO_IMAGE}</svg>`;
   }
 
   window.Art = { character, characterSVG, productSVG, tint, starPoints };
