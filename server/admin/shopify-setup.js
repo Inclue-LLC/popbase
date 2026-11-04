@@ -101,5 +101,27 @@ const PRODUCT_FIELDS = [
     if (errs.length && !errs.some((e) => e.code === 'TAKEN')) throw new Error(`${f.key}: ${errs.map((e) => e.message).join(' / ')}`);
     console.log(errs.length ? `・商品メタフィールド popup.${f.key} はすでにあります` : `・商品メタフィールド popup.${f.key} を作成しました`);
   }
+
+  // 商品ページの「メタフィールド」欄に出るよう、定義を「固定（ピン留め）」する
+  // （固定していない定義は、商品ページに表示されない）
+  try {
+    const list = await gql(`
+      query Defs {
+        metafieldDefinitions(first: 50, ownerType: PRODUCT, namespace: "popup") { nodes { id key pinnedPosition } }
+      }`);
+    for (const d of list.metafieldDefinitions.nodes) {
+      if (d.pinnedPosition != null) continue;
+      const r = await gql(`
+        mutation Pin($id: ID!) {
+          metafieldDefinitionPin(definitionId: $id) { pinnedDefinition { id } userErrors { field message } }
+        }`, { id: d.id });
+      const errs = r.metafieldDefinitionPin.userErrors;
+      if (errs.length) throw new Error(errs.map((e) => e.message).join(' / '));
+      console.log(`・商品メタフィールド popup.${d.key} を商品ページに表示するようにしました`);
+    }
+  } catch (e) {
+    console.log(`・商品ページへの表示（固定）は自動でできませんでした（${e.message}）。` +
+      'Shopify の「設定 → カスタムデータ（メタフィールドとメタオブジェクト） → 商品」で、popup の項目を開いて「固定」してください');
+  }
   console.log('完了しました。続けてコレクション「popup」に商品を入れ、/admin から配置してください。');
 })().catch((e) => { console.error('失敗しました:', e.message); process.exit(1); });
