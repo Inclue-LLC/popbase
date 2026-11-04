@@ -1,23 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 22 231 248">
-  <!-- POP BASE のマーク（正式なロゴデータが届いたら差し替える） -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="262 92 230 232" role="img" aria-label="POP BASE">
+  <title>POP BASE</title>
   <defs>
-    <linearGradient id="pbBack" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0" stop-color="#c3b2f2"/>
-      <stop offset=".55" stop-color="#e6c3f0"/>
-      <stop offset="1" stop-color="#f1c6e6"/>
+    <linearGradient id="pbBack" gradientUnits="userSpaceOnUse" x1="275" y1="290" x2="425" y2="105">
+      <stop offset="0" stop-color="#c0aff4"/>
+      <stop offset=".45" stop-color="#d6bbf4"/>
+      <stop offset="1" stop-color="#f0c2ee"/>
     </linearGradient>
-    <linearGradient id="pbFront" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f6b9d4" stop-opacity=".88"/>
-      <stop offset="1" stop-color="#f59ab7" stop-opacity=".92"/>
+    <linearGradient id="pbBackFade" gradientUnits="userSpaceOnUse" x1="0" y1="200" x2="0" y2="300">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".35"/>
     </linearGradient>
-    <linearGradient id="pbDoor" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fdeef2"/>
-      <stop offset="1" stop-color="#fff8f5"/>
+    <linearGradient id="pbFront" gradientUnits="userSpaceOnUse" x1="0" y1="135" x2="0" y2="315">
+      <stop offset="0" stop-color="#fab4d2"/>
+      <stop offset=".55" stop-color="#f7a5c0"/>
+      <stop offset="1" stop-color="#fcd2da"/>
     </linearGradient>
+    <linearGradient id="pbDoor" gradientUnits="userSpaceOnUse" x1="0" y1="195" x2="0" y2="318">
+      <stop offset="0" stop-color="#fdf1f2"/>
+      <stop offset=".7" stop-color="#fff6f3"/>
+      <stop offset="1" stop-color="#fff6f3" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="pbDoorCut" maskUnits="userSpaceOnUse" x="200" y="50" width="350" height="400">
+      <rect x="200" y="50" width="350" height="400" fill="#fff"/>
+      <path d="M334 420 V220.25 A27.75 27.75 0 0 1 389.5 220.25 V420 Z" fill="#000"/>
+    </mask>
+    <clipPath id="pbDoorClip"><rect x="0" y="161" width="212" height="204" rx="13" transform="translate(271 0) matrix(1 -0.44 0 1 0 0)"/></clipPath>
   </defs>
-  <g transform="skewY(-22.3)">
-    <rect x="0" y="95" width="160" height="125" rx="14" fill="url(#pbBack)"/>
-    <rect x="65" y="145" width="150" height="143" rx="14" fill="url(#pbFront)"/>
-    <path d="M65 288 V191 a27.5 27.5 0 0 1 55 0 V288 Z" fill="url(#pbDoor)"/>
+  <g transform="translate(271 0) matrix(1 -0.44 0 1 0 0)">
+    <rect x="0" y="161" width="157" height="136" rx="13" fill="url(#pbBack)"/>
+    <rect x="0" y="161" width="157" height="136" rx="13" fill="url(#pbBackFade)"/>
   </g>
+  <g mask="url(#pbDoorCut)">
+    <g transform="translate(271 0) matrix(1 -0.44 0 1 0 0)"><rect x="64" y="220" width="148" height="145" rx="13" fill="url(#pbFront)" fill-opacity=".9"/></g>
+  </g>
+  <path d="M334 318 V220.25 A27.75 27.75 0 0 1 389.5 220.25 V318 Z" fill="url(#pbDoor)" clip-path="url(#pbDoorClip)"/>
 </svg>

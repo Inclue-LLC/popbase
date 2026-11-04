@@ -240,7 +240,10 @@ docs/shopify-setup.md Shopify の初期設定（技術担当向け）
 
 ## ブランドデザイン（POP BASE）
 
-- ロゴのマーク: `images/popbase-mark.svg`（ロゴの見本から作った仮のデータ。正式なロゴデータが届いたら同じ名前で差し替える）
+- ロゴの SVG: `images/logo/`（ロゴの見本画像から作ったもの。作り直すときは `python3 scripts/build-logo.py <Poppins-Medium.ttf>`）
+  - `popbase-logo.svg`（基本）・`-mono`（濃色）・`-line`（線）・`-white`（白）／`popbase-logo-horizontal*.svg`（横組み）
+  - `popbase-mark*.svg`（マークだけ）／`popbase-icon-*.svg`（アイコン）
+  - サイトで使うマーク: `images/popbase-mark.svg`
 - カラー: ラベンダー `#DCCEF5`・ピンク `#F7C9D8`・クリーム `#FFF4F1`・濃色 `#2E2729`（`css/style.css` の `--brand-*`）
 - 文字: 英字は Poppins、日本語は Zen Kaku Gothic New（ショップのフォントは管理画面で変更可）
 - 店内の初期テーマ: `base`（Lavender Base）

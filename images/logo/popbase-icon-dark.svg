@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="POP BASE">
+  <title>POP BASE</title>
+  <defs>
+    <mask id="pbwDoorCut" maskUnits="userSpaceOnUse" x="200" y="50" width="350" height="400">
+      <rect x="200" y="50" width="350" height="400" fill="#fff"/>
+      <path d="M334 420 V220.25 A27.75 27.75 0 0 1 389.5 220.25 V420 Z" fill="#000"/>
+    </mask>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#2e2729"/>
+  <g transform="translate(107.29 106.00) scale(1.2931) translate(-262 -92)">
+  <g mask="url(#pbwDoorCut)" fill="#ffffff">
+    <g transform="translate(271 0) matrix(1 -0.44 0 1 0 0)"><rect x="0" y="161" width="157" height="136" rx="13" /><rect x="64" y="220" width="148" height="145" rx="13" /></g>
+  </g>
+  </g>
+</svg>
