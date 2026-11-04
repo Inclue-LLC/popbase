@@ -66,6 +66,9 @@ npm run admin:user -- staff01
 サーバー1つで **サイト配信と同時接続の両方** を行います。Node.js と WebSocket が動くサービスならどこでも公開できます
 （例: Render、Fly.io、Google Cloud Run、Railway、VPS など）。
 
+**popbase.jp（Render）で公開する手順は [docs/deploy-render.md](docs/deploy-render.md) にあります**（設定は `render.yaml`）。
+サーバーは必ず **1台** で動かしてください（店内の人数・待機列をサーバーのメモリで管理しているため）。
+
 | 環境変数 | 既定値 | 内容 |
 | --- | --- | --- |
 | `PORT` | 8080 | 待ち受けポート |
@@ -79,6 +82,8 @@ npm run admin:user -- staff01
 | `SESSION_SECRET` | 自動生成 | 管理画面のログイン Cookie の署名鍵。サーバーを複数台にする場合は同じ値を設定 |
 | `COOKIE_SECURE` | なし | `1` で Cookie を HTTPS 限定にする（本番は HTTPS で公開し、`1` を推奨） |
 | `DATA_DIR` | `./data` | 管理画面のアカウント・（Shopify 未設定時の）下書きと画像の保存先 |
+| `CLIENT_IP_HEADER` / `TRUST_PROXY_HOPS` | なし / 1 | お客さんの接続元 IP の読み方（中継サーバー越しに公開する場合。`server/client-ip.js`）。公開後に `/api/ip` で確認 |
+| `ADMIN_INITIAL_USER` / `ADMIN_INITIAL_PASSWORD` | なし | アカウントが1つもないとき、起動時にこのアカウントを作る（コマンドを打てない公開サービス向け。作ったら消す） |
 
 **本番で気をつけること**
 - 管理画面は必ず **HTTPS** で公開してください。

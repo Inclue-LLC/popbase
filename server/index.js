@@ -15,6 +15,7 @@
  *   RECONNECT_SECONDS 再読み込み・通信の切れ目で、席や順番を預かる秒数（既定 30）
  *   MAX_PER_IP        同じIPからの同時接続数の上限（既定 6）
  *   ALLOWED_ORIGINS   接続を許可するサイトのURL（カンマ区切り。空なら制限なし）
+ *   CLIENT_IP_HEADER / TRUST_PROXY_HOPS  接続元 IP の読み方（server/client-ip.js）
  */
 const http = require('http');
 const fs = require('fs');
@@ -22,6 +23,7 @@ const path = require('path');
 const { WebSocketServer } = require('ws');
 const adminApi = require('./admin/api');
 const visit = require('./visit');
+const { clientIp } = require('./client-ip');
 
 const PORT = Number(process.env.PORT) || 8080;
 const MAX_PER_IP = Number(process.env.MAX_PER_IP) || 6;
@@ -69,6 +71,11 @@ const stats = () => visit.stats();
 const server = http.createServer(async (req, res) => {
   let urlPath = '/';
   try { urlPath = new URL(req.url, 'http://x').pathname; } catch { /* noop */ }
+  // 公開後の確認用：サーバーが判定したあなたの接続元（server/client-ip.js）
+  if (urlPath === '/api/ip') {
+    res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
+    return res.end(JSON.stringify({ ip: clientIp(req) }));
+  }
   if (urlPath.startsWith('/admin/api/') || urlPath === '/api/published' || urlPath.startsWith('/uploads/')) {
     try {
       if ((await adminApi.handle(req, res, urlPath)) !== false) return;
@@ -86,7 +93,7 @@ wss.on('connection', (ws, req) => {
   const origin = req.headers.origin || '';
   if (ALLOWED_ORIGINS.length && !ALLOWED_ORIGINS.includes(origin)) return ws.close(1008, 'origin');
 
-  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress;
+  const ip = clientIp(req);
   if ((ipCount.get(ip) || 0) >= MAX_PER_IP) return ws.close(1008, 'too many');
   ipCount.set(ip, (ipCount.get(ip) || 0) + 1);
   ws.on('close', () => ipCount.set(ip, Math.max(0, (ipCount.get(ip) || 1) - 1)));
@@ -115,7 +122,22 @@ server.listen(PORT, () => {
   console.log(`STUDIO HANEUL pop-up: http://localhost:${PORT}  （同時接続: ws://localhost:${PORT}/ws）`);
   console.log(`入場制限: ${visit.CAP} 人まで。混雑中のお買い物時間 ${visit.VISIT_MS / 60e3} 分（終了 ${visit.WARN_MS / 60e3} 分前からタイマー表示）`);
   console.log(`店内管理画面: http://localhost:${PORT}/admin  （保存先: ${adminApi.store.label}）`);
-  if (!require('./admin/auth').readUsers().length) {
+  const auth = require('./admin/auth');
+  // 最初のアカウント：アカウントが1つもなく、ADMIN_INITIAL_USER / ADMIN_INITIAL_PASSWORD があれば作る
+  // （コマンドを打てない公開サービス向け。作ったあとは、この2つの環境変数を消してください）
+  const iu = (process.env.ADMIN_INITIAL_USER || '').trim();
+  const ipw = process.env.ADMIN_INITIAL_PASSWORD || '';
+  if (!auth.readUsers().length && iu) {
+    if (!/^[\w.@-]{2,40}$/.test(iu) || ipw.length < 10) {
+      console.log('  ※ ADMIN_INITIAL_USER は半角英数字（2〜40文字）、ADMIN_INITIAL_PASSWORD は10文字以上にしてください');
+    } else {
+      auth.setUser(iu, ipw);
+      console.log(`  管理画面のアカウント ${iu} を作成しました。環境変数 ADMIN_INITIAL_PASSWORD は消してください`);
+    }
+  } else if (auth.readUsers().length && ipw) {
+    console.log('  ※ アカウントはもうあります。環境変数 ADMIN_INITIAL_USER / ADMIN_INITIAL_PASSWORD は消してください（使われません）');
+  }
+  if (!auth.readUsers().length) {
     console.log('  ※ 管理画面のアカウントがまだありません。別のターミナルで npm run admin:user -- <名前> を実行して作成してください');
   }
 });

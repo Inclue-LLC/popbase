@@ -1,0 +1,36 @@
+# Render（https://render.com）で公開するための設定（Blueprint）
+# 手順: docs/deploy-render.md
+services:
+  - type: web
+    name: popbase
+    runtime: node
+    region: singapore          # 日本に一番近い地域
+    plan: starter              # 同時接続のサーバーを24時間動かすため、無料プラン（休止あり・保存先なし）は使えません
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    # 管理画面のアカウント・下書き・アップロード画像の保存先（再起動・更新しても消えない）
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
+    domains:
+      - popbase.jp
+      - www.popbase.jp
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATA_DIR
+        value: /var/data
+      - key: COOKIE_SECURE
+        value: "1"
+      # 同時接続を許可するサイトのアドレス（Render の仮アドレスで試すときは、そのアドレスもカンマで足す）
+      - key: ALLOWED_ORIGINS
+        value: https://popbase.jp,https://www.popbase.jp
+      - key: SESSION_SECRET
+        generateValue: true
+      # 最初の管理画面アカウント（公開の手続きのときに入力。ログインできたらパスワードの方は消す）
+      - key: ADMIN_INITIAL_USER
+        sync: false
+      - key: ADMIN_INITIAL_PASSWORD
+        sync: false

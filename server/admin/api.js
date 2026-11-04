@@ -44,7 +44,7 @@ async function readJson(req) {
   try { return JSON.parse(buf.toString('utf8') || '{}'); } catch { throw new InputError('json'); }
 }
 
-const clientIp = (req) => (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress;
+const { clientIp } = require('../client-ip');
 
 // 画像の種類をファイルの中身で判定（拡張子や Content-Type は信用しない）
 function sniffImage(buf) {
