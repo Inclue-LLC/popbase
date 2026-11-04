@@ -12,7 +12,6 @@ const yen = (n) => `¥${Number(n || 0).toLocaleString('ja-JP')}`;
 const fmtTime = (iso) => (iso ? new Date(iso).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—');
 
 const SAMPLE_PRODUCTS = window.PRODUCTS; // Shopify につないでいないときの商品（js/data.js）
-const EVENT_KEY = 'haneul:admin-event';
 
 const state = {
   user: null,
@@ -74,10 +73,7 @@ async function start() {
       try { state.collections = (await api('collections')).collections; } catch (e) { toast(`コレクションを読み込めませんでした：${e.message}`, { error: true }); }
     }
     await loadEvents();
-    const remembered = (() => { try { return localStorage.getItem(EVENT_KEY); } catch { return null; } })();
-    const pick = state.events.find((x) => x.id === remembered) || state.events.find((x) => x.active) || state.events[0];
-    if (pick) await selectEvent(pick.id);
-    else showEmpty();
+    await route();
   } catch (e) {
     if (e.status === 401) showLogin(e.data?.needsSetup);
     else toast(e.message, { error: true });
@@ -163,62 +159,129 @@ function renderEventBar() {
   $('#deleteEventBtn').disabled = !!cur.active;
   $('#deleteEventBtn').title = cur.active ? 'お客さんに表示中のイベントは削除できません' : '';
 }
-function showEmpty() {
-  state.eventId = null;
-  $('#app').classList.add('is-empty');
-  $('#noEvents').hidden = false;
-  renderEventBar();
+/* ---------- 画面の切り替え（#/ = イベント一覧、#/event/ID = イベントの編集） ---------- */
+let openTab = null; // イベントを開いたときに選ぶタブ
+async function route() {
+  const m = /^#\/event\/([\w-]+)$/.exec(location.hash);
+  const target = m && state.events.find((x) => x.id === m[1]);
+  await flushSave();
+  if (!target) { showList(); return; }
+  try {
+    await selectEvent(target.id);
+    if (openTab) { document.querySelector(`.tab[data-tab="${openTab}"]`)?.click(); openTab = null; }
+  } catch (e) { toast(e.message, { error: true }); showList(); }
 }
+window.addEventListener('hashchange', () => { if (state.user) route(); });
+const openEvent = (id, tab = null) => {
+  openTab = tab;
+  const h = `#/event/${id}`;
+  if (location.hash === h) route(); else location.hash = h;
+};
+
+function showList() {
+  state.eventId = null;
+  state.draft = null;
+  if (location.hash && !/^#\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
+  $('#app').classList.add('is-list');
+  $('#eventList').hidden = false;
+  renderEventList();
+  window.scrollTo(0, 0);
+}
+
+/** イベント一覧：開催中 → 開催予定 → 準備中（未公開） → 終了 */
+function renderEventList() {
+  const HS = window.HaneulSchedule;
+  const groups = { live: [], soon: [], draftonly: [], ended: [] };
+  for (const x of state.events) groups[eventStatus(x)[0]].push(x);
+  const t = (v) => HS.parseDateTime(v) ?? 0;
+  groups.live.sort((a, b) => Number(b.active) - Number(a.active) || t(b.open_at) - t(a.open_at));
+  groups.soon.sort((a, b) => t(a.open_at) - t(b.open_at));
+  groups.draftonly.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+  groups.ended.sort((a, b) => t(b.close_at) - t(a.close_at));
+  const colTitle = (h) => state.collections.find((c) => c.handle === h)?.title || h;
+  const card = (x) => {
+    const [cls, label] = eventStatus(x);
+    const when = x.open_at ? HS.periodText({ open_at: x.open_at, close_at: x.close_at }) : '会期未設定';
+    const meta = [];
+    if (window.ADMIN_SHOPIFY) meta.push(x.collection ? `コレクション：${esc(colTitle(x.collection))}` : '<span class="warn">コレクション未設定</span>');
+    if (x.publishedAt) meta.push(`公開：${fmtTime(x.publishedAt)}`);
+    if (x.updatedAt) meta.push(`最終更新：${fmtTime(x.updatedAt)}`);
+    return `<article class="ev-card ${x.active ? 'is-active' : ''} ${cls === 'ended' ? 'is-ended' : ''}" data-id="${esc(x.id)}">
+      <div class="ev-main">
+        <div class="ev-badges"><span class="pill pill-${cls}">${label}</span>${x.active ? '<span class="pill pill-active">お客さんに表示中</span>' : ''}</div>
+        ${x.brand ? `<p class="ev-brand">${esc(x.brand)}</p>` : ''}
+        <h3>${esc(x.title || '（イベント名なし）')}</h3>
+        <p class="ev-period">${esc(when)}</p>
+        <p class="ev-meta">${meta.join('　')}</p>
+      </div>
+      <div class="ev-actions">
+        <button class="btn btn-primary btn-small" data-open type="button">編集する</button>
+        <button class="btn btn-small" data-copy type="button">複製</button>
+        <button class="btn btn-small btn-ghost btn-danger" data-delete type="button" ${x.active ? 'disabled title="お客さんに表示中のイベントは削除できません"' : ''}>削除</button>
+      </div>
+    </article>`;
+  };
+  const section = (key, title, note) => (groups[key].length ? `
+    <section class="el-group"><h2>${title}<small>${groups[key].length}件${note ? `・${note}` : ''}</small></h2>
+      <div class="el-cards">${groups[key].map(card).join('')}</div></section>` : '');
+  $('#eventGroups').innerHTML = state.events.length
+    ? section('live', '開催中', '') + section('soon', '開催予定', '開始日時になると自動で表示') +
+      section('draftonly', '準備中（未公開）', '「公開する」を押すまで表示されません') + section('ended', '終了', '')
+    : `<div class="el-empty"><h2>イベントがまだありません</h2>
+        <p>「＋ 新しいイベント」でイベントを作ると、内装・棚の配置・入口の画面などを、イベントごとに設定できます。</p></div>`;
+}
+
+$('#eventGroups').addEventListener('click', (e) => {
+  const card = e.target.closest('.ev-card');
+  if (!card) return;
+  const id = card.dataset.id;
+  if (e.target.closest('[data-open]')) openEvent(id);
+  else if (e.target.closest('[data-copy]')) createEvent({ copyFrom: id });
+  else if (e.target.closest('[data-delete]')) deleteEvent(id);
+});
+$('#listNewBtn').addEventListener('click', () => createEvent());
+
 async function selectEvent(id) {
   state.eventId = id;
-  try { localStorage.setItem(EVENT_KEY, id); } catch { /* noop */ }
-  $('#app').classList.remove('is-empty');
-  $('#noEvents').hidden = true;
+  $('#app').classList.remove('is-list');
+  $('#eventList').hidden = true;
   $('#previewLink').href = `/?preview=draft&event=${encodeURIComponent(id)}`;
   renderEventBar();
   await loadState();
 }
 
-$('#eventSel').addEventListener('change', async (e) => {
-  const id = e.target.value;
-  await flushSave();
-  try { await selectEvent(id); } catch (err) { toast(err.message, { error: true }); }
-});
+$('#eventSel').addEventListener('change', (e) => openEvent(e.target.value));
 
-async function createEvent({ copy = false } = {}) {
-  const cur = state.events.find((x) => x.id === state.eventId);
-  const title = prompt(copy
-    ? `「${cur?.title || ''}」の内装・入口の画面・キャラクターなどの設定を引き継いで、新しいイベントを作ります。\n（会期・コレクション・サブタイトルは引き継ぎません）\n\n新しいイベントの名前：`
+async function createEvent({ copyFrom = null } = {}) {
+  const src = copyFrom && state.events.find((x) => x.id === copyFrom);
+  const title = prompt(src
+    ? `「${src.title || ''}」の内装・入口の画面・キャラクターなどの設定を引き継いで、新しいイベントを作ります。\n（会期・コレクション・サブタイトルは引き継ぎません）\n\n新しいイベントの名前：`
     : '新しいイベントの名前（看板に出るイベント名。あとから変えられます）：');
   if (title == null) return;
   if (!title.trim()) { toast('イベント名を入れてください', { error: true }); return; }
   await flushSave();
   try {
-    const r = await api('events', { method: 'POST', body: { title: title.trim(), copyFrom: copy ? state.eventId : null } });
+    const r = await api('events', { method: 'POST', body: { title: title.trim(), copyFrom } });
     await loadEvents();
-    await selectEvent(r.id);
-    document.querySelector('.tab[data-tab="event"]').click();
-    toast(copy ? 'イベントを複製しました。会期とコレクションを設定してください' : 'イベントを作りました。会期とコレクションを設定してください');
+    openEvent(r.id, 'event');
+    toast(src ? 'イベントを複製しました。会期とコレクションを設定してください' : 'イベントを作りました。会期とコレクションを設定してください');
   } catch (e) { toast(e.message, { error: true }); }
 }
-$('#newEventBtn').addEventListener('click', () => createEvent());
-$('#firstEventBtn').addEventListener('click', () => createEvent());
-$('#copyEventBtn').addEventListener('click', () => createEvent({ copy: true }));
+$('#copyEventBtn').addEventListener('click', () => createEvent({ copyFrom: state.eventId }));
 
-$('#deleteEventBtn').addEventListener('click', async () => {
-  const cur = state.events.find((x) => x.id === state.eventId);
+async function deleteEvent(id) {
+  const cur = state.events.find((x) => x.id === id);
   if (!cur) return;
   if (!confirm(`イベント「${cur.title || '（イベント名なし）'}」を削除します。\n下書き・公開済みの設定・公開の履歴が消え、元に戻せません。よろしいですか？`)) return;
   try {
-    clearTimeout(state.saveTimer);
-    state.dirtyLocal = false;
-    await api(`events?event=${encodeURIComponent(cur.id)}`, { method: 'DELETE' });
+    if (id === state.eventId) { clearTimeout(state.saveTimer); state.dirtyLocal = false; }
+    await api(`events?event=${encodeURIComponent(id)}`, { method: 'DELETE' });
     await loadEvents();
-    const next = state.events.find((x) => x.active) || state.events[0];
-    if (next) await selectEvent(next.id); else showEmpty();
+    if (location.hash === '#/' || !location.hash) showList(); else location.hash = '#/';
     toast('イベントを削除しました');
   } catch (e) { toast(e.message, { error: true }); }
-});
+}
+$('#deleteEventBtn').addEventListener('click', () => deleteEvent(state.eventId));
 
 /** コレクションを変えたら、そのコレクションの商品を読み込み直す */
 async function changeCollection(handle) {

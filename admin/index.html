@@ -44,22 +44,28 @@
       </div>
     </header>
 
-    <!-- イベントの切り替え（お客さんに出すイベントは会期で自動で決まる） -->
+    <!-- 最初の画面：イベント一覧 -->
+    <section class="event-list" id="eventList" hidden>
+      <div class="el-head">
+        <div>
+          <h1>イベント一覧</h1>
+          <p>お客さんのサイトには、公開したイベントのうち会期中のもの（なければ次に始まるもの）が自動で表示されます。</p>
+        </div>
+        <button class="btn btn-primary" id="listNewBtn" type="button">＋ 新しいイベント</button>
+      </div>
+      <div id="eventGroups"></div>
+    </section>
+
+    <!-- 編集中のイベント -->
     <div class="eventbar">
+      <a class="btn btn-small btn-ghost" id="backToList" href="#/">← イベント一覧</a>
       <label class="eventbar-label" for="eventSel">イベント</label>
       <select id="eventSel" aria-describedby="eventInfo"></select>
       <span class="event-info" id="eventInfo"></span>
       <div class="eventbar-actions">
-        <button class="btn btn-small" id="newEventBtn" type="button">＋ 新しいイベント</button>
         <button class="btn btn-small" id="copyEventBtn" type="button">このイベントを複製</button>
         <button class="btn btn-small btn-ghost btn-danger" id="deleteEventBtn" type="button">削除</button>
       </div>
-    </div>
-    <div class="no-events" id="noEvents" hidden>
-      <h2>イベントがまだありません</h2>
-      <p>「＋ 新しいイベント」でイベントを作ると、内装・棚の配置・入口の画面などを、イベントごとに設定できます。<br>
-        お客さんのサイトには、公開したイベントのうち、会期中のもの（なければ次に始まるもの）が自動で表示されます。</p>
-      <button class="btn btn-primary" id="firstEventBtn" type="button">＋ 新しいイベントを作る</button>
     </div>
 
     <nav class="tabs" role="tablist">
