@@ -92,7 +92,6 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 }
 .entrance { color: var(--ent-ink, var(--ink)); }
 .entrance-bg { position: absolute; inset: 0; z-index: 0; background: center / cover no-repeat; }
-.entrance.has-image .sky { display: none; }
 .entrance-inner { position: relative; z-index: 2; transition: opacity .5s, transform .6s; }
 /* 設定を読み込むまで中身を出さない（初期値が一瞬見えるのを防ぐ） */
 .entrance:not(.is-ready) .entrance-inner { opacity: 0; }
@@ -128,22 +127,6 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 @keyframes doorLeft { 0% { transform: translateX(-100%); } 35% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
 @keyframes doorRight { 0% { transform: translateX(100%); } 35% { transform: translateX(0); } 100% { transform: translateX(100%); } }
 @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-
-.sky .cloud {
-  position: absolute; z-index: 1;
-  width: 180px; height: 56px; border-radius: 999px;
-  background: rgba(255, 255, 255, .75);
-  animation: drift linear infinite;
-}
-.sky .cloud::before, .sky .cloud::after {
-  content: ''; position: absolute; background: inherit; border-radius: 50%;
-}
-.sky .cloud::before { width: 80px; height: 80px; left: 28px; top: -40px; }
-.sky .cloud::after { width: 60px; height: 60px; left: 90px; top: -26px; }
-.sky .c1 { top: 14%; animation-duration: 38s; }
-.sky .c2 { top: 62%; animation-duration: 52s; animation-delay: -20s; transform: scale(.7); }
-.sky .c3 { top: 84%; animation-duration: 44s; animation-delay: -34s; }
-@keyframes drift { from { left: -220px; } to { left: 110%; } }
 
 .bob { animation: bob 2.4s ease-in-out infinite; }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
