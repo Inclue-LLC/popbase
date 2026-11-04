@@ -35,6 +35,8 @@ window.AppReady = (async function () {
 
   /* ---------- 共通テキスト ---------- */
   document.querySelectorAll('[data-bind]').forEach((el) => { el.textContent = SHOP[el.dataset.bind] ?? ''; });
+  // ブラウザのタブ：お店の名前｜開催中のブランド
+  document.title = SHOP.brand ? `${SHOP.title} | ${SHOP.brand}` : SHOP.title;
   // 購入特典（管理画面で特典の名前が空欄なら表示しない）
   if (SHOP.novelty) $('#noveltyInfo').textContent = `税込 ${yen(SHOP.novelty.threshold)} 以上お買い上げで「${SHOP.novelty.name}」をプレゼント。`;
   else $('#noveltyInfo').closest('.info-card').hidden = true;

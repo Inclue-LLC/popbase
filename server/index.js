@@ -1,5 +1,5 @@
 /*
- * STUDIO HANEUL Virtual Pop-up — サーバー
+ * POP BASE（バーチャルポップアップショップ）— サーバー
  * --------------------------------------------------
  * 1. サイト（静的ファイル）の配信
  * 2. 同時接続（WebSocket /ws）：同じ店内にいる他のお客さんのアバターを中継
@@ -119,7 +119,7 @@ refreshSchedule();
 setInterval(refreshSchedule, 30000).unref?.();
 
 server.listen(PORT, () => {
-  console.log(`STUDIO HANEUL pop-up: http://localhost:${PORT}  （同時接続: ws://localhost:${PORT}/ws）`);
+  console.log(`POP BASE: http://localhost:${PORT}  （同時接続: ws://localhost:${PORT}/ws）`);
   console.log(`入場制限: ${visit.CAP} 人まで。混雑中のお買い物時間 ${visit.VISIT_MS / 60e3} 分（終了 ${visit.WARN_MS / 60e3} 分前からタイマー表示）`);
   console.log(`店内管理画面: http://localhost:${PORT}/admin  （保存先: ${adminApi.store.label}）`);
   const auth = require('./admin/auth');

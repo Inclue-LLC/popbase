@@ -173,7 +173,7 @@
     left_title: ['default', '初期の看板の文字'], left_label: ['default', '初期の看板の文字'],
     right_title: ['default', '初期の看板の文字'], right_label: ['default', '初期の看板の文字'],
     novelty_threshold: ['default', '3,000円'],
-    entrance_kicker: ['default', 'Virtual Pop-up Store'], entrance_heading: ['default', 'ブランド名'],
+    entrance_kicker: ['default', 'POP BASE'], entrance_heading: ['default', 'ブランド名'],
     entrance_message: ['default', 'イベント名（＋サブタイトル）'], entrance_button: ['default', '「お店に入る」'],
     entrance_logo: ['default', '大きい見出しの文字'], entrance_image: ['default', '背景の色'],
     entrance_characters: ['default', '表示する'],

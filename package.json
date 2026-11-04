@@ -2,7 +2,7 @@
   "name": "studiohaneul-popup",
   "version": "1.0.0",
   "private": true,
-  "description": "STUDIO HANEUL virtual pop-up store (3D store + multiplayer server)",
+  "description": "POP BASE virtual pop-up store (3D store + multiplayer server)",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",

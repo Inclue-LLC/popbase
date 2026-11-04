@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>STUDIO HANEUL Virtual Pop-up Store</title>
-  <meta name="description" content="スタジオハヌルのバーチャルポップアップショップ。アバターで店内を歩いて、会場限定グッズをお買い物。">
+  <title>POP BASE</title>
+  <meta name="description" content="POP BASE（ポップベース）は、キャラクターのポップアップが入れ替わるバーチャルショップ。アバターで店内を歩いて、会場限定グッズをお買い物。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -58,7 +58,7 @@
   </div>
 
   <header class="site-header">
-    <a class="logo" href="#top" aria-label="トップへ"><span data-bind="brand"></span><small>POP-UP</small></a>
+    <a class="logo" href="#top" aria-label="トップへ"><span data-bind="title"></span><small data-bind="brand"></small></a>
     <nav class="nav" aria-label="店内案内">
       <a href="#store">店内</a>
       <a href="#info">ご案内</a>
@@ -148,7 +148,7 @@
   </main>
 
   <footer class="site-footer">
-    <p>&copy; <span data-bind="brand"></span> — Virtual Pop-up Store</p>
+    <p>&copy; <span data-bind="title"></span> — <span data-bind="brand"></span> Pop-up</p>
     <p class="demo-note">※ このサイトはデモです。決済は接続されていません。</p>
   </footer>
 

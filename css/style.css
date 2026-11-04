@@ -141,7 +141,8 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
   border-bottom: 1px solid var(--line);
 }
 .logo { font-weight: 800; letter-spacing: .06em; color: var(--ink); text-decoration: none; white-space: nowrap; }
-.logo small { margin-left: .5em; font-size: .65rem; letter-spacing: .2em; color: var(--pink); }
+.logo small { display: inline-block; max-width: 14em; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; margin-left: .6em; font-size: .65rem; letter-spacing: .12em; color: var(--pink); }
+@media (max-width: 520px) { .logo small { display: none; } }
 .nav { display: flex; gap: 4px; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
 .nav a {
   color: var(--ink-soft); text-decoration: none; font-weight: 700; font-size: .9rem;
