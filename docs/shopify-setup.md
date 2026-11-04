@@ -76,13 +76,13 @@ npm run shopify:setup
 
 次のものが作成されます（すでにあればそのまま）。
 
-- メタオブジェクト定義「**POP UPイベント**」（タイプ `popup_event`、ストアフロントから読み取り可）
+- メタオブジェクト定義「**POP UPイベント**」（タイプ `popup_event`、ストアフロントから読み取り可。項目は `settings`（イベントの設定をまとめた JSON）・`layout`（棚の配置）・`admin_meta`（管理情報）の3つ）
   - 店内管理画面が、エントリー `draft`（下書き）と `current`（公開中）を自動で作成・更新します
 - 商品メタフィールド定義（ネームスペース `popup`）
 
 | 管理画面での表示 | キー | 内容 |
 | --- | --- | --- |
-| キャラクター | `popup.character` | `ハル` / `ビョル` / `タルビ` / `ゴミ` |
+| キャラクター | `popup.character` | 自由入力（`ハル` / `ビョル` / `タルビ` / `ゴミ` は自社キャラクターとして扱う。他社のキャラクター名も入れられる） |
 | 会場限定 | `popup.limited` | オンで「会場限定」マーク |
 | お一人様の購入上限 | `popup.purchase_limit` | 例: 1 |
 | 仕様（サイズ・素材） | `popup.spec` | 例: 約 W24 × H20cm / ポリエステル |
@@ -92,7 +92,7 @@ npm run shopify:setup
 すでにある定義に、足りない項目だけが追加されます。
 
 スクリプトが使えない場合は、Shopify 管理画面の **設定 → カスタムデータ** で同じ定義を手で作成してください
-（POP UPイベントのフィールド一覧は `server/admin/shopify-setup.js` の `EVENT_FIELDS` にあります）。
+（POP UPイベントの項目は `server/admin/shopify-setup.js` の `EVENT_FIELDS` にあります）。
 
 ## 4. コレクションと商品
 

@@ -37,7 +37,7 @@
         products(first: 100) { nodes { ${PRODUCT_FIELDS(withInventory)} } }
       }
       metaobject(handle: { type: "popup_event", handle: $event }) {
-        fields { key value reference { ... on MediaImage { image { url } } } }
+        fields { key value }
       }
     }`;
 
@@ -86,12 +86,11 @@
   /* メタオブジェクト「POP UPイベント」→ イベント設定（js/event.js の形）と棚の配置 */
   function eventFromMetaobject(mo) {
     if (!mo) return null;
-    const f = Object.fromEntries(mo.fields.map((x) => [x.key, x.reference?.image?.url || x.value]));
-    let layout = null;
-    try { layout = f.layout ? JSON.parse(f.layout) : null; } catch { layout = null; }
-    delete f.layout;
-    delete f.admin_meta;
-    return { event: f, layout };
+    const f = Object.fromEntries(mo.fields.map((x) => [x.key, x.value]));
+    const parse = (v) => { try { return v ? JSON.parse(v) : null; } catch { return null; } };
+    // イベントの設定は 1 つの JSON（settings）。画像は { id, url } なので URL にする
+    const event = window.HaneulEvent.flatten(parse(f.settings) || {});
+    return { event, layout: parse(f.layout) };
   }
 
   async function load() {
