@@ -259,8 +259,35 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .pill-ended { background: color-mix(in srgb, var(--ink-soft) 15%, transparent); color: var(--ink-soft); }
 .pill-draftonly { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
 .eventbar-actions { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
-.no-events { max-width: 560px; margin: 48px auto; padding: 32px; text-align: center; background: var(--surface); border-radius: 20px; box-shadow: 0 10px 40px rgba(30, 26, 45, .08); }
-.no-events h2 { margin-bottom: 10px; }
-.no-events p { color: var(--ink-soft); }
-.app.is-empty .tabs, .app.is-empty .workspace, .app.is-empty #copyEventBtn, .app.is-empty #deleteEventBtn,
-.app.is-empty #eventSel, .app.is-empty .eventbar-label, .app.is-empty #publishBtn, .app.is-empty #previewLink { display: none; }
+
+/* イベント一覧（最初の画面） */
+.app.is-list .tabs, .app.is-list .workspace, .app.is-list .eventbar,
+.app.is-list #publishBtn, .app.is-list #previewLink, .app.is-list #status { visibility: hidden; }
+.app.is-list .tabs, .app.is-list .workspace, .app.is-list .eventbar { display: none; }
+.event-list { max-width: 1080px; margin: 0 auto; padding: 28px 20px 60px; }
+.el-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.el-head h1 { font-size: 1.5rem; margin-bottom: 4px; }
+.el-head p { margin: 0; color: var(--ink-soft); font-size: .85rem; }
+.el-group { margin-top: 26px; }
+.el-group h2 { font-size: .95rem; color: var(--ink-soft); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.el-group h2 small { font-weight: 500; }
+.el-cards { display: grid; gap: 12px; }
+.ev-card {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 16px 18px; border-radius: 16px; background: var(--surface);
+  border: 1.5px solid var(--line); box-shadow: 0 4px 16px rgba(120, 90, 140, .05);
+}
+.ev-card.is-active { border-color: #b9a3ec; box-shadow: 0 0 0 3px color-mix(in srgb, #dccef5 60%, transparent), 0 6px 20px rgba(120, 90, 140, .1); }
+.ev-card.is-ended { opacity: .75; }
+.ev-main { flex: 1; min-width: 240px; }
+.ev-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+.ev-badges .pill { padding: .1em .7em; border-radius: 999px; font-weight: 700; font-size: .72rem; }
+.pill-active { background: #2e2729; color: #fff; }
+.ev-card h3 { font-size: 1.1rem; }
+.ev-brand { margin: 0; font-size: .75rem; letter-spacing: .1em; color: var(--ink-soft); font-weight: 700; }
+.ev-period { margin: 6px 0 0; font-weight: 700; font-size: .9rem; }
+.ev-meta { margin: 2px 0 0; font-size: .78rem; color: var(--ink-soft); }
+.ev-meta .warn { color: var(--danger); font-weight: 700; }
+.ev-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.el-empty { padding: 40px 24px; text-align: center; border-radius: 20px; background: var(--surface); border: 1.5px dashed var(--line); color: var(--ink-soft); }
+.el-empty h2 { color: var(--ink); margin-bottom: 8px; }
