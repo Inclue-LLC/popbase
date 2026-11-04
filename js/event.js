@@ -126,7 +126,8 @@
     { group: '床', key: 'floor_color_2', label: '床の色 2', type: 'color', themePath: 'floor.colors.1' },
     { group: '床', key: 'rug_color', label: '会場限定テーブルの下の色', hint: 'テーブルの下に敷く楕円の色。指定した色のまま表示します', type: 'color', themePath: 'rug' },
     { group: '看板・照明', key: 'sign_color', label: '看板の色', type: 'color', themePath: 'sign.bg' },
-    { group: '看板・照明', key: 'sign_text_color', label: '看板の文字色', type: 'color', themePath: 'sign.ink' },
+    { group: '看板・照明', key: 'sign_text_color', label: '看板の大きい文字の色', hint: 'イベント名・棚の英字・「LIMITED」など', type: 'color', themePath: 'sign.ink' },
+    { group: '看板・照明', key: 'sign_sub_color', label: '看板の小さい文字の色', hint: 'イベント名の上のブランド名・棚の日本語・「会場限定テーブル」など', type: 'color', themePath: 'sign.sub' },
     { group: '看板・照明', key: 'light', label: '照明', type: 'select', options: () => opt([['', 'テーマのまま'], ['day', '明るい'], ['night', '夜（暗め＋スポットライト）']]) },
     { group: '棚の看板', key: 'left_title', label: '左の棚（英字）', type: 'text', placeholderPath: 'layout.left.title' },
     { group: '棚の看板', key: 'left_label', label: '左の棚（日本語）', type: 'text', placeholderPath: 'layout.left.label' },
@@ -246,6 +247,7 @@
     if (has(f, 'rug_color')) { theme.rug = f.rug_color; theme.rugOpacity = 1; }
     set(theme.sign, 'bg', 'sign_color');
     set(theme.sign, 'ink', 'sign_text_color');
+    set(theme.sign, 'sub', 'sign_sub_color');
     set(theme, 'light', 'light');
     set(theme.entrance, 'top', 'entrance_color_top');
     set(theme.entrance, 'bottom', 'entrance_color_bottom');
