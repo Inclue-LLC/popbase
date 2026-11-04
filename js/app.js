@@ -1,10 +1,10 @@
 /*
- * ページ全体の動き（商品一覧・商品詳細・カート・ガチャ）
+ * ページ全体の動き（入口・商品詳細・カート・退店）
  * Shopify が設定されていれば、まず Shopify から商品とイベント設定を読み込んでから表示します。
  */
 window.AppReady = (async function () {
   await window.DataSource.load();
-  const { SHOP, CHARACTERS, CATEGORIES, PRODUCTS, GACHA_PRIZES, Art } = window;
+  const { SHOP, CHARACTERS, CATEGORIES, PRODUCTS, Art } = window;
   const shopify = window.ShopifyData?.enabled ? window.ShopifyData : null;
   const $ = (sel, root = document) => root.querySelector(sel);
   const yen = (n) => `¥${n.toLocaleString('ja-JP')}`;
@@ -13,7 +13,6 @@ window.AppReady = (async function () {
   const NO_CHAR = { id: '', name: '', color: '#e3e6f0' };
   const charOf = (p) => charById[p.character] || NO_CHAR;
   const productById = Object.fromEntries(PRODUCTS.map((p) => [p.id, p]));
-  const today = () => new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
 
   /* ---------- 保存（localStorage は使えない環境もあるので必ず try/catch） ---------- */
   const store = {
@@ -28,13 +27,11 @@ window.AppReady = (async function () {
 
   const state = {
     cart: store.get('cart', {}),
-    coupon: store.get('coupon', null),
   };
   // 存在しない商品をカートから除外
   for (const id of Object.keys(state.cart)) if (!productById[id]) delete state.cart[id];
 
   const maxQty = (p) => Math.min(p.stock, p.limit || 10);
-  const activeCoupon = () => (state.coupon && state.coupon.date === today() ? state.coupon : null);
 
   /* ---------- 共通テキスト ---------- */
   document.querySelectorAll('[data-bind]').forEach((el) => { el.textContent = SHOP[el.dataset.bind] ?? ''; });
@@ -90,12 +87,21 @@ window.AppReady = (async function () {
     entrance.classList.add('open');
     setTimeout(() => { entrance.classList.add('is-hidden'); entrance.classList.remove('open'); }, 1400);
   }
+  // ended: 'timeout'（お買い物時間が終了）| 'exit'（EXIT から退店）| false
   function showEntrance({ ended = false } = {}) {
-    entrance.classList.remove('is-hidden', 'open', 'is-waiting');
+    entrance.classList.remove('is-hidden', 'open', 'is-waiting', 'is-picking');
+    $('#entPick').hidden = true;
     $('#entEnded').hidden = !ended;
+    if (ended === 'exit') {
+      $('#entEndedTitle').textContent = 'ご来店ありがとうございました';
+      $('#entEndedText').textContent = 'またのお越しをお待ちしています。';
+    } else if (ended) {
+      $('#entEndedTitle').textContent = 'お買い物時間が終了しました';
+      $('#entEndedText').textContent = 'ご来店ありがとうございました。カートの中身は空になりました。';
+    }
     $('#entWait').hidden = true;
     enterBtn.disabled = false;
-    enterBtn.textContent = ended ? 'もう一度並ぶ' : enterLabel();
+    enterBtn.textContent = ended === 'exit' ? 'もう一度入店する' : ended ? 'もう一度並ぶ' : enterLabel();
   }
   function requestEntry() {
     enterBtn.disabled = true;
@@ -169,9 +175,10 @@ window.AppReady = (async function () {
       document.querySelectorAll('.modal.is-open, .drawer.is-open').forEach((el) => closeLayer(el));
       state.cart = {};
       saveCart();
+      try { sessionStorage.removeItem('haneul:entered'); } catch { /* noop */ }
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       document.body.classList.remove('world-fs', 'no-scroll');
-      showEntrance({ ended: true });
+      showEntrance({ ended: 'timeout' });
     });
     Visit.on('timer', () => updateTimer());
 
@@ -228,6 +235,7 @@ window.AppReady = (async function () {
   /* ---------- モーダル / ドロワー共通 ---------- */
   let lastFocus = null;
   function openLayer(el) {
+    clearTimeout(el._hideTimer); // 閉じた直後に開き直したとき、閉じる処理で隠れないように
     lastFocus = document.activeElement;
     el.hidden = false;
     requestAnimationFrame(() => el.classList.add('is-open'));
@@ -236,7 +244,8 @@ window.AppReady = (async function () {
   }
   function closeLayer(el) {
     el.classList.remove('is-open');
-    setTimeout(() => { el.hidden = true; }, 250);
+    clearTimeout(el._hideTimer);
+    el._hideTimer = setTimeout(() => { el.hidden = true; }, 250);
     if (!document.querySelector('.modal.is-open, .drawer.is-open')) document.body.classList.remove('no-scroll');
     lastFocus?.focus?.();
   }
@@ -331,11 +340,9 @@ window.AppReady = (async function () {
     const lines = Object.entries(state.cart).map(([id, q]) => ({ p: productById[id], q }));
     const count = lines.reduce((s, l) => s + l.q, 0);
     const subtotal = lines.reduce((s, l) => s + l.p.price * l.q, 0);
-    const coupon = activeCoupon();
-    const discount = coupon ? Math.floor((subtotal * coupon.rate) / 100) : 0;
-    // Shopify 連携時は、送料・割引の最終額は Shopify の購入手続きで計算されます（ここでは目安）
+    // Shopify 連携時は、送料の最終額は Shopify の購入手続きで計算されます（ここでは目安）
     const shipping = subtotal === 0 || subtotal >= SHOP.freeShippingThreshold ? 0 : SHOP.shippingFee;
-    return { lines, count, subtotal, coupon, discount, shipping, total: subtotal - discount + shipping };
+    return { lines, count, subtotal, shipping, total: subtotal + shipping };
   }
 
   function renderCart() {
@@ -375,12 +382,10 @@ window.AppReady = (async function () {
     $('#cartSummary').innerHTML = t.lines.length ? `
       <dl>
         <div><dt>小計</dt><dd>${yen(t.subtotal)}</dd></div>
-        ${t.coupon ? `<div class="discount"><dt>${t.coupon.label}</dt><dd>−${yen(t.discount)}</dd></div>` : ''}
         <div><dt>送料</dt><dd>${t.shipping ? yen(t.shipping) : '無料'}</dd></div>
         <div class="total"><dt>合計（税込）${shopify ? '<small>目安</small>' : ''}</dt><dd>${yen(t.total)}</dd></div>
       </dl>
-      ${shopify ? '<p class="hint">送料・割引の最終金額は、次の購入手続き画面（Shopify）で確定します</p>' : ''}
-      ${!t.coupon ? '<p class="hint">クーポンガチャで割引クーポンをゲットできます</p>' : ''}
+      ${shopify ? '<p class="hint">送料の最終金額は、次の購入手続き画面（Shopify）で確定します</p>' : ''}
       ${t.shipping ? `<p class="hint">あと ${yen(SHOP.freeShippingThreshold - t.subtotal)} で送料無料</p>` : ''}` : '';
     $('#checkoutBtn').disabled = t.lines.length === 0;
     document.dispatchEvent(new CustomEvent('haneul:cart', { detail: { count: t.count } }));
@@ -406,7 +411,7 @@ window.AppReady = (async function () {
       btn.disabled = true;
       btn.textContent = '購入手続きを準備しています…';
       try {
-        const url = await shopify.checkout(t.lines.map(({ p, q }) => ({ variantId: p.variantId, quantity: q })), t.coupon?.code);
+        const url = await shopify.checkout(t.lines.map(({ p, q }) => ({ variantId: p.variantId, quantity: q })));
         window.location.href = url;
       } catch (err) {
         console.error(err);
@@ -422,77 +427,29 @@ window.AppReady = (async function () {
       (t.subtotal >= SHOP.novelty.threshold ? `<br>特典「${SHOP.novelty.name}」を同梱します。` : '');
     $('#doneCast').innerHTML = visibleChars().map((c, i) => `<div class="bob" style="animation-delay:${i * 0.2}s">${Art.characterSVG(c)}</div>`).join('');
     state.cart = {};
-    if (t.coupon) { state.coupon = { ...t.coupon, date: 'used' }; store.set('coupon', state.coupon); }
     saveCart();
     window.World?.refresh();
     closeLayer($('#cartDrawer'));
     setTimeout(() => openLayer($('#doneModal')), 260);
   });
 
-  /* ---------- ガチャ ---------- */
-  const totalWeight = GACHA_PRIZES.reduce((s, p) => s + p.weight, 0);
-  $('#gachaOdds').innerHTML = GACHA_PRIZES.map((p) =>
-    `<li><span>${p.label}</span><span>${Math.round((p.weight / totalWeight) * 100)}%</span></li>`).join('');
-  const capsuleColors = ['#8fc8f0', '#ffd76a', '#c9b8f0', '#f2b8a0', '#ffb3c6', '#a8e0c0'];
-  $('#capsules').innerHTML = Array.from({ length: 14 }, (_, i) => {
-    // ドームの底から積み重なるように配置（5・5・4 個）
-    const row = Math.floor(i / 5);
-    const x = 6 + (i % 5) * 17 + (row % 2) * 8 + ((i * 7) % 5);
-    const y = 76 - row * 16 + ((i * 11) % 6);
-    return `<span class="capsule" style="--cc:${capsuleColors[i % capsuleColors.length]};left:${x}%;top:${y}%;--r:${(i * 47) % 360}deg"></span>`;
-  }).join('');
-
-  function lastSpin() { return store.get('lastSpin', null); }
-  function renderGachaState() {
-    const c = activeCoupon();
-    const btn = $('#gachaBtn');
-    const spunToday = lastSpin() === today();
-    btn.disabled = spunToday;
-    if (spunToday) {
-      $('#gachaResult').innerHTML = c
-        ? `今日のクーポン：<strong>${c.label}</strong>（カートで自動適用されます）`
-        : '今日のガチャは終了しました。また明日回してね！';
-      if (!$('#gachaReset')) {
-        $('#gachaResult').insertAdjacentHTML('afterend',
-          '<button class="link-btn" id="gachaReset">（デモ用）もう一度回せるようにする</button>');
-        $('#gachaReset').addEventListener('click', () => {
-          store.set('lastSpin', null);
-          $('#gachaReset').remove();
-          $('#capsuleOut').className = 'capsule-out';
-          renderGachaState();
-        });
-      }
-    } else {
-      $('#gachaResult').textContent = 'ハンドルをクリックして回してね';
-    }
+  /* ---------- 退店（店内の EXIT から） ---------- */
+  function confirmExit() {
+    const n = totals().count;
+    $('#exitText').innerHTML = n
+      ? `カートに入っている商品（<strong>${n} 点</strong>）は<strong>空になります</strong>。<br>お会計がまだの場合は、先にレジでお会計をお済ませください。`
+      : 'カートは空です。';
+    openLayer($('#exitModal'));
   }
-
-  $('#gachaBtn').addEventListener('click', () => {
-    if (lastSpin() === today()) return;
-    let r = Math.random() * totalWeight;
-    const prize = GACHA_PRIZES.find((p) => (r -= p.weight) < 0) || GACHA_PRIZES[0];
-    const machine = $('#machine');
-    const out = $('#capsuleOut');
-    $('#gachaBtn').disabled = true;
-    machine.classList.add('spinning');
-    out.className = 'capsule-out';
-    out.style.setProperty('--cc', capsuleColors[Math.floor(Math.random() * capsuleColors.length)]);
-    $('#gachaResult').textContent = 'ガラガラ…';
-    setTimeout(() => {
-      machine.classList.remove('spinning');
-      out.classList.add('drop');
-    }, 1100);
-    setTimeout(() => {
-      out.classList.add('open');
-      // より良いクーポンを持っていればそちらを残す
-      const prev = activeCoupon();
-      if (!prev || prize.rate > prev.rate) state.coupon = { label: prize.label, rate: prize.rate, code: prize.code, date: today() };
-      store.set('coupon', state.coupon);
-      store.set('lastSpin', today());
-      renderCart();
-      renderGachaState();
-      toast(`🎉 ${prize.label} が当たりました！`);
-    }, 1900);
+  $('#exitConfirm').addEventListener('click', () => {
+    closeLayer($('#exitModal'));
+    state.cart = {};
+    saveCart();
+    Visit.leave(); // 席をすぐ空ける
+    try { sessionStorage.removeItem('haneul:entered'); } catch { /* noop */ }
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    document.body.classList.remove('world-fs', 'no-scroll');
+    showEntrance({ ended: 'exit' });
   });
 
   /* ---------- キャラクター紹介 ---------- */
@@ -522,7 +479,7 @@ window.AppReady = (async function () {
     toast,
     cartCount: () => totals().count,
     isLayerOpen: () => !!document.querySelector('.modal.is-open, .drawer.is-open'),
-    openGacha() { renderGachaState(); openLayer($('#gachaModal')); },
+    confirmExit,
     clearCart() { state.cart = {}; saveCart(); },
     // 壁のキャラクターに話しかけたとき
     showCharacter(id) {
@@ -532,6 +489,5 @@ window.AppReady = (async function () {
   };
 
   renderCart();
-  renderGachaState();
   return window.App;
 })();

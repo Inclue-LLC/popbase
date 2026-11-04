@@ -8,7 +8,7 @@
  *   店内での置き場所・並び順など    … 商品メタフィールド（ネームスペース popup）
  *   会期・内装テーマ・壁紙・色・棚の配置 … メタオブジェクト「POP UPイベント」（タイプ popup_event、ハンドル current）
  *                                     ※ 店内管理画面（/admin）から編集・公開します
- *   購入手続き・割引コード          … Shopify のチェックアウト
+ *   購入手続き                      … Shopify のチェックアウト
  */
 (function () {
   const cfg = window.SHOPIFY_CONFIG || {};
@@ -121,14 +121,13 @@
     }
   }
 
-  async function checkout(lines, discountCode) {
+  async function checkout(lines) {
     const json = await gql(`
       mutation CreateCart($input: CartInput!) {
         cartCreate(input: $input) { cart { checkoutUrl } userErrors { field message } }
       }`, {
       input: {
         lines: lines.map((l) => ({ merchandiseId: l.variantId, quantity: l.quantity })),
-        ...(discountCode ? { discountCodes: [discountCode] } : {}),
       },
     });
     const r = json.data?.cartCreate;

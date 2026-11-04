@@ -211,7 +211,7 @@ function drawDoor(ctx, W, H, theme) {
   ctx.font = `800 ${0.22 * PPM}px ${font()}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('ENTRANCE', W / 2, y - 0.41 * PPM);
+  ctx.fillText('EXIT', W / 2, y - 0.41 * PPM);
 }
 
 /** 床（4m 四方のタイルを繰り返す。carpet は一枚絵） */

@@ -91,14 +91,3 @@ window.PRODUCTS = [
   { id: 'p16', name: '【会場限定】4キャラ集合トート', character: 'gomi', category: 'bag', shape: 'tote', price: 3300, stock: 12, limited: true, limit: 1,
     desc: 'ポップアップ限定デザインのトート。お一人様1点まで。', spec: '約 W36 × H38cm / 綿100%' },
 ];
-
-/*
- * 1日1回のクーポンガチャ（weight は出やすさ）
- * code は Shopify 管理画面で作成したディスカウントコード。Shopify 連携時は購入手続きに自動で付きます。
- */
-window.GACHA_PRIZES = [
-  { id: 'off5', label: '5% OFF クーポン', rate: 5, weight: 55, code: 'HANEUL5' },
-  { id: 'off10', label: '10% OFF クーポン', rate: 10, weight: 30, code: 'HANEUL10' },
-  { id: 'off15', label: '15% OFF クーポン', rate: 15, weight: 12, code: 'HANEUL15' },
-  { id: 'off20', label: 'シークレット 20% OFF', rate: 20, weight: 3, code: 'HANEUL20' },
-];

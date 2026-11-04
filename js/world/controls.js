@@ -21,7 +21,8 @@ export class Controls {
       if (!active() || typing(e)) return;
       const k = e.key.toLowerCase();
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd', 'q', 'e'].includes(k)) e.preventDefault();
-      if (k === 'enter' || k === ' ') { onInteract(); return; }
+      // Enter の既定の動き（開いた画面のボタンが押されてしまう）を止めてから反応する
+      if (k === 'enter' || k === ' ') { e.preventDefault(); onInteract(); return; }
       if (/^[1-6]$/.test(k)) { onEmote(Number(k) - 1); return; }
       this.keys.add(k);
     });

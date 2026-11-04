@@ -174,21 +174,6 @@ body.world-fs .world {
   .store-controls { justify-content: center; }
 }
 
-/* クーポンガチャ（モーダル） */
-.gacha-card { width: min(780px, 100%); padding: 36px 32px 28px; }
-.gacha-card .gacha-wrap { gap: 28px; }
-.gacha-card h2 { font-size: clamp(1.3rem, 3.4vw, 1.8rem); font-weight: 800; }
-.gacha-card .odds li { background: var(--surface-2); }
-@media (max-width: 720px) {
-  .gacha-card { padding: 24px 18px 18px; }
-  .gacha-card .gacha-wrap { gap: 0; }
-  .gacha-card .lead { font-size: .85rem; }
-  .gacha-card .odds { grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 10px; }
-  .gacha-card .odds li { font-size: .74rem; padding: .3em .7em; }
-  .gacha-card .machine { transform: scale(.78); margin: -26px 0 -34px; }
-  .gacha-card .gacha-result { margin-top: 8px; }
-}
-
 @media (max-width: 640px) {
   .hud-top { flex-wrap: wrap; }
   .hud-btn { font-size: .76rem; padding: .35em .75em; }

@@ -22,7 +22,7 @@ const BASE = (opt('url', 'http://localhost:8080')).replace(/\/$/, '');
 const STAY_MIN = opt('stay', null) ? Number(opt('stay')) : null;
 const WS_URL = `${BASE.replace(/^http/, 'ws')}/ws`;
 
-// 人が集まりそうな場所（棚の前・テーブルのまわり・レジ・ガチャ・通路）
+// 人が集まりそうな場所（棚の前・テーブルのまわり・レジ・通路）
 const SPOTS = [
   [-5.6, 2.2], [-5.6, 0.6], [-5.6, -1.0], [-5.6, -2.6], [-5.6, -3.8],
   [5.6, 2.2], [5.6, 0.6], [5.6, -1.0], [5.6, -2.6], [5.6, -3.8],

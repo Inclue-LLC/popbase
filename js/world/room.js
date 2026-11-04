@@ -17,16 +17,6 @@ const HALF_D = ROOM.d / 2;
 
 const ITEM_HEIGHT = { plush: 0.78, mug: 0.6, tote: 0.66, pouch: 0.56, note: 0.6, keychain: 0.56, sticker: 0.56 };
 
-const GACHA_SVG = `<svg viewBox="0 0 160 280">
-  <rect x="18" y="150" width="124" height="120" rx="16" fill="#e0607e"/>
-  <rect x="34" y="218" width="40" height="32" rx="8" fill="rgba(58,51,70,.35)"/>
-  <circle cx="112" cy="190" r="20" fill="#fff"/><rect x="107" y="174" width="10" height="32" rx="5" fill="#ffd76a"/>
-  <path d="M14 156 a66 66 0 0 1 132 0 v4 h-132z" fill="rgba(255,255,255,.8)" stroke="#fff" stroke-width="5"/>
-  ${['#8fc8f0', '#ffd76a', '#c9b8f0', '#f2b8a0', '#ffb3c6', '#a8e0c0', '#8fc8f0', '#ffd76a'].map((c, i) =>
-    `<circle cx="${38 + (i % 4) * 28}" cy="${138 - Math.floor(i / 4) * 26}" r="12" fill="${c}"/>`).join('')}
-  <rect x="40" y="58" width="80" height="22" rx="11" fill="#fff"/>
-  <text x="80" y="74" text-anchor="middle" font-size="12" font-weight="800" fill="#e0607e" font-family="sans-serif">GACHA</text>
-</svg>`;
 
 const basic = (map, extra = {}) => new THREE.MeshBasicMaterial({ map, ...extra });
 const lambert = (color) => new THREE.MeshLambertMaterial({ color });
@@ -255,14 +245,12 @@ export async function buildRoom(theme) {
   colliders.push({ minX: rX - rW / 2, maxX: rX + rW / 2, minZ: -HALF_D, maxZ: rZ + rD / 2 });
   interactables.push({ type: 'cart', id: 'cart', label: 'お会計（カートを見る）', object: register, extra: regSign, pos: new THREE.Vector3(rX, 0, rZ + rD / 2 + 0.6) });
 
-  /* ---------- ガチャマシン ---------- */
-  const gacha = new THREE.Sprite(new THREE.SpriteMaterial({ map: await T.svgTexture(GACHA_SVG, 320, 560), transparent: true, alphaTest: 0.05 }));
-  gacha.center.set(0.5, 0);
-  gacha.scale.set(1.0, 1.75, 1);
-  gacha.position.set(5.3, 0, -6.1);
-  group.add(gacha);
-  colliders.push({ minX: 4.8, maxX: 5.8, minZ: -HALF_D, maxZ: -5.7 });
-  interactables.push({ type: 'gacha', id: 'gacha', label: 'クーポンガチャ', object: gacha, pos: new THREE.Vector3(5.3, 0, -5.1) });
+  /* ---------- 出口（手前の壁のドア。クリック・近づいて Enter で退店の確認） ---------- */
+  const exitDoor = plane(2.6, 2.9, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+  exitDoor.rotation.y = Math.PI;
+  exitDoor.position.set(0, 1.45, HALF_D - 0.03);
+  group.add(exitDoor);
+  interactables.push({ type: 'exit', id: 'exit', label: '出口（退店する）', object: exitDoor, pos: new THREE.Vector3(0, 0, HALF_D - 0.9) });
 
   /* ---------- 照明 ---------- */
   group.add(new THREE.HemisphereLight('#ffffff', night ? '#2a2f55' : '#d8c8b0', night ? 1.4 : 2.6));

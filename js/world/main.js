@@ -1,7 +1,7 @@
 /*
  * 3D 店内（アバターで歩けるバーチャルポップアップ）
  * --------------------------------------------------
- * room.js     店内の組み立て（壁・棚・テーブル・レジ・ガチャ・飾り）
+ * room.js     店内の組み立て（壁・棚・テーブル・レジ・出口）
  * avatars.js  アバター（キャラクターの絵を立体の板にしたもの）
  * controls.js キーボード・スティック・ドラッグ・タップ
  * 同時接続（他のお客さんのアバター）は、入店の手続きと同じ接続（js/visit.js の window.Visit）を使う
@@ -154,6 +154,7 @@ async function main() {
   Visit.on('admitted', (info) => { if (info.offline) setStatus('offline'); tryJoin(); });
   Visit.on('resumed', tryJoin);
   Visit.on('timeout', () => { clearPeers(); setStatus('offline'); self.group.position.copy(SPAWN); });
+  Visit.on('left', () => { clearPeers(); setStatus('offline'); self.group.position.copy(SPAWN); });
   if (Visit.state === 'inside') tryJoin();
   else if (Visit.state === 'offline') setStatus('offline');
 
@@ -220,7 +221,7 @@ async function main() {
     if (!it) return;
     if (it.type === 'product') window.App.openProduct(it.id);
     else if (it.type === 'cart') window.App.openCart();
-    else if (it.type === 'gacha') window.App.openGacha();
+    else if (it.type === 'exit') window.App.confirmExit();
     else if (it.type === 'character') window.App.showCharacter(it.id);
   }
   promptBtn.addEventListener('click', () => interact(nearest));
@@ -235,8 +236,8 @@ async function main() {
       const hit = raycaster.intersectObjects(objs, false)[0];
       if (hit) {
         const it = room.interactables.find((x) => x.object === hit.object || x.extra === hit.object);
-        // ガチャ・キャラクターの絵は、近くにいるときだけ反応（遠くからは歩いていく）
-        if (it && (it.type === 'product' || it.type === 'cart' || self.group.position.distanceTo(it.pos) < NEAR * 1.6)) return interact(it);
+        // キャラクターの絵は、近くにいるときだけ反応（遠くからは歩いていく）
+        if (it && (it.type === 'product' || it.type === 'cart' || it.type === 'exit' || self.group.position.distanceTo(it.pos) < NEAR * 1.6)) return interact(it);
         if (it) { walkTarget = stepToward(it.pos.x, it.pos.z); return; }
       }
       const floor = room.group.getObjectByName('floor');

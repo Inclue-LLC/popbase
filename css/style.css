@@ -202,54 +202,6 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .badge-few { background: #fff; color: #c0392b; border: 1px solid #f0c0b8; }
 .badge-soldout { background: #555; color: #fff; }
 
-/* ---------- ガチャ ---------- */
-.gacha-wrap { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: center; }
-@media (max-width: 720px) { .gacha-wrap { grid-template-columns: 1fr; justify-items: center; } }
-.odds { list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 6px; max-width: 320px; }
-.odds li { display: flex; justify-content: space-between; background: var(--surface); border-radius: 12px; padding: .45em 1em; font-size: .9rem; font-weight: 700; }
-.odds li:last-child { color: var(--pink); }
-.machine { position: relative; width: 240px; }
-.machine-dome {
-  position: relative; height: 200px; border-radius: 120px 120px 24px 24px; overflow: hidden;
-  background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .9), rgba(255, 255, 255, .35) 40%, rgba(200, 225, 250, .5));
-  border: 6px solid #fff; box-shadow: inset 0 -10px 20px rgba(74, 144, 200, .15), var(--shadow);
-}
-.capsule {
-  position: absolute; width: 36px; height: 36px; border-radius: 50%;
-  background: linear-gradient(180deg, var(--cc) 50%, #fff 50%);
-  border: 2px solid rgba(58, 51, 70, .12);
-  transform: rotate(var(--r));
-}
-.machine.spinning .capsule { animation: shake .25s infinite alternate; }
-.machine.spinning .handle span { animation: turn 1.1s ease-in-out; }
-@keyframes shake { from { transform: rotate(var(--r)) translate(-3px, 2px); } to { transform: rotate(calc(var(--r) + 40deg)) translate(3px, -3px); } }
-.machine-body {
-  position: relative; height: 130px; margin-top: -6px;
-  background: linear-gradient(180deg, #ff9fb2, #e0607e); border-radius: 18px 18px 26px 26px;
-}
-.machine-slot { position: absolute; left: 24px; bottom: 22px; width: 64px; height: 50px; border-radius: 14px; background: rgba(58, 51, 70, .35); }
-.handle {
-  position: absolute; right: 30px; top: 30px; width: 70px; height: 70px; border-radius: 50%;
-  border: 0; background: #fff; box-shadow: 0 4px 0 rgba(58, 51, 70, .15);
-}
-.handle span { position: absolute; inset: 0; display: block; }
-.handle span::before { content: ''; position: absolute; left: 50%; top: 8px; bottom: 8px; width: 14px; transform: translateX(-50%); border-radius: 8px; background: #ffd76a; }
-.handle:not(:disabled):hover { animation: wiggle .5s; }
-.handle:disabled { opacity: .7; }
-@keyframes turn { to { transform: rotate(360deg); } }
-@keyframes wiggle { 25% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } }
-.capsule-out {
-  position: absolute; left: 36px; bottom: 30px; width: 40px; height: 40px; border-radius: 50%;
-  background: linear-gradient(180deg, var(--cc, #8fc8f0) 50%, #fff 50%);
-  opacity: 0; transform: translateY(-40px) scale(.5);
-}
-.capsule-out.drop { animation: drop .7s cubic-bezier(.3, 1.6, .5, 1) forwards; }
-.capsule-out.open { animation: pop .5s forwards; }
-@keyframes drop { to { opacity: 1; transform: translateY(0) scale(1); } }
-@keyframes pop { 0% { opacity: 1; transform: scale(1); } 60% { transform: scale(1.5); } 100% { opacity: 0; transform: scale(1.8); } }
-.gacha-result { text-align: center; font-weight: 700; margin: 28px 0 0; min-height: 1.7em; }
-.gacha-result strong { color: var(--pink); font-size: 1.15em; }
-
 /* ---------- ご案内 ---------- */
 .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 16px; }
 .info-card { background: var(--surface); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
@@ -413,3 +365,11 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .ep-grid .pick-char[aria-checked="true"] { border-color: #4a90c8; box-shadow: 0 0 0 3px rgba(74, 144, 200, .3); }
 .ep-note { margin: 0 0 12px; font-size: .78rem; color: #6f6880; }
 .entrance-pick .link-btn { margin-top: 8px; }
+
+/* ---------- 退店の確認 ---------- */
+.exit-card { width: min(420px, 100%); padding: 28px 24px 22px; text-align: center; }
+.exit-card h3 { font-size: 1.25rem; margin-bottom: 10px; }
+.exit-card p { margin: 0 0 18px; font-size: .92rem; }
+.exit-card strong { color: var(--pink); }
+.exit-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.btn-danger { background: #c0392b; color: #fff; }

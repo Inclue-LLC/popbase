@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>STUDIO HANEUL Virtual Pop-up Store</title>
-  <meta name="description" content="スタジオハヌルのバーチャルポップアップショップ。会場限定グッズ、クーポンガチャ、購入特典をオンラインで。">
+  <meta name="description" content="スタジオハヌルのバーチャルポップアップショップ。アバターで店内を歩いて、会場限定グッズをお買い物。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -27,8 +27,8 @@
       <p class="entrance-notice" id="entNotice" hidden></p>
       <!-- お買い物時間が終わったとき -->
       <div class="entrance-ended" id="entEnded" hidden role="status">
-        <p class="ee-title">お買い物時間が終了しました</p>
-        <p>ご来店ありがとうございました。カートの中身は空になりました。</p>
+        <p class="ee-title" id="entEndedTitle">お買い物時間が終了しました</p>
+        <p id="entEndedText">ご来店ありがとうございました。カートの中身は空になりました。</p>
       </div>
       <button class="btn btn-primary btn-lg" id="enterBtn">お店に入る</button>
 
@@ -187,30 +187,16 @@
     </div>
   </aside>
 
-  <!-- クーポンガチャ（店内のガチャマシンから開く） -->
-  <div class="modal" id="gachaModal" role="dialog" aria-modal="true" aria-labelledby="gachaTitle" hidden>
+  <!-- 退店の確認（店内の EXIT から） -->
+  <div class="modal" id="exitModal" role="dialog" aria-modal="true" aria-labelledby="exitTitle" hidden>
     <div class="modal-backdrop" data-close></div>
-    <div class="modal-card gacha-card">
-      <button class="icon-btn modal-close" data-close aria-label="閉じる">&times;</button>
-      <div class="gacha-wrap">
-        <div class="gacha-text">
-          <p class="eyebrow">DAILY GACHA</p>
-          <h2 id="gachaTitle">1日1回 クーポンガチャ</h2>
-          <p class="lead">ハンドルを回すと、今日のお買い物で使える割引クーポンが当たります。シークレットは 20% OFF！</p>
-          <ul class="odds" id="gachaOdds"></ul>
-        </div>
-        <div class="machine" id="machine">
-          <div class="machine-dome">
-            <div class="capsules" id="capsules"></div>
-          </div>
-          <div class="machine-body">
-            <div class="machine-slot"></div>
-            <button class="handle" id="gachaBtn" aria-label="ガチャを回す"><span></span></button>
-          </div>
-          <div class="capsule-out" id="capsuleOut" aria-hidden="true"></div>
-        </div>
+    <div class="modal-card exit-card">
+      <h3 id="exitTitle">本当に退出しますか？</h3>
+      <p id="exitText"></p>
+      <div class="exit-actions">
+        <button class="btn" data-close>お買い物を続ける</button>
+        <button class="btn btn-danger" id="exitConfirm">退出する</button>
       </div>
-      <p class="gacha-result" id="gachaResult" role="status" aria-live="polite"></p>
     </div>
   </div>
 

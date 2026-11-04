@@ -9,6 +9,7 @@
  *     'admitted' { crowded, visitMinutes, warnMinutes }      入店できた
  *     'timer'    { deadline（このブラウザの時刻 ms）| null } 残り時間が決まった／なくなった
  *     'timeout'  時間切れで退出
+ *     'left'     自分で退店した（店内の EXIT から）
  *     'message'  店内の同時接続のメッセージ（join / leave / move / emote / look / welcome）
  *     'status'   'connecting' | 'online' | 'offline'
  * サーバーにつながらない場合（静的ホスティングなど）は、制限なしでそのまま入店する。
@@ -133,6 +134,8 @@
       store.set(null);
       V.state = 'ended';
       V.wanted = false;
+      V.setDeadline(null);
+      emit('left');
     },
   };
 
