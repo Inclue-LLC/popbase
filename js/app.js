@@ -337,6 +337,8 @@ window.AppReady = (async function () {
     qty = 1;
     $('#pmImage').innerHTML = Art.productSVG(p);
     $('#pmImage').style.setProperty('--c', c.color);
+    // 管理画面で背景色を指定していれば、その色にする
+    $('#pmImage').style.background = SHOP.productBg || '';
     $('#pmBadges').innerHTML = badges(p);
     $('#pmName').textContent = p.name;
     $('#pmPrice').innerHTML = `${yen(p.price)}<small>税込</small>`;

@@ -246,6 +246,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .pd-body { padding: 28px; display: flex; flex-direction: column; gap: 6px; }
 .pd-body h3 { font-size: 1.25rem; padding-right: 32px; }
 .pd-body p { margin: 0; }
+.pd-body #pmDesc { white-space: pre-line; } /* Shopify の商品説明の改行をそのまま表示 */
 .pd-price { font-size: 1.5rem; font-weight: 800; }
 .pd-price small { font-size: .7rem; margin-left: 4px; color: var(--ink-soft); font-weight: 500; }
 .pd-spec, .pd-stock { font-size: .85rem; color: var(--ink-soft); }

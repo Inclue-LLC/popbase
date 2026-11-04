@@ -20,7 +20,7 @@
   const SIZES = { '大': 'plush', '中': 'mug', '小': 'keychain' };
 
   const PRODUCT_FIELDS = (withInventory) => `
-    id handle title description productType tags
+    id handle title description descriptionHtml productType tags
     featuredImage { url(transform: { maxWidth: 600, maxHeight: 600 }) }
     variants(first: 1) { nodes { id availableForSale ${withInventory ? 'quantityAvailable' : ''} price { amount } } }
     metafields(identifiers: [
@@ -49,6 +49,24 @@
     return res.json();
   }
 
+  /**
+   * 商品説明（Shopify の HTML）を、改行を残した文字にする
+   * 段落・改行・箇条書きの区切りを改行にして、タグは表示しない（HTML としては描かないので安全）
+   */
+  function descText(html, fallback) {
+    if (!html) return fallback || '';
+    const marked = String(html)
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<li[^>]*>/gi, '・')
+      .replace(/<\/(p|div|li|h[1-6]|tr|blockquote)>/gi, '\n');
+    const doc = new DOMParser().parseFromString(marked, 'text/html');
+    return (doc.body.textContent || '')
+      .replace(/\u00a0/g, ' ')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim() || fallback || '';
+  }
+
   const mf = (node, key) => (node.metafields || []).find((m) => m && m.key === key)?.value ?? null;
   const toInt = (v) => (v == null || v === '' ? null : Number.parseInt(v, 10));
   const slug = (s) => String(s || 'other').trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-');
@@ -64,7 +82,7 @@
       id: node.handle,
       variantId: v.id,
       name: node.title,
-      desc: node.description || '',
+      desc: descText(node.descriptionHtml, node.description),
       spec: '',
       price: Math.round(Number(v.price?.amount || 0)),
       stock,

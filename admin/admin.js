@@ -598,7 +598,7 @@ function unitLabel(v, max) {
 function fieldHtml(f, value, placeholders) {
   const id = `f_${f.key}`;
   const label = `<label for="${id}">${esc(f.label)}${needBadge(f)}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`;
-  const defaultColorLabel = f.tab === 'entrance' ? '初期の色' : 'テーマの色';
+  const defaultColorLabel = f.tab === 'entrance' || String(f.themePath || '').startsWith('const.') ? '初期の色' : 'テーマの色';
   let input = '';
   if (f.type === 'text' || f.type === 'number') {
     let ph = f.placeholderPath ? themeDefault(f.placeholderPath) : placeholders[f.key];
