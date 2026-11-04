@@ -24,7 +24,7 @@ services:
         value: /var/data
       - key: COOKIE_SECURE
         value: "1"
-      # 同時接続を許可するサイトのアドレス（Render の仮アドレスで試すときは、そのアドレスもカンマで足す）
+      # 同時接続を許可するサイトのアドレス（このサーバー自身のアドレス＝Render の仮アドレスは常に許可）
       - key: ALLOWED_ORIGINS
         value: https://popbase.jp,https://www.popbase.jp
       - key: SESSION_SECRET
