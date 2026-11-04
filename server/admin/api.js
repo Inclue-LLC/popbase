@@ -3,13 +3,19 @@
  *   POST /admin/api/login     { user, password }
  *   POST /admin/api/logout
  *   GET  /admin/api/session   ログイン中のスタッフ・保存先
- *   GET  /admin/api/state     下書き・公開中・履歴・（Shopify なら）商品一覧
- *   PUT  /admin/api/draft     { event, layout, rev } 下書きを保存
- *   POST /admin/api/publish   { rev } 下書きを公開
- *   POST /admin/api/discard   下書きを捨てて公開中に戻す
+ *   GET  /admin/api/events            イベントの一覧（どれがお客さんに出ているか）
+ *   POST /admin/api/events            { title, copyFrom? } イベントを作る（copyFrom で複製）
+ *   DELETE /admin/api/events?event=ID イベントを削除
+ *   GET  /admin/api/state?event=ID    下書き・公開済み・履歴・（Shopify なら）商品一覧
+ *   PUT  /admin/api/draft?event=ID    { event, layout, rev } 下書きを保存
+ *   POST /admin/api/publish?event=ID  { rev } 下書きを公開
+ *   POST /admin/api/discard?event=ID  下書きを捨てて公開済みの内容に戻す
+ *   GET  /admin/api/collections       Shopify のコレクションの一覧
+ *   GET  /admin/api/products?collection=HANDLE  コレクションの商品（Shopify）
+ *   GET  /admin/api/preview?event=ID  下書きをサイトで確認する用
  *   POST /admin/api/upload    画像（PNG / JPEG / WebP、8MB まで）
  * 公開用
- *   GET  /api/published       公開中のイベント設定と棚の配置（サイトが読む）
+ *   GET  /api/published       お客さんに出すイベント（会期で自動）の設定と棚の配置（サイトが読む）
  *   GET  /uploads/...         アップロードした画像（ローカル保存のとき）
  */
 const fs = require('fs');
@@ -62,6 +68,13 @@ function sameOrigin(req) {
   try { return new URL(origin).host === req.headers.host; } catch { return false; }
 }
 
+// 必須項目（Shopify につないでいるときは、店内に並べるコレクションも必須）
+function missingFor(event) {
+  const missing = missingRequired(event || {});
+  if (store.mode === 'shopify' && !event?.collection) missing.push('Shopify のコレクション');
+  return missing;
+}
+
 async function handle(req, res, urlPath) {
   /* ---------- 公開用 ---------- */
   if (urlPath === '/api/published' && req.method === 'GET') {
@@ -106,23 +119,51 @@ async function handle(req, res, urlPath) {
     if (!user) return json(res, 401, { error: 'ログインしてください', needsSetup: auth.readUsers().length === 0 });
 
     if (route === 'session' && req.method === 'GET') return json(res, 200, { user, mode: store.mode, storage: store.label });
-    if (route === 'state' && req.method === 'GET') return json(res, 200, await store.getState());
+    const q = new URL(req.url, 'http://x').searchParams;
+    const id = q.get('event') || '';
+
+    if (route === 'events' && req.method === 'GET') return json(res, 200, { events: await store.listEvents() });
+    if (route === 'events' && req.method === 'POST') {
+      const { title, copyFrom } = await readJson(req);
+      if (typeof title !== 'string' || !title.trim() || title.length > 60) throw new InputError('イベント名を入れてください');
+      const r = await store.createEvent({ title: title.trim(), copyFrom: copyFrom || null }, user);
+      console.log(`[admin] ${user} がイベント ${r.id} を作成しました`);
+      return json(res, 200, r);
+    }
+    if (route === 'events' && req.method === 'DELETE') {
+      const active = await store.getPublished();
+      if (active.id === id) return json(res, 400, { error: 'お客さんに表示中のイベントは削除できません' });
+      await store.deleteEvent(id);
+      console.log(`[admin] ${user} がイベント ${id} を削除しました`);
+      return json(res, 200, { ok: true });
+    }
+    if (route === 'collections' && req.method === 'GET') {
+      return json(res, 200, { collections: store.collections ? await store.collections() : [] });
+    }
+    if (route === 'products' && req.method === 'GET') {
+      const c = q.get('collection') || '';
+      if (!store.products || !/^[a-z0-9][a-z0-9-]{0,254}$/.test(c)) return json(res, 200, { products: null });
+      return json(res, 200, { products: await store.products(c) });
+    }
+    if (route === 'preview' && req.method === 'GET') return json(res, 200, await store.getDraft(id));
+
+    if (route === 'state' && req.method === 'GET') return json(res, 200, await store.getState(id));
     if (route === 'draft' && req.method === 'PUT') {
       const body = await readJson(req);
-      return json(res, 200, await store.saveDraft(body, user));
+      return json(res, 200, await store.saveDraft(id, body, user));
     }
     if (route === 'publish' && req.method === 'POST') {
       const { rev } = await readJson(req);
       // 必須項目が空欄なら公開しない
-      const missing = missingRequired((await store.getState()).draft.event || {});
+      const missing = missingFor((await store.getState(id)).draft.event);
       if (missing.length) return json(res, 400, { error: `必須項目が未入力です：${missing.join('・')}` });
-      const pub = await store.publish(user, rev);
-      // 会期・営業時間をすぐ入店管理に反映
+      const pub = await store.publish(id, user, rev);
+      // 会期・営業時間をすぐ入店管理に反映（お客さんに出すイベントが変わることもある）
       try { require('../visit').setSchedule((await store.getPublished()).event || {}); } catch (e) { console.error(e); }
-      console.log(`[admin] ${user} が公開しました (${pub.publishedAt})`);
+      console.log(`[admin] ${user} がイベント ${id} を公開しました (${pub.publishedAt})`);
       return json(res, 200, pub);
     }
-    if (route === 'discard' && req.method === 'POST') return json(res, 200, await store.discard(user));
+    if (route === 'discard' && req.method === 'POST') return json(res, 200, await store.discard(id, user));
     if (route === 'upload' && req.method === 'POST') {
       const buf = await readBody(req, 8 * 1024 * 1024);
       const kind = sniffImage(buf);
@@ -131,7 +172,7 @@ async function handle(req, res, urlPath) {
     }
     return json(res, 404, { error: 'not found' });
   } catch (e) {
-    if (e instanceof InputError) return json(res, 400, { error: `入力内容を確認してください（${e.message}）` });
+    if (e instanceof InputError) return json(res, e.status || 400, { error: e.status === 404 ? e.message : `入力内容を確認してください（${e.message}）` });
     if (e instanceof store.Conflict) return json(res, 409, { error: '他のスタッフが先に変更を保存しました。最新の内容を読み込み直します' });
     if (e.status === 413) return json(res, 413, { error: 'ファイルが大きすぎます（8MB まで）' });
     console.error('[admin]', e);

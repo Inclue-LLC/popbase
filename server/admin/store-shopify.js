@@ -1,10 +1,12 @@
 /*
  * 保存先：Shopify（Admin API）
  * --------------------------------------------------
- * メタオブジェクト「POP UPイベント」（タイプ popup_event）の2つのエントリーを使います。
- *   draft   … 管理画面で編集中の下書き
- *   current … 公開中（お客さんのサイトが Storefront API で読むもの）
- * 「公開」は draft の内容を current にコピーします。画像は Shopify の「ファイル」に保存されます。
+ * メタオブジェクト「POP UPイベント」（タイプ popup_event）に、イベントごとに2つのエントリーを使います。
+ *   <イベントID>-draft … 管理画面で編集中の下書き
+ *   <イベントID>-live  … 公開済みの内容
+ * （以前の形式の draft / current は、イベント「main」として扱います）
+ * 「公開」は下書きの内容を live にコピーします。お客さんのサイトに出すイベントは会期で自動で決まります（events.js）。
+ * 画像は Shopify の「ファイル」に保存されます。
  *
  * 環境変数（サーバーだけに設定。ブラウザには出しません）:
  *   SHOPIFY_STORE_DOMAIN   例: your-store.myshopify.com
@@ -12,7 +14,8 @@
  *   SHOPIFY_API_VERSION    既定 2025-01
  *   SHOPIFY_COLLECTION     店内に並べるコレクションのハンドル（既定 popup）
  */
-const { KEYS, IMAGE, cleanEvent, cleanLayout, flatten } = require('./fields');
+const { KEYS, IMAGE, cleanEvent, cleanLayout, flatten, InputError } = require('./fields');
+const ev = require('./events');
 
 const auth = require('./shopify-token');
 
@@ -44,16 +47,8 @@ function userErrors(errs) {
   if (errs?.length) throw new ShopifyError(errs.map((e) => `${e.field?.join('.') || ''} ${e.message}`).join(' / '));
 }
 
-async function readEntry(handle) {
-  const data = await gql(`
-    query Entry($handle: MetaobjectHandleInput!) {
-      metaobjectByHandle(handle: $handle) {
-        id updatedAt
-        fields { key value reference { ... on MediaImage { id image { url } } } }
-      }
-    }`, { handle: { type: TYPE, handle } });
-  const mo = data.metaobjectByHandle;
-  if (!mo) return null;
+/** メタオブジェクトのフィールド → { event, layout, meta } */
+function parseEntry(mo) {
   const f = Object.fromEntries(mo.fields.map((x) => [x.key, x]));
   // イベントの設定は 1 つの JSON（settings）にまとめて保存している（画像は { id, url }）
   let saved = {};
@@ -69,7 +64,65 @@ async function readEntry(handle) {
   let meta = {};
   try { layout = f.layout?.value ? JSON.parse(f.layout.value) : null; } catch { layout = null; }
   try { meta = f.admin_meta?.value ? JSON.parse(f.admin_meta.value) : {}; } catch { meta = {}; }
-  return { event, layout, meta, updatedAt: mo.updatedAt };
+  return { id: mo.id, event, layout, meta, updatedAt: mo.updatedAt };
+}
+
+async function readEntry(handle) {
+  const data = await gql(`
+    query Entry($handle: MetaobjectHandleInput!) {
+      metaobjectByHandle(handle: $handle) { id updatedAt fields { key value } }
+    }`, { handle: { type: TYPE, handle } });
+  return data.metaobjectByHandle ? parseEntry(data.metaobjectByHandle) : null;
+}
+
+/* イベント ID → エントリーのハンドル（以前の形式の「main」は draft / current） */
+const handleOf = (id, kind) => (id === 'main' ? (kind === 'draft' ? 'draft' : 'current') : `${id}-${kind}`);
+function idOfHandle(h) {
+  if (h === 'draft' || h === 'current') return ['main', h === 'draft' ? 'draft' : 'live'];
+  const m = /^(e\d{8}-[a-f0-9]{6})-(draft|live)$/.exec(h);
+  return m ? [m[1], m[2]] : [null, null];
+}
+
+/** すべてのイベント（下書きと公開済みを組み合わせる） */
+async function readAll() {
+  const out = {};
+  let after = null;
+  for (let page = 0; page < 10; page++) {
+    const data = await gql(`
+      query All($type: String!, $after: String) {
+        metaobjects(type: $type, first: 100, after: $after) {
+          nodes { id handle updatedAt fields { key value } }
+          pageInfo { hasNextPage endCursor }
+        }
+      }`, { type: TYPE, after });
+    for (const mo of data.metaobjects.nodes) {
+      const [id, kind] = idOfHandle(mo.handle);
+      if (!id) continue;
+      out[id] ||= { id, draft: null, live: null };
+      out[id][kind] = parseEntry(mo);
+    }
+    if (!data.metaobjects.pageInfo.hasNextPage) break;
+    after = data.metaobjects.pageInfo.endCursor;
+  }
+  return Object.values(out).map(toEvent);
+}
+
+/** エントリーの組 → events.js の形 { id, createdAt, draft, published, history } */
+function toEvent({ id, draft, live }) {
+  const published = live
+    ? { event: live.event, layout: live.layout, publishedAt: live.meta.publishedAt || live.updatedAt, publishedBy: live.meta.publishedBy || null }
+    : null;
+  const d = draft
+    ? { event: draft.event, layout: draft.layout, rev: draft.meta.rev || 0, updatedAt: draft.meta.updatedAt || draft.updatedAt, updatedBy: draft.meta.updatedBy || null }
+    : { event: published?.event || {}, layout: published?.layout || null, rev: 0, updatedAt: null, updatedBy: null };
+  return { id, createdAt: draft?.meta.createdAt || live?.meta.createdAt || null, draft: d, published, history: live?.meta.history || [], _draftMeta: draft?.meta || {} };
+}
+
+async function readEvent(id) {
+  if (!ev.validId(id)) throw Object.assign(new InputError('イベントが見つかりません'), { status: 404 });
+  const [draft, live] = await Promise.all([readEntry(handleOf(id, 'draft')), readEntry(handleOf(id, 'live'))]);
+  if (!draft && !live) throw Object.assign(new InputError('イベントが見つかりません'), { status: 404 });
+  return toEvent({ id, draft, live });
 }
 
 async function writeEntry(handle, event, layout, meta) {
@@ -94,7 +147,7 @@ async function writeEntry(handle, event, layout, meta) {
   userErrors(data.metaobjectUpsert.userErrors);
 }
 
-async function products() {
+async function products(collection = COLLECTION) {
   const data = await gql(`
     query Products($q: String!) {
       collections(first: 1, query: $q) {
@@ -109,7 +162,7 @@ async function products() {
           }
         }
       }
-    }`, { q: `handle:${COLLECTION}` });
+    }`, { q: `handle:${collection}` });
   const nodes = data.collections.nodes[0]?.products.nodes || [];
   const SIZE = { '大': 'plush', '中': 'mug', '小': 'keychain' };
   return nodes.map((n) => ({
@@ -137,50 +190,95 @@ module.exports = {
   mode: 'shopify',
   label: `Shopify（${DOMAIN}）`,
   enabled: auth.configured,
+  defaultCollection: COLLECTION,
 
-  async getState() {
-    const [cur, draft, list] = await Promise.all([readEntry('current'), readEntry('draft'), products()]);
-    const published = cur
-      ? { event: cur.event, layout: cur.layout, publishedAt: cur.meta.publishedAt || cur.updatedAt, publishedBy: cur.meta.publishedBy || null }
-      : { event: {}, layout: null, publishedAt: null, publishedBy: null };
-    const d = draft
-      ? { event: draft.event, layout: draft.layout, rev: draft.meta.rev || 0, updatedAt: draft.meta.updatedAt || draft.updatedAt, updatedBy: draft.meta.updatedBy || null }
-      : { event: published.event, layout: published.layout, rev: 0, updatedAt: null, updatedBy: null };
-    return { draft: d, published, history: cur?.meta.history || [], products: list };
+  async listEvents() {
+    const all = await readAll();
+    const active = ev.pickActive(all);
+    return all.map((x) => ev.summary(x, active?.id))
+      .sort((a, b) => (b.open_at || b.createdAt || '').localeCompare(a.open_at || a.createdAt || ''));
   },
 
-  async saveDraft({ event, layout, rev }, user) {
-    const cur = await readEntry('draft');
-    const curRev = cur?.meta.rev || 0;
-    if (rev !== curRev) throw new Conflict();
-    const ev = cleanEvent(event, imageOk);
+  async createEvent({ title, copyFrom }, user) {
+    const id = ev.newId();
+    let event = { title };
+    let layout = null;
+    if (copyFrom) {
+      const src = await readEvent(copyFrom);
+      event = ev.copyForNew(src.draft.event, title);
+      layout = src.draft.layout;
+    }
+    const now = new Date().toISOString();
+    await writeEntry(handleOf(id, 'draft'), event, layout, { rev: 1, updatedAt: now, updatedBy: user, createdAt: now, createdBy: user });
+    return { id };
+  },
+
+  async deleteEvent(id) {
+    for (const kind of ['draft', 'live']) {
+      const e = await readEntry(handleOf(id, kind));
+      if (!e) continue;
+      const data = await gql(`
+        mutation Del($id: ID!) { metaobjectDelete(id: $id) { deletedId userErrors { field message } } }`, { id: e.id });
+      userErrors(data.metaobjectDelete.userErrors);
+    }
+  },
+
+  async getState(id) {
+    const x = await readEvent(id);
+    const list = await products(x.draft.event.collection || COLLECTION);
+    const published = x.published || { event: {}, layout: null, publishedAt: null, publishedBy: null };
+    return { id, draft: x.draft, published, history: x.history, products: list };
+  },
+
+  products,
+
+  /** 管理画面の「コレクション」の選択肢 */
+  async collections() {
+    const data = await gql(`
+      query Cols { collections(first: 250, sortKey: TITLE) { nodes { handle title productsCount { count } } } }`);
+    return data.collections.nodes.map((c) => ({ handle: c.handle, title: c.title, count: c.productsCount?.count ?? null }));
+  },
+
+  async saveDraft(id, { event, layout, rev }, user) {
+    const x = await readEvent(id);
+    if (rev !== x.draft.rev) throw new Conflict();
+    const e = cleanEvent(event, imageOk);
     const lay = cleanLayout(layout);
-    const meta = { rev: curRev + 1, updatedAt: new Date().toISOString(), updatedBy: user };
-    await writeEntry('draft', ev, lay, meta);
-    return { event: ev, layout: lay, ...meta };
+    const meta = { ...x._draftMeta, rev: x.draft.rev + 1, updatedAt: new Date().toISOString(), updatedBy: user };
+    await writeEntry(handleOf(id, 'draft'), e, lay, meta);
+    return { event: e, layout: lay, rev: meta.rev, updatedAt: meta.updatedAt, updatedBy: user };
   },
 
-  async publish(user, rev) {
-    const draft = await readEntry('draft');
-    if (!draft || rev !== (draft.meta.rev || 0)) throw new Conflict();
-    const cur = await readEntry('current');
+  async publish(id, user, rev) {
+    const x = await readEvent(id);
+    if (rev !== x.draft.rev) throw new Conflict();
     const at = new Date().toISOString();
-    const history = [{ at, by: user }, ...(cur?.meta.history || [])].slice(0, 50);
-    await writeEntry('current', draft.event, draft.layout, { publishedAt: at, publishedBy: user, history });
-    return { event: draft.event, layout: draft.layout, publishedAt: at, publishedBy: user };
+    const history = [{ at, by: user }, ...(x.history || [])].slice(0, 50);
+    await writeEntry(handleOf(id, 'live'), x.draft.event, x.draft.layout, { publishedAt: at, publishedBy: user, history, createdAt: x.createdAt });
+    // 下書きのエントリーがまだない（以前の形式）ときは作っておく
+    if (!x._draftMeta.rev) await writeEntry(handleOf(id, 'draft'), x.draft.event, x.draft.layout, { rev: x.draft.rev, updatedAt: at, updatedBy: user, createdAt: x.createdAt || at });
+    return { event: x.draft.event, layout: x.draft.layout, publishedAt: at, publishedBy: user };
   },
 
-  async discard(user) {
-    const cur = await readEntry('current');
-    const draft = await readEntry('draft');
-    const meta = { rev: (draft?.meta.rev || 0) + 1, updatedAt: new Date().toISOString(), updatedBy: user };
-    await writeEntry('draft', cur?.event || {}, cur?.layout || null, meta);
-    return { event: cur?.event || {}, layout: cur?.layout || null, ...meta };
+  async discard(id, user) {
+    const x = await readEvent(id);
+    const p = x.published || { event: {}, layout: null };
+    const meta = { ...x._draftMeta, rev: x.draft.rev + 1, updatedAt: new Date().toISOString(), updatedBy: user };
+    await writeEntry(handleOf(id, 'draft'), p.event, p.layout, meta);
+    return { event: p.event, layout: p.layout, ...meta };
   },
 
+  /** お客さんのサイトに出すイベント（会期で自動） */
   async getPublished() {
-    const cur = await readEntry('current');
-    return { event: flatten(cur?.event || {}), layout: cur?.layout || null };
+    const active = ev.pickActive(await readAll());
+    if (!active) return { id: null, event: {}, layout: null };
+    return { id: active.id, event: flatten(active.published.event || {}), layout: active.published.layout };
+  },
+
+  /** 下書きのプレビュー用 */
+  async getDraft(id) {
+    const x = await readEvent(id);
+    return { id, event: flatten(x.draft.event || {}), layout: x.draft.layout };
   },
 
   /* 画像を Shopify の「ファイル」にアップロード */

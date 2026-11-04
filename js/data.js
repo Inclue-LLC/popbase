@@ -32,8 +32,7 @@ window.SHOPIFY_CONFIG = {
   domain: 'popbase.myshopify.com',
   storefrontToken: '6109cfbfcb2aff80c436826553ae28c9', // Headless チャネルの「公開アクセストークン」（公開してよいトークン）
   apiVersion: '2025-01',
-  collection: 'popup',    // 店内に並べるコレクションのハンドル
-  eventHandle: 'current', // 使う「POP UPイベント」メタオブジェクトのハンドル
+  collection: 'popup',    // イベントでコレクションを選んでいないときに使うコレクションのハンドル
 };
 
 window.CHARACTERS = [

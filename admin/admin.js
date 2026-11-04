@@ -1,6 +1,7 @@
 /*
  * 店内管理画面
- * 下書きを編集 → 自動保存 → プレビューで確認 → 「公開する」でお客さんのサイトに反映
+ * イベントを選ぶ（作る・複製する）→ 下書きを編集 → 自動保存 → プレビューで確認 → 「公開する」
+ * お客さんのサイトには、公開したイベントのうち会期中のもの（なければ次に始まるもの）が自動で出る
  */
 import { Preview } from './preview.js';
 
@@ -10,8 +11,15 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const yen = (n) => `¥${Number(n || 0).toLocaleString('ja-JP')}`;
 const fmtTime = (iso) => (iso ? new Date(iso).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—');
 
+const SAMPLE_PRODUCTS = window.PRODUCTS; // Shopify につないでいないときの商品（js/data.js）
+const EVENT_KEY = 'haneul:admin-event';
+
 const state = {
   user: null,
+  mode: 'local',     // 'local' | 'shopify'
+  events: [],        // イベントの一覧（サーバーの要約）
+  eventId: null,     // 編集中のイベント
+  collections: [],   // Shopify のコレクション
   draft: null,      // { event, layout, rev, updatedAt, updatedBy }
   published: null,
   history: [],
@@ -38,6 +46,9 @@ async function api(path, { method = 'GET', body, raw, type } = {}) {
   return data;
 }
 
+// 編集中のイベントの API（?event=ID を付ける）
+const evApi = (path, opts) => api(`${path}?event=${encodeURIComponent(state.eventId)}`, opts);
+
 let toastTimer;
 function toast(msg, { error = false } = {}) {
   const el = $('#toast');
@@ -55,9 +66,18 @@ async function start() {
     state.user = s.user;
     $('#storage').textContent = `保存先：${s.storage}`;
     $('#userName').textContent = `${s.user} さん`;
+    state.mode = s.mode;
+    window.ADMIN_SHOPIFY = s.mode === 'shopify';
     $('#login').hidden = true;
     $('#app').hidden = false;
-    await loadState();
+    if (window.ADMIN_SHOPIFY) {
+      try { state.collections = (await api('collections')).collections; } catch (e) { toast(`コレクションを読み込めませんでした：${e.message}`, { error: true }); }
+    }
+    await loadEvents();
+    const remembered = (() => { try { return localStorage.getItem(EVENT_KEY); } catch { return null; } })();
+    const pick = state.events.find((x) => x.id === remembered) || state.events.find((x) => x.active) || state.events[0];
+    if (pick) await selectEvent(pick.id);
+    else showEmpty();
   } catch (e) {
     if (e.status === 401) showLogin(e.data?.needsSetup);
     else toast(e.message, { error: true });
@@ -94,8 +114,8 @@ $('#logoutBtn').addEventListener('click', async () => {
 /* ---------- 読み込み ---------- */
 let preview;
 async function loadState() {
-  const st = await api('state');
-  if (st.products) window.PRODUCTS = st.products; // Shopify の商品
+  const st = await evApi('state');
+  window.PRODUCTS = st.products || SAMPLE_PRODUCTS; // Shopify ならイベントのコレクションの商品
   state.products = window.PRODUCTS;
   state.draft = st.draft;
   state.draft.event ||= {};
@@ -108,6 +128,110 @@ async function loadState() {
     }
   }
   renderAll();
+}
+
+/* ---------- イベント ---------- */
+async function loadEvents() {
+  state.events = (await api('events')).events;
+  renderEventBar();
+}
+
+// イベントの状態（公開済みなら会期から：開催中／開催予定／終了。未公開なら「未公開」）
+function eventStatus(x) {
+  if (!x.published) return ['draftonly', '未公開'];
+  const HS = window.HaneulSchedule;
+  const now = Date.now();
+  const open = HS.parseDateTime(x.open_at);
+  const close = HS.parseDateTime(x.close_at);
+  if (open != null && now < open) return ['soon', '開催予定'];
+  if (close != null && now >= close) return ['ended', '終了'];
+  return ['live', '開催中'];
+}
+function eventLabel(x) {
+  const HS = window.HaneulSchedule;
+  const when = x.open_at ? HS.periodText({ open_at: x.open_at, close_at: x.close_at }) : '会期未設定';
+  return `${x.title || '（イベント名なし）'}　${when}　［${eventStatus(x)[1]}${x.active ? '・お客さんに表示中' : ''}］`;
+}
+function renderEventBar() {
+  $('#eventSel').innerHTML = state.events.map((x) =>
+    `<option value="${esc(x.id)}" ${x.id === state.eventId ? 'selected' : ''}>${esc(eventLabel(x))}</option>`).join('');
+  const cur = state.events.find((x) => x.id === state.eventId);
+  if (!cur) { $('#eventInfo').innerHTML = ''; return; }
+  const [cls, label] = eventStatus(cur);
+  $('#eventInfo').innerHTML = `<span class="pill pill-${cls}">${label}</span>` +
+    (cur.active ? 'いまお客さんのサイトに表示されています' : cur.published ? '会期になると自動でお客さんのサイトに表示されます' : '「公開する」を押すと、会期に合わせて表示されます');
+  $('#deleteEventBtn').disabled = !!cur.active;
+  $('#deleteEventBtn').title = cur.active ? 'お客さんに表示中のイベントは削除できません' : '';
+}
+function showEmpty() {
+  state.eventId = null;
+  $('#app').classList.add('is-empty');
+  $('#noEvents').hidden = false;
+  renderEventBar();
+}
+async function selectEvent(id) {
+  state.eventId = id;
+  try { localStorage.setItem(EVENT_KEY, id); } catch { /* noop */ }
+  $('#app').classList.remove('is-empty');
+  $('#noEvents').hidden = true;
+  $('#previewLink').href = `/?preview=draft&event=${encodeURIComponent(id)}`;
+  renderEventBar();
+  await loadState();
+}
+
+$('#eventSel').addEventListener('change', async (e) => {
+  const id = e.target.value;
+  await flushSave();
+  try { await selectEvent(id); } catch (err) { toast(err.message, { error: true }); }
+});
+
+async function createEvent({ copy = false } = {}) {
+  const cur = state.events.find((x) => x.id === state.eventId);
+  const title = prompt(copy
+    ? `「${cur?.title || ''}」の内装・入口の画面・キャラクターなどの設定を引き継いで、新しいイベントを作ります。\n（会期・コレクション・サブタイトルは引き継ぎません）\n\n新しいイベントの名前：`
+    : '新しいイベントの名前（看板に出るイベント名。あとから変えられます）：');
+  if (title == null) return;
+  if (!title.trim()) { toast('イベント名を入れてください', { error: true }); return; }
+  await flushSave();
+  try {
+    const r = await api('events', { method: 'POST', body: { title: title.trim(), copyFrom: copy ? state.eventId : null } });
+    await loadEvents();
+    await selectEvent(r.id);
+    document.querySelector('.tab[data-tab="event"]').click();
+    toast(copy ? 'イベントを複製しました。会期とコレクションを設定してください' : 'イベントを作りました。会期とコレクションを設定してください');
+  } catch (e) { toast(e.message, { error: true }); }
+}
+$('#newEventBtn').addEventListener('click', () => createEvent());
+$('#firstEventBtn').addEventListener('click', () => createEvent());
+$('#copyEventBtn').addEventListener('click', () => createEvent({ copy: true }));
+
+$('#deleteEventBtn').addEventListener('click', async () => {
+  const cur = state.events.find((x) => x.id === state.eventId);
+  if (!cur) return;
+  if (!confirm(`イベント「${cur.title || '（イベント名なし）'}」を削除します。\n下書き・公開済みの設定・公開の履歴が消え、元に戻せません。よろしいですか？`)) return;
+  try {
+    clearTimeout(state.saveTimer);
+    state.dirtyLocal = false;
+    await api(`events?event=${encodeURIComponent(cur.id)}`, { method: 'DELETE' });
+    await loadEvents();
+    const next = state.events.find((x) => x.active) || state.events[0];
+    if (next) await selectEvent(next.id); else showEmpty();
+    toast('イベントを削除しました');
+  } catch (e) { toast(e.message, { error: true }); }
+});
+
+/** コレクションを変えたら、そのコレクションの商品を読み込み直す */
+async function changeCollection(handle) {
+  if (!handle) return;
+  try {
+    const r = await api(`products?collection=${encodeURIComponent(handle)}`);
+    window.PRODUCTS = r.products || SAMPLE_PRODUCTS;
+    state.products = window.PRODUCTS;
+    renderPalette();
+    renderFixtures();
+    refreshPreview();
+    if (!state.products.length) toast('このコレクションには、まだ商品がありません（Shopify で商品を入れてください）');
+  } catch (e) { toast(`商品を読み込めませんでした：${e.message}`, { error: true }); }
 }
 
 function renderAll() {
@@ -195,7 +319,7 @@ async function save() {
   state.dirtyLocal = false;
   renderStatus();
   try {
-    const r = await api('draft', { method: 'PUT', body: { event: state.draft.event, layout: state.draft.layout, rev: state.draft.rev } });
+    const r = await evApi('draft', { method: 'PUT', body: { event: state.draft.event, layout: state.draft.layout, rev: state.draft.rev } });
     Object.assign(state.draft, { rev: r.rev, updatedAt: r.updatedAt, updatedBy: r.updatedBy });
   } catch (e) {
     if (e.status === 409) { toast(e.message, { error: true }); await loadState(); return; }
@@ -225,12 +349,14 @@ $('#publishBtn').addEventListener('click', async () => {
     return;
   }
   await flushSave();
-  if (!confirm('公開すると、お客さんのサイトにすぐ反映されます。公開しますか？')) return;
+  if (!confirm('公開します。会期中のイベントなら、お客さんのサイトにすぐ反映されます。よろしいですか？')) return;
   try {
-    const pub = await api('publish', { method: 'POST', body: { rev: state.draft.rev } });
+    const pub = await evApi('publish', { method: 'POST', body: { rev: state.draft.rev } });
     state.published = pub;
     state.history.unshift({ at: pub.publishedAt, by: pub.publishedBy });
-    toast('公開しました');
+    await loadEvents(); // お客さんに出すイベントが変わることがある
+    const cur = state.events.find((x) => x.id === state.eventId);
+    toast(cur?.active ? '公開しました。お客さんのサイトに表示されています' : '公開しました。会期になると自動でお客さんのサイトに表示されます');
     renderStatus();
     renderHistory();
   } catch (e) {
@@ -240,10 +366,10 @@ $('#publishBtn').addEventListener('click', async () => {
 });
 
 $('#discardBtn').addEventListener('click', async () => {
-  if (!confirm('下書きの変更をすべて捨てて、公開中の内容に戻します。よろしいですか？')) return;
+  if (!confirm('下書きの変更をすべて捨てて、このイベントの公開済みの内容に戻します。よろしいですか？')) return;
   await flushSave();
   try {
-    await api('discard', { method: 'POST' });
+    await evApi('discard', { method: 'POST' });
     await loadState();
     toast('公開中の内容に戻しました');
   } catch (e) { toast(e.message, { error: true }); }
@@ -253,7 +379,7 @@ $('#previewLink').addEventListener('click', async (e) => {
   if (state.dirtyLocal || state.saving) {
     e.preventDefault();
     await flushSave();
-    window.open('/?preview=draft', '_blank', 'noopener');
+    window.open(`/?preview=draft&event=${encodeURIComponent(state.eventId)}`, '_blank', 'noopener');
   }
 });
 
@@ -611,6 +737,14 @@ function fieldHtml(f, value, placeholders) {
       ${value ? `<button type="button" class="btn btn-small btn-ghost" data-reset="${f.key}">消す</button>` : ''}</span>`;
   } else if (f.type === 'textarea') {
     input = `<textarea id="${id}" data-key="${f.key}" maxlength="300" rows="2">${esc(value ?? '')}</textarea>`;
+  } else if (f.type === 'collection') {
+    // Shopify のコレクションから選ぶ
+    const list = state.collections.slice();
+    if (value && !list.some((c) => c.handle === value)) list.unshift({ handle: value, title: `${value}（Shopify に見つかりません）`, count: null });
+    input = `<select id="${id}" data-key="${f.key}">
+      <option value="" ${value ? '' : 'selected'}>（選んでください）</option>
+      ${list.map((c) => `<option value="${esc(c.handle)}" ${c.handle === value ? 'selected' : ''}>${esc(c.title)}${c.count != null ? `（${c.count}点）` : ''}</option>`).join('')}
+    </select>`;
   } else if (f.type === 'select') {
     const opts = f.options();
     const first = f.key === 'theme_preset' ? [{ value: '', label: `サイトの初期設定（${window.THEMES[E.original.theme]?.name || ''}）` }] : [];
@@ -662,6 +796,7 @@ for (const sel of Object.values(FORMS)) {
     const key = e.target.dataset.key;
     // テーマや色の変更で「テーマの色」の表示が変わるので描き直す
     // 購入特典の「なし／あり」で、条件金額と名前の欄を出し入れする
+    if (key === 'collection') { changeCollection(e.target.value); markMissing(); return; }
     if (key === 'theme_preset' || key === 'novelty' || e.target.type === 'color') { renderForm(); return; }
     const input = e.target.closest('[data-upload]');
     if (!input || !input.files[0]) return;
@@ -874,7 +1009,7 @@ $('#avList').addEventListener('click', (e) => {
 function renderHistory() {
   const p = state.published;
   $('#historySummary').innerHTML = `
-    <p><b>公開中：</b>${p?.publishedAt ? `${fmtTime(p.publishedAt)}（${esc(p.publishedBy || '—')}）` : 'まだ公開していません（サイトは初期設定で表示中）'}</p>
+    <p><b>このイベントの公開：</b>${p?.publishedAt ? `${fmtTime(p.publishedAt)}（${esc(p.publishedBy || '—')}）` : 'まだ公開していません'}</p>
     <p><b>下書き：</b>${state.draft.updatedAt ? `${fmtTime(state.draft.updatedAt)}（${esc(state.draft.updatedBy || '—')}）に保存` : '変更なし'}</p>`;
   $('#historyList').innerHTML = state.history.length
     ? state.history.map((h) => `<li>${fmtTime(h.at)}　${esc(h.by)} さんが公開</li>`).join('')
