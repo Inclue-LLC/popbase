@@ -230,7 +230,7 @@ export async function buildRoom(theme) {
     interactables.push({ type: 'product', id: p.id, label: p.name, price: p.price, object: sp, pos: front, alt: new THREE.Vector3(x, 0, tZ - tD / 2 - 0.5) });
   }
 
-  const rug = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: theme.rug, transparent: true, opacity: 0.55 }));
+  const rug = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: theme.rug, transparent: true, opacity: theme.rugOpacity ?? 0.55 }));
   rug.rotation.x = -Math.PI / 2;
   rug.scale.set(3.2, 1.9, 1);
   rug.position.set(0, 0.004, tZ);
