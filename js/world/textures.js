@@ -272,18 +272,22 @@ export async function floorTexture(theme, sizeM) {
   return toTexture(c, { repeat: [sizeM / TILE, sizeM / TILE] });
 }
 
-/** 看板（角丸の板＋文字。style:'neon' で光る） */
-export function signTexture(lines, sign, wM, hM, { radius = 0.18 } = {}) {
+/**
+ * 看板（角丸の板＋文字。style:'neon' で光る）
+ * full: true … 台の側面などに貼る用。余白・角丸なしで端まで塗る（透明な部分が黒く見えるのを防ぐ）
+ */
+export function signTexture(lines, sign, wM, hM, { radius = 0.18, full = false } = {}) {
   const W = wM * PPM * 2;
   const H = hM * PPM * 2;
   const c = makeCanvas(W, H);
   const ctx = c.getContext('2d');
-  const pad = sign.style === 'neon' ? 22 : 6;
-  rr(ctx, pad, pad, W - pad * 2, H - pad * 2, radius * PPM * 2);
+  const pad = full ? 0 : sign.style === 'neon' ? 22 : 6;
+  if (full) ctx.rect(0, 0, W, H);
+  else rr(ctx, pad, pad, W - pad * 2, H - pad * 2, radius * PPM * 2);
   ctx.fillStyle = sign.bg;
-  if (sign.style === 'neon') { ctx.shadowColor = sign.ink; ctx.shadowBlur = 24; }
+  if (sign.style === 'neon' && !full) { ctx.shadowColor = sign.ink; ctx.shadowBlur = 24; }
   ctx.fill();
-  if (sign.style === 'neon') { ctx.lineWidth = 8; ctx.strokeStyle = sign.ink; ctx.stroke(); }
+  if (sign.style === 'neon' && !full) { ctx.lineWidth = 8; ctx.strokeStyle = sign.ink; ctx.stroke(); }
   ctx.shadowBlur = 0;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';

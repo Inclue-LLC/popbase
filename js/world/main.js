@@ -298,9 +298,6 @@ async function main() {
     self.update(dt);
     for (const a of peers.values()) a.update(dt, { follow: true });
 
-    // 吊り飾りをゆらす
-    const t = clock.elapsedTime;
-    room.group.children.forEach((o) => { if (o.userData.sway) o.position.x = o.userData.sway.base + Math.sin(t * 0.9 + o.userData.sway.phase) * 0.04; });
 
     // カメラ：アバターの後ろから追いかける
     const p = self.group.position;

@@ -17,28 +17,6 @@ const HALF_D = ROOM.d / 2;
 
 const ITEM_HEIGHT = { plush: 0.78, mug: 0.6, tote: 0.66, pouch: 0.56, note: 0.6, keychain: 0.56, sticker: 0.56 };
 
-/* 吊り飾り（SVG） */
-const HANGING = {
-  cloud: () => '<svg viewBox="-34 -26 68 44"><g fill="#fff"><circle cx="-18" cy="2" r="13"/><circle cx="0" cy="-6" r="18"/><circle cx="19" cy="2" r="12"/><rect x="-30" y="0" width="60" height="15" rx="7.5"/></g></svg>',
-  star: () => `<svg viewBox="-24 -24 48 48"><polygon points="${window.Art.starPoints(0, 0, 18, 8)}" fill="#ffd76a" stroke="#ffd76a" stroke-width="4" stroke-linejoin="round"/></svg>`,
-  moon: () => '<svg viewBox="0 0 48 48"><path d="M30 6 a19 19 0 1 0 12 30 a15 15 0 1 1 -12 -30z" fill="#fff1a8"/></svg>',
-  ornament: (i) => `<svg viewBox="0 0 48 56"><rect x="18" y="0" width="12" height="8" rx="2" fill="#d4af37"/><circle cx="24" cy="32" r="21" fill="${['#c94a4a', '#2f6b4f', '#ffd76a', '#4a90c8'][i % 4]}"/><path d="M6 30 Q24 40 42 30" stroke="#fff" stroke-width="3" fill="none" opacity=".7"/><circle cx="16" cy="24" r="4" fill="#fff" opacity=".5"/></svg>`,
-  snow: () => '<svg viewBox="-24 -24 48 48"><g stroke="#fff" stroke-width="3.5" stroke-linecap="round"><line x1="0" y1="-20" x2="0" y2="20"/><line x1="0" y1="-20" x2="0" y2="20" transform="rotate(60)"/><line x1="0" y1="-20" x2="0" y2="20" transform="rotate(120)"/></g><circle r="4" fill="#cfe8ff"/></svg>',
-  flower: (i) => {
-    const fill = ['#ffb3c6', '#ffffff', '#fff1a8'][i % 3];
-    const petals = [0, 1, 2, 3, 4].map((k) => {
-      const a = (Math.PI * 2 * k) / 5 - Math.PI / 2;
-      return `<circle cx="${(Math.cos(a) * 10).toFixed(1)}" cy="${(Math.sin(a) * 10).toFixed(1)}" r="7.5" fill="${fill}"/>`;
-    }).join('');
-    return `<svg viewBox="-24 -24 48 48">${petals}<circle r="6" fill="#ffd76a"/></svg>`;
-  },
-  heart: () => '<svg viewBox="-16 -14 32 26"><path transform="scale(1.4)" d="M0 6 C-10 -2 -8 -10 -3 -10 C-1 -10 0 -8 0 -7 C0 -8 1 -10 3 -10 C8 -10 10 -2 0 6Z" fill="#ff8fa8"/></svg>',
-  balloon: (i) => {
-    const c = ['#ffb3c6', '#8fc8f0', '#ffd76a', '#c9b8f0'][i % 4];
-    return `<svg viewBox="0 0 40 56"><ellipse cx="20" cy="22" rx="17" ry="21" fill="${c}"/><path d="M17 43 L23 43 L20 48 Z" fill="${c}"/><ellipse cx="13" cy="14" rx="4" ry="6" fill="#fff" opacity=".5"/></svg>`;
-  },
-};
-
 const GACHA_SVG = `<svg viewBox="0 0 160 280">
   <rect x="18" y="150" width="124" height="120" rx="16" fill="#e0607e"/>
   <rect x="34" y="218" width="40" height="32" rx="8" fill="rgba(58,51,70,.35)"/>
@@ -49,11 +27,6 @@ const GACHA_SVG = `<svg viewBox="0 0 160 280">
   <rect x="40" y="58" width="80" height="22" rx="11" fill="#fff"/>
   <text x="80" y="74" text-anchor="middle" font-size="12" font-weight="800" fill="#e0607e" font-family="sans-serif">GACHA</text>
 </svg>`;
-
-function rand(seed) {
-  let s = seed;
-  return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
-}
 
 const basic = (map, extra = {}) => new THREE.MeshBasicMaterial({ map, ...extra });
 const lambert = (color) => new THREE.MeshLambertMaterial({ color });
@@ -224,7 +197,7 @@ export async function buildRoom(theme) {
   const tableSign = T.signTexture([
     { text: (window.STORE_LAYOUT.island || {}).title || 'LIMITED', size: 0.42, spacing: 16 },
     { text: (window.STORE_LAYOUT.island || {}).label || '会場限定', size: 0.26, color: theme.sign.sub },
-  ], { ...theme.sign, style: 'board' }, tW, tH, { radius: 0.02 });
+  ], { ...theme.sign, style: 'board' }, tW, tH, { full: true });
   const sideM = lambert(theme.shelf.edge);
   const table = new THREE.Mesh(new THREE.BoxGeometry(tW, tH, tD), [
     sideM, sideM, lambert(theme.shelf.board), sideM,
@@ -265,7 +238,7 @@ export async function buildRoom(theme) {
 
   /* ---------- レジ ---------- */
   const rW = 2.2; const rH = 1.0; const rD = 0.9; const rX = -5.3; const rZ = -6.1;
-  const regTex = T.signTexture([{ text: 'REGISTER', size: 0.34, spacing: 10, color: '#6f6880' }], { bg: theme.shelf.back, ink: '#6f6880' }, rW, rH, { radius: 0.02 });
+  const regTex = T.signTexture([{ text: 'REGISTER', size: 0.34, spacing: 10, color: '#6f6880' }], { bg: theme.shelf.back, ink: '#6f6880' }, rW, rH, { full: true });
   const register = new THREE.Mesh(new THREE.BoxGeometry(rW, rH, rD), [
     sideM, sideM, lambert(theme.shelf.board), sideM, new THREE.MeshBasicMaterial({ map: regTex }), sideM,
   ]);
@@ -290,29 +263,6 @@ export async function buildRoom(theme) {
   group.add(gacha);
   colliders.push({ minX: 4.8, maxX: 5.8, minZ: -HALF_D, maxZ: -5.7 });
   interactables.push({ type: 'gacha', id: 'gacha', label: 'クーポンガチャ', object: gacha, pos: new THREE.Vector3(5.3, 0, -5.1) });
-
-  /* ---------- 吊り飾り ---------- */
-  const kinds = theme.hangings || [];
-  const r = rand(7);
-  const lineMat = new THREE.LineBasicMaterial({ color: night ? '#8088c0' : '#9890a8', transparent: true, opacity: 0.6 });
-  const hangTex = {};
-  for (let i = 0; i < 18 && kinds.length; i++) {
-    const kind = kinds[i % kinds.length];
-    const key = `${kind}${i % 4}`;
-    hangTex[key] ||= await T.svgTexture(HANGING[kind](i), 128, 128);
-    let x = (r() * 2 - 1) * 5.6;
-    if (Math.abs(x) < 2.8) x += x < 0 ? -2.8 : 2.8; // 看板の前はあける
-    const z = -6 + r() * 11;
-    const y = ROOM.h - 0.5 - r() * 0.8;
-    const s = 0.35 + r() * 0.25;
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: hangTex[key], transparent: true, alphaTest: 0.05 }));
-    sp.scale.set(s, s, 1);
-    sp.position.set(x, y, z);
-    sp.userData.sway = { base: x, phase: r() * 6 };
-    group.add(sp);
-    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, ROOM.h, z), new THREE.Vector3(x, y + s / 2, z)]), lineMat);
-    group.add(line);
-  }
 
   /* ---------- 照明 ---------- */
   group.add(new THREE.HemisphereLight('#ffffff', night ? '#2a2f55' : '#d8c8b0', night ? 1.4 : 2.6));
