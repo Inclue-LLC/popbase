@@ -365,3 +365,30 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 
 /* 画像に差し替えたキャラクター */
 .char-img { display: block; aspect-ratio: 1; object-fit: contain; }
+
+/* ---------- 入場制限：待機・終了・残り時間 ---------- */
+.entrance.is-hidden { display: none; }
+.entrance-wait, .entrance-ended {
+  margin: 0 auto; max-width: 420px; padding: 18px 22px; border-radius: 22px;
+  background: rgba(255, 255, 255, .88); color: #3a3346; box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+}
+.entrance-wait p, .entrance-ended p { margin: 0; }
+.ew-title, .ee-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 4px !important; }
+.ew-pos { font-weight: 700; }
+.ew-pos b { font-size: 2.4rem; color: var(--primary); margin: 0 .1em; }
+.ew-est { font-weight: 700; color: #6f6880; min-height: 1.5em; }
+.ew-note { font-size: .85rem; margin-top: 8px !important; }
+.ew-small { font-size: .74rem; color: #6f6880; margin-top: 6px !important; }
+.entrance-ended { margin-bottom: 18px; }
+.entrance.is-waiting #enterBtn, .entrance.is-waiting #entNotice { display: none; }
+#enterBtn:disabled { opacity: .7; }
+
+.visit-timer {
+  position: fixed; left: 50%; top: 12px; z-index: 60; transform: translateX(-50%);
+  padding: .4em 1.2em; border-radius: 999px;
+  background: #fff; color: #3a3346; font-weight: 800; font-size: .95rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .18); border: 2px solid #ffd76a;
+}
+.visit-timer b { font-variant-numeric: tabular-nums; font-size: 1.15em; margin-left: .2em; }
+.visit-timer.is-urgent { background: #c0392b; color: #fff; border-color: #c0392b; animation: timerPulse 1s infinite; }
+@keyframes timerPulse { 50% { transform: translateX(-50%) scale(1.06); } }

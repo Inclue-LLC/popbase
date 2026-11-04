@@ -3,26 +3,19 @@
  * --------------------------------------------------
  * 3D モデルの代わりに、キャラクターの絵（または管理画面で追加したアバターの画像）を
  * 立体の板（常にカメラを向くスプライト）にして歩かせます。選べるアバターは window.AVATARS（js/event.js）。
- * 名前は「形容詞＋キャラクター名」の組み合わせから選ぶ方式で、自由入力はありません（荒らし対策）。
- * NAMES / EMOTES の数は server/index.js の NAME_COUNT / EMOTE_COUNT と合わせてください。
+ * 名前は表示しません。上に出るのはスタンプだけです。
+ * EMOTES の数は server/visit.js の EMOTE_COUNT と合わせてください。
  */
 import * as THREE from '../../vendor/three.module.min.js';
 import { characterTexture, shadowTexture } from './textures.js';
 
-export const NAMES = ['ふわふわの', 'きらきらの', 'のんびり', 'おさんぽ中の', 'はらぺこの', 'ねむねむの',
-  'わくわく', 'ぽかぽかの', 'にこにこ', 'そらいろの', 'ほしぞらの', 'おつきみ'];
 export const EMOTES = ['👋', '❤️', '✨', '😆', '👍', '🎁'];
 
 const texCache = new Map();
 let shadowTex;
 
-export function displayName(avatarId, nameIndex) {
-  const a = window.HaneulEvent.findAvatar(avatarId);
-  return `${NAMES[nameIndex] || NAMES[0]}${a.name}`;
-}
-
 export class Avatar {
-  constructor({ avatar, name, isSelf = false, labelsEl }) {
+  constructor({ avatar, isSelf = false, labelsEl }) {
     this.group = new THREE.Group();
     this.isSelf = isSelf;
     this.moving = false;
@@ -52,16 +45,14 @@ export class Avatar {
 
     this.label = document.createElement('div');
     this.label.className = `avatar-label${isSelf ? ' is-self' : ''}`;
-    this.label.innerHTML = '<span class="al-name"></span><span class="al-emote"></span>';
+    this.label.innerHTML = '<span class="al-emote"></span>'; // 名前は出さない（スタンプだけ）
     labelsEl.appendChild(this.label);
 
-    this.setLook(avatar, name);
+    this.setLook(avatar);
   }
 
-  async setLook(avatar, name) {
+  async setLook(avatar) {
     this.avatar = avatar;
-    this.name = name;
-    this.label.querySelector('.al-name').textContent = displayName(avatar, name);
     // キャラクターならその絵、管理画面で追加したアバターならアップロードした画像
     const a = window.HaneulEvent.findAvatar(avatar);
     const src = a.character || { id: a.id, image: a.image };

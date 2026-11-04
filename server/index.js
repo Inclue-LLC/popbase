@@ -5,36 +5,28 @@
  * 2. 同時接続（WebSocket /ws）：同じ店内にいる他のお客さんのアバターを中継
  * 3. 店内管理画面（/admin）と、その API（server/admin/）
  *
- * お客さんが送れるのは「位置・向き・アバターの種類・名前の番号・スタンプの番号」だけです。
- * 自由入力の文字は一切受け付けないので、チャットの荒らし対策は不要です。
+ * 入場制限・待機列・お買い物時間・同時接続の中身は server/visit.js にあります。
  *
  * 環境変数:
- *   PORT            待ち受けポート（既定 8080）
- *   ROOM_CAPACITY   1部屋の最大人数。超えると次の部屋（チャンネル）を自動で作る（既定 30）
- *   MAX_PER_IP      同じIPからの同時接続数の上限（既定 6）
- *   ALLOWED_ORIGINS 接続を許可するサイトのURL（カンマ区切り。空なら制限なし）
+ *   PORT              待ち受けポート（既定 8080）
+ *   MAX_VISITORS      店内に同時に入れる人数（既定 50）。超えたら待機列
+ *   VISIT_MINUTES     混雑中（待っている人がいるとき）の1人あたりのお買い物時間（既定 30）
+ *   WARN_MINUTES      終了何分前からタイマーを出すか（既定 5）
+ *   RECONNECT_SECONDS 再読み込み・通信の切れ目で、席や順番を預かる秒数（既定 30）
+ *   MAX_PER_IP        同じIPからの同時接続数の上限（既定 6）
+ *   ALLOWED_ORIGINS   接続を許可するサイトのURL（カンマ区切り。空なら制限なし）
  */
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { WebSocketServer } = require('ws');
 const adminApi = require('./admin/api');
+const visit = require('./visit');
 
 const PORT = Number(process.env.PORT) || 8080;
-const ROOM_CAPACITY = Number(process.env.ROOM_CAPACITY) || 30;
 const MAX_PER_IP = Number(process.env.MAX_PER_IP) || 6;
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
 const ROOT = path.resolve(__dirname, '..');
-
-// クライアント（js/world/avatars.js）と同じ値
-const AVATARS = ['haru', 'byeol', 'dalbit', 'gomi'];
-// 管理画面で追加したアバターの ID（c_ ＋英数字）。見た目は各お客さんのブラウザが公開中の一覧から探し、
-// 一覧にない ID は最初のアバターで表示する
-const CUSTOM_AVATAR = /^c_[a-z0-9]{6,16}$/;
-const avatarOk = (v) => typeof v === 'string' && (AVATARS.includes(v) || CUSTOM_AVATAR.test(v));
-const NAME_COUNT = 12;   // 名前の前半（形容詞）の数
-const EMOTE_COUNT = 6;   // スタンプの数
-const BOUNDS = 6.8;      // 店内の広さ（±m）
 
 /* ---------- 静的ファイル ---------- */
 const MIME = {
@@ -70,41 +62,8 @@ function serveStatic(req, res) {
   });
 }
 
-/* ---------- 部屋（チャンネル） ---------- */
-const rooms = new Map(); // roomId -> Map<clientId, client>
-let nextClientId = 1;
-let nextRoomId = 1;
 const ipCount = new Map();
-
-function pickRoom() {
-  for (const [id, members] of rooms) if (members.size < ROOM_CAPACITY) return id;
-  const id = nextRoomId++;
-  rooms.set(id, new Map());
-  return id;
-}
-
-function stats() {
-  return { rooms: [...rooms].map(([id, m]) => ({ id, people: m.size })), capacity: ROOM_CAPACITY };
-}
-
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-const num = (v, fallback = 0) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
-const int = (v, max) => (Number.isInteger(v) && v >= 0 && v < max ? v : 0);
-
-function publicState(c) {
-  return { id: c.id, avatar: c.avatar, name: c.name, x: c.x, z: c.z, ry: c.ry, m: c.moving };
-}
-
-function send(ws, msg) {
-  if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
-}
-
-function broadcast(roomId, msg, exceptId) {
-  const members = rooms.get(roomId);
-  if (!members) return;
-  const data = JSON.stringify(msg);
-  for (const c of members.values()) if (c.id !== exceptId && c.ws.readyState === c.ws.OPEN) c.ws.send(data);
-}
+const stats = () => visit.stats();
 
 /* ---------- WebSocket ---------- */
 const server = http.createServer(async (req, res) => {
@@ -130,58 +89,9 @@ wss.on('connection', (ws, req) => {
   const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress;
   if ((ipCount.get(ip) || 0) >= MAX_PER_IP) return ws.close(1008, 'too many');
   ipCount.set(ip, (ipCount.get(ip) || 0) + 1);
+  ws.on('close', () => ipCount.set(ip, Math.max(0, (ipCount.get(ip) || 1) - 1)));
 
-  let client = null;
-  let tokens = 30; // 簡易レート制限（1秒あたり約20通まで）
-  const refill = setInterval(() => { tokens = Math.min(30, tokens + 20); }, 1000);
-
-  ws.on('message', (raw) => {
-    if (--tokens < 0) return;
-    let msg;
-    try { msg = JSON.parse(raw); } catch { return; }
-    if (!msg || typeof msg !== 'object') return;
-
-    if (msg.t === 'join' && !client) {
-      const roomId = pickRoom();
-      client = {
-        id: nextClientId++, ws, roomId,
-        avatar: avatarOk(msg.avatar) ? msg.avatar : AVATARS[0],
-        name: int(msg.name, NAME_COUNT),
-        x: clamp(num(msg.x), -BOUNDS, BOUNDS), z: clamp(num(msg.z, 5.5), -BOUNDS, BOUNDS), ry: num(msg.ry), moving: false,
-      };
-      rooms.get(roomId).set(client.id, client);
-      send(ws, { t: 'welcome', id: client.id, room: roomId, capacity: ROOM_CAPACITY,
-        peers: [...rooms.get(roomId).values()].filter((c) => c.id !== client.id).map(publicState) });
-      broadcast(roomId, { t: 'join', peer: publicState(client) }, client.id);
-      return;
-    }
-    if (!client) return;
-
-    if (msg.t === 'move') {
-      client.x = clamp(num(msg.x, client.x), -BOUNDS, BOUNDS);
-      client.z = clamp(num(msg.z, client.z), -BOUNDS, BOUNDS);
-      client.ry = num(msg.ry, client.ry);
-      client.moving = !!msg.m;
-      broadcast(client.roomId, { t: 'move', id: client.id, x: client.x, z: client.z, ry: client.ry, m: client.moving }, client.id);
-    } else if (msg.t === 'emote') {
-      broadcast(client.roomId, { t: 'emote', id: client.id, e: int(msg.e, EMOTE_COUNT) }, client.id);
-    } else if (msg.t === 'look') {
-      // アバターや名前の変更
-      client.avatar = avatarOk(msg.avatar) ? msg.avatar : client.avatar;
-      client.name = int(msg.name, NAME_COUNT);
-      broadcast(client.roomId, { t: 'look', id: client.id, avatar: client.avatar, name: client.name }, client.id);
-    }
-  });
-
-  ws.on('close', () => {
-    clearInterval(refill);
-    ipCount.set(ip, Math.max(0, (ipCount.get(ip) || 1) - 1));
-    if (!client) return;
-    const members = rooms.get(client.roomId);
-    members?.delete(client.id);
-    broadcast(client.roomId, { t: 'leave', id: client.id });
-    if (members && members.size === 0 && rooms.size > 1) rooms.delete(client.roomId);
-  });
+  visit.onConnection(ws);
 });
 
 // 切断を検知するための ping
@@ -195,7 +105,8 @@ setInterval(() => {
 wss.on('connection', (ws) => { ws.isAlive = true; ws.on('pong', () => { ws.isAlive = true; }); });
 
 server.listen(PORT, () => {
-  console.log(`STUDIO HANEUL pop-up: http://localhost:${PORT}  (multiplayer: ws://localhost:${PORT}/ws, ${ROOM_CAPACITY} people/room)`);
+  console.log(`STUDIO HANEUL pop-up: http://localhost:${PORT}  （同時接続: ws://localhost:${PORT}/ws）`);
+  console.log(`入場制限: ${visit.CAP} 人まで。混雑中のお買い物時間 ${visit.VISIT_MS / 60e3} 分（終了 ${visit.WARN_MS / 60e3} 分前からタイマー表示）`);
   console.log(`店内管理画面: http://localhost:${PORT}/admin  （保存先: ${adminApi.store.label}）`);
   if (!require('./admin/auth').readUsers().length) {
     console.log('  ※ 管理画面のアカウントがまだありません。別のターミナルで npm run admin:user -- <名前> を実行して作成してください');

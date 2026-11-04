@@ -733,7 +733,6 @@ function renderAvatars() {
   // プレビュー（お客さんのアバター選び）
   $('#apGrid').innerHTML = list.map((a) => `<span class="pick" style="--c:${a.character ? esc(a.character.color) : '#e3e6f0'}">
     ${window.Art.characterSVG(a.character || { image: a.image })}<span>${esc(a.name)}</span></span>`).join('');
-  $('#apSample').textContent = `ふわふわの${list[list.length - 1]?.name || ''}`;
 }
 
 $('#avBuiltin').addEventListener('change', (e) => {

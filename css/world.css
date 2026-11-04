@@ -27,22 +27,15 @@ body.world-fs .world {
 .world-canvas:active { cursor: grabbing; }
 .world:not([data-ready]) .world-canvas { opacity: 0; }
 
-/* 名前ラベル・スタンプ */
+/* スタンプ（名前は表示しない） */
 .world-labels { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
 .avatar-label {
   position: absolute; left: 0; top: 0;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   will-change: transform;
 }
-.al-name {
-  padding: 1px 10px; border-radius: 999px;
-  background: rgba(255, 255, 255, .88); color: #3a3346;
-  font-size: 12px; font-weight: 700; white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .12);
-}
 /* 自分の名前は表示しない（スタンプだけ出す） */
-.avatar-label.is-self .al-name { display: none; }
-.al-emote {
+.avatar-label.is-self .al-emote {
   order: -1; font-size: 30px; line-height: 1; opacity: 0;
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .2));
 }

@@ -25,7 +25,22 @@
       <div class="entrance-cast" id="entranceCast"></div>
       <p class="entrance-period" id="entPeriod"></p>
       <p class="entrance-notice" id="entNotice" hidden></p>
+      <!-- お買い物時間が終わったとき -->
+      <div class="entrance-ended" id="entEnded" hidden role="status">
+        <p class="ee-title">お買い物時間が終了しました</p>
+        <p>ご来店ありがとうございました。カートの中身は空になりました。</p>
+      </div>
       <button class="btn btn-primary btn-lg" id="enterBtn">お店に入る</button>
+
+      <!-- 満員のときの待機（js/app.js） -->
+      <div class="entrance-wait" id="entWait" hidden role="status" aria-live="polite">
+        <p class="ew-title">ただいま満員です</p>
+        <p class="ew-pos">入店まで あと <b id="ewAhead">0</b> 人</p>
+        <p class="ew-est" id="ewEst"></p>
+        <p class="ew-note">このままお待ちください。順番が来ると自動で入店します。<br>混雑中のお買い物時間は、1人 <span class="ew-min">30</span> 分です。</p>
+        <p class="ew-small">ページを閉じたり再読み込みしても、30秒以内なら順番はそのままです。</p>
+      </div>
+
     </div>
     <div class="door door-left" aria-hidden="true"></div>
     <div class="door door-right" aria-hidden="true"></div>
@@ -70,11 +85,7 @@
           <div class="picker-card" role="dialog" aria-labelledby="pickTitle">
             <h3 id="pickTitle">アバターを選んで入店</h3>
             <div class="pick-chars" id="pickChars"></div>
-            <label class="pick-name">おなまえ
-              <span class="pick-name-row"><select id="pickNames"></select><span id="pickPreview" class="pick-preview"></span>
-              <button class="hud-btn" id="pickShuffle" type="button">おまかせ</button></span>
-            </label>
-            <p class="pick-note">他のお客さんには、選んだキャラクターとおなまえが表示されます。</p>
+            <p class="pick-note">他のお客さんには、選んだアバターが表示されます。</p>
             <button class="btn btn-primary" id="pickGo">この姿で入店する</button>
           </div>
         </div>
@@ -206,6 +217,8 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <!-- お買い物時間の残り（終了5分前から表示） -->
+  <div class="visit-timer" id="visitTimer" hidden role="timer" aria-live="off">お買い物時間 残り <b id="visitTimerText">5:00</b></div>
 
   <script src="js/data.js"></script>
   <script src="js/themes.js"></script>
@@ -213,6 +226,7 @@
   <script src="js/shopify.js"></script>
   <script src="js/source.js"></script>
   <script src="js/art.js"></script>
+  <script src="js/visit.js"></script>
   <script src="js/app.js"></script>
   <script type="module" src="js/world/main.js"></script>
 </body>

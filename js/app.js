@@ -77,14 +77,92 @@ window.AppReady = (async function () {
   }
   renderEntrance();
 
+  /* ---------- 入店の手続き（入場制限・待機・お買い物時間。js/visit.js） ---------- */
   const entrance = $('#entrance');
-  if (sessionStorageSafe('entered') && !entrancePreview) entrance.remove();
-  $('#enterBtn')?.addEventListener('click', () => {
-    if (entrancePreview) return; // 管理画面のプレビューでは入店しない
+  const Visit = window.Visit;
+  const enterBtn = $('#enterBtn');
+  const enterLabel = () => (SHOP.entrance?.button || 'お店に入る');
+
+  function hideEntrance({ animate = true } = {}) {
+    entrance.classList.remove('is-waiting');
+    $('#entWait').hidden = true;
+    if (!animate) { entrance.classList.add('is-hidden'); return; }
     entrance.classList.add('open');
-    try { sessionStorage.setItem('haneul:entered', '1'); } catch { /* noop */ }
-    setTimeout(() => entrance.remove(), 1400);
-  });
+    setTimeout(() => { entrance.classList.add('is-hidden'); entrance.classList.remove('open'); }, 1400);
+  }
+  function showEntrance({ ended = false } = {}) {
+    entrance.classList.remove('is-hidden', 'open', 'is-waiting');
+    $('#entEnded').hidden = !ended;
+    $('#entWait').hidden = true;
+    enterBtn.disabled = false;
+    enterBtn.textContent = ended ? 'もう一度並ぶ' : enterLabel();
+  }
+  function requestEntry() {
+    enterBtn.disabled = true;
+    enterBtn.textContent = '入店の手続き中…';
+    Visit.start();
+  }
+
+  if (!entrancePreview) {
+    enterBtn.addEventListener('click', () => {
+      $('#entEnded').hidden = true;
+      requestEntry();
+    });
+
+    Visit.on('queued', (q) => {
+      entrance.classList.remove('is-hidden', 'open');
+      entrance.classList.add('is-waiting');
+      $('#entWait').hidden = false;
+      $('#ewAhead').textContent = q.ahead;
+      $('#ewEst').textContent = q.estimateMinutes ? `目安：約 ${q.estimateMinutes} 分` : 'まもなく入店できます';
+    });
+    Visit.on('admitted', (info) => {
+      const wasWaiting = entrance.classList.contains('is-waiting');
+      try { sessionStorage.setItem('haneul:entered', '1'); } catch { /* noop */ }
+      hideEntrance({ animate: !autoResumed || wasWaiting });
+      autoResumed = false;
+      if (wasWaiting) toast('お待たせしました！ ご入店ください');
+      if (info.crowded && !info.offline) {
+        setTimeout(() => toast(`混雑中のため、お買い物時間は ${info.visitMinutes} 分です（終了 ${info.warnMinutes} 分前からタイマーが出ます）`), wasWaiting ? 2600 : 600);
+      }
+    });
+    Visit.on('timeout', () => {
+      // 時間切れ：開いている画面を閉じ、カートを空にして入口へ
+      document.querySelectorAll('.modal.is-open, .drawer.is-open').forEach((el) => closeLayer(el));
+      state.cart = {};
+      saveCart();
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      document.body.classList.remove('world-fs', 'no-scroll');
+      showEntrance({ ended: true });
+    });
+    Visit.on('timer', () => updateTimer());
+
+    // 再読み込みのときは、前の入店券で自動的に続きから（30秒以内なら席・順番・残り時間がそのまま）
+    var autoResumed = false;
+    if (Visit.hasTicket() || sessionStorageSafe('entered')) {
+      autoResumed = true;
+      requestEntry();
+    }
+  }
+
+  /* ---------- お買い物時間の残り（終了5分前から表示） ---------- */
+  let warned = { five: false, one: false };
+  function updateTimer() {
+    const el = $('#visitTimer');
+    const dl = Visit?.deadline;
+    const warnMs = (Visit?.info?.warnMinutes || 5) * 60e3;
+    if (!dl) { el.hidden = true; warned = { five: false, one: false }; return; }
+    const rem = Math.max(0, dl - Date.now());
+    if (rem > warnMs) { el.hidden = true; return; }
+    el.hidden = false;
+    const sec = Math.ceil(rem / 1000);
+    $('#visitTimerText').textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+    el.classList.toggle('is-urgent', rem <= 60e3);
+    if (!warned.five) { warned.five = true; toast(`お買い物時間は残り ${Math.ceil(rem / 60e3)} 分です。お会計はお早めにお願いします`); }
+    if (!warned.one && rem <= 60e3) { warned.one = true; toast('残り1分です。時間になると自動で退店し、カートは空になります'); }
+  }
+  setInterval(updateTimer, 500);
+
   if (entrancePreview) {
     // 管理画面（同じサイトの親ウィンドウ）から届いた下書きを表示する
     window.addEventListener('message', (e) => {
@@ -407,6 +485,7 @@ window.AppReady = (async function () {
     cartCount: () => totals().count,
     isLayerOpen: () => !!document.querySelector('.modal.is-open, .drawer.is-open'),
     openGacha() { renderGachaState(); openLayer($('#gachaModal')); },
+    clearCart() { state.cart = {}; saveCart(); },
     // 壁のキャラクターに話しかけたとき
     showCharacter(id) {
       const c = charById[id];

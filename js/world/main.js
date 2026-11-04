@@ -4,13 +4,12 @@
  * room.js     店内の組み立て（壁・棚・テーブル・レジ・ガチャ・飾り）
  * avatars.js  アバター（キャラクターの絵を立体の板にしたもの）
  * controls.js キーボード・スティック・ドラッグ・タップ
- * net.js      同時接続（他のお客さんのアバター）
+ * 同時接続（他のお客さんのアバター）は、入店の手続きと同じ接続（js/visit.js の window.Visit）を使う
  */
 import * as THREE from '../../vendor/three.module.min.js';
 import { buildRoom, disposeRoom } from './room.js';
-import { Avatar, NAMES, EMOTES, displayName } from './avatars.js';
+import { Avatar, EMOTES } from './avatars.js';
 import { Controls } from './controls.js';
-import { Net, resolveUrl } from './net.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const saved = {
@@ -97,23 +96,25 @@ async function main() {
   /* ---------- 自分のアバター ---------- */
   let look = saved.get('look', null);
   // 前に選んだアバターが管理画面で外されていたら、最初のアバターに替える
-  if (look && !window.AVATARS.some((a) => a.id === look.avatar)) look = { ...look, avatar: window.AVATARS[0].id };
-  const self = new Avatar({ avatar: look?.avatar || window.AVATARS[0].id, name: look?.name ?? 0, isSelf: true, labelsEl });
+  if (look && !window.AVATARS.some((a) => a.id === look.avatar)) look = { avatar: window.AVATARS[0].id };
+  const self = new Avatar({ avatar: look?.avatar || window.AVATARS[0].id, isSelf: true, labelsEl });
   self.group.position.copy(SPAWN);
   scene.add(self.group);
 
-  /* ---------- 他のお客さん ---------- */
+  /* ---------- 他のお客さん（入店の手続きと同じ接続 window.Visit を使う） ---------- */
+  const Visit = window.Visit;
   const peers = new Map();
-  let myRoom = null;
+  let netState = 'connecting';
   const statusEl = $('#netStatus');
-  function setStatus(s) {
+  function setStatus(s = netState) {
+    netState = s;
     statusEl.dataset.state = s;
-    statusEl.textContent = s === 'online' ? `店内 ${peers.size + 1} 人${myRoom > 1 ? `（チャンネル ${myRoom}）` : ''}`
+    statusEl.textContent = s === 'online' ? `店内 ${peers.size + 1} 人`
       : s === 'connecting' ? '接続しています…' : 'ひとりで見ています';
   }
   function addPeer(p) {
     if (peers.has(p.id)) return;
-    const a = new Avatar({ avatar: p.avatar, name: p.name, labelsEl });
+    const a = new Avatar({ avatar: p.avatar, labelsEl });
     a.group.position.set(p.x, 0, p.z);
     a.setTarget(p.x, p.z, p.m);
     scene.add(a.group);
@@ -126,67 +127,68 @@ async function main() {
     a.dispose();
     peers.delete(id);
   }
-  const net = new Net(resolveUrl(), {
-    status: setStatus,
-    message(m) {
-      if (m.t === 'welcome') {
-        for (const id of [...peers.keys()]) removePeer(id);
-        myRoom = m.room;
-        m.peers.forEach(addPeer);
-      } else if (m.t === 'join') addPeer(m.peer);
-      else if (m.t === 'leave') removePeer(m.id);
-      else if (m.t === 'move') peers.get(m.id)?.setTarget(m.x, m.z, m.m);
-      else if (m.t === 'emote') peers.get(m.id)?.emote(m.e);
-      else if (m.t === 'look') peers.get(m.id)?.setLook(m.avatar, m.name);
-      if (m.t !== 'move') setStatus('online');
-    },
-    disconnected() { for (const id of [...peers.keys()]) removePeer(id); },
+  const clearPeers = () => { for (const id of [...peers.keys()]) removePeer(id); };
+  Visit.on('status', (s) => setStatus(s === 'online' && Visit.state !== 'inside' ? 'connecting' : s));
+  Visit.on('message', (m) => {
+    if (m.t === 'welcome') { clearPeers(); m.peers.forEach(addPeer); }
+    else if (m.t === 'join') addPeer(m.peer);
+    else if (m.t === 'leave') removePeer(m.id);
+    else if (m.t === 'move') peers.get(m.id)?.setTarget(m.x, m.z, m.m);
+    else if (m.t === 'emote') peers.get(m.id)?.emote(m.e);
+    else if (m.t === 'look') peers.get(m.id)?.setLook(m.avatar);
+    else if (m.t === 'reset') clearPeers();
+    if (m.t !== 'move') setStatus(Visit.state === 'inside' ? 'online' : netState);
   });
+  // 入店できたら（再接続のときも）、自分のアバターで店内に現れる
+  function tryJoin() {
+    if (!look || Visit.state !== 'inside') return;
+    const p = self.group.position;
+    Visit.send({ t: 'join', avatar: look.avatar, x: p.x, z: p.z });
+  }
+  Visit.on('admitted', (info) => { if (info.offline) setStatus('offline'); tryJoin(); });
+  Visit.on('resumed', tryJoin);
+  Visit.on('timeout', () => { clearPeers(); setStatus('offline'); self.group.position.copy(SPAWN); });
+  if (Visit.state === 'inside') tryJoin();
+  else if (Visit.state === 'offline') setStatus('offline');
 
-  /* ---------- アバター選び ---------- */
+  /* ---------- アバター選び（名前はなし） ---------- */
   const picker = $('#avatarPicker');
-  let pick = { avatar: self.avatar, name: self.name };
+  let pick = { avatar: self.avatar };
   function renderPicker() {
     // 選べるアバター：キャラクター＋管理画面で追加したアバター（window.AVATARS）
     const escName = (v) => String(v).replace(/[&<>"']/g, '');
     $('#pickChars').innerHTML = window.AVATARS.map((a) => `
       <button class="pick-char" data-avatar="${escName(a.id)}" aria-pressed="${pick.avatar === a.id}" style="--c:${a.character ? a.character.color : '#e3e6f0'}">
         ${window.Art.characterSVG(a.character || { image: a.image })}<span>${escName(a.name)}</span></button>`).join('');
-    $('#pickNames').innerHTML = NAMES.map((n, i) => `<option value="${i}">${n}</option>`).join('');
-    $('#pickNames').value = String(pick.name);
-    $('#pickPreview').textContent = displayName(pick.avatar, pick.name);
   }
   $('#pickChars').addEventListener('click', (e) => {
     const b = e.target.closest('[data-avatar]');
     if (b) { pick.avatar = b.dataset.avatar; renderPicker(); }
   });
-  $('#pickNames').addEventListener('change', (e) => { pick.name = Number(e.target.value); renderPicker(); });
-  $('#pickShuffle').addEventListener('click', () => { pick.name = Math.floor(Math.random() * NAMES.length); renderPicker(); });
   function openPicker() {
-    pick = { avatar: self.avatar, name: self.name };
+    pick = { avatar: self.avatar };
     renderPicker();
     picker.hidden = false;
     $('#pickGo').focus({ preventScroll: true });
   }
   $('#pickGo').addEventListener('click', () => {
     const first = !look;
-    look = { ...pick };
+    look = { avatar: pick.avatar };
     saved.set('look', look);
-    self.setLook(look.avatar, look.name);
+    self.setLook(look.avatar);
     picker.hidden = true;
     root.focus({ preventScroll: true });
-    if (first) net.connect({ avatar: look.avatar, name: look.name, x: self.group.position.x, z: self.group.position.z });
-    else net.send({ t: 'look', avatar: look.avatar, name: look.name });
+    if (first) tryJoin();
+    else Visit.send({ t: 'look', avatar: look.avatar });
   });
   $('#lookBtn').addEventListener('click', openPicker);
-  if (look) net.connect({ avatar: look.avatar, name: look.name, x: SPAWN.x, z: SPAWN.z });
-  else { setStatus('offline'); openPicker(); }
+  if (!look) openPicker();
 
   /* ---------- スタンプ ---------- */
   $('#emotes').innerHTML = EMOTES.map((e, i) => `<button class="emote-btn" data-emote="${i}" aria-label="スタンプ ${i + 1}">${e}</button>`).join('');
   function emote(i) {
     self.emote(i);
-    net.send({ t: 'emote', e: i });
+    Visit.send({ t: 'emote', e: i });
   }
   $('#emotes').addEventListener('click', (e) => {
     const b = e.target.closest('[data-emote]');
@@ -249,6 +251,17 @@ async function main() {
     if (!blocked(p.x + dx, p.z)) { p.x += dx; moved = true; }
     if (!blocked(p.x, p.z + dz)) { p.z += dz; moved = true; }
     return moved;
+  }
+
+  /* ---------- 自分の位置を送る（1秒あたり最大10回・変わったときだけ） ---------- */
+  let lastMoveKey = '';
+  let lastMoveAt = 0;
+  function sendMove(st, now) {
+    const key = `${st.x.toFixed(2)},${st.z.toFixed(2)},${st.m}`;
+    if (key === lastMoveKey || now - lastMoveAt < 100) return;
+    lastMoveKey = key;
+    lastMoveAt = now;
+    Visit.send({ t: 'move', x: +st.x.toFixed(2), z: +st.z.toFixed(2), ry: +st.ry.toFixed(2), m: st.m });
   }
 
   /* ---------- 描画ループ ---------- */
@@ -328,7 +341,7 @@ async function main() {
     self.placeLabel(camera, w, h);
     for (const a of peers.values()) a.placeLabel(camera, w, h);
 
-    net.move({ x: p.x, z: p.z, ry: yaw, m: moving }, performance.now());
+    sendMove({ x: p.x, z: p.z, ry: yaw, m: moving }, performance.now());
   }
 
   function frame() {
