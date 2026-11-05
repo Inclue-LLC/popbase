@@ -281,7 +281,7 @@ window.AppReady = (async function () {
       hh.hidden = !closes;
       if (closes) {
         const w = HS.whenText(closes);
-        hh.textContent = w.startsWith('今日') ? `本日 ${HS.timeText(closes)} 閉店` : `${w} 閉店`;
+        hh.textContent = w.startsWith('本日') ? `本日 ${HS.timeText(closes)} 閉店` : `${w} 閉店`;
       }
     }
   }

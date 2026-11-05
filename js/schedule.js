@@ -101,11 +101,11 @@
     return `営業時間 ${t(daily.open)}–${t(daily.close)}`;
   }
 
-  /** 開く時刻の表示 例：12月1日(火) 10:00 ／ 今日 10:00 ／ 明日 10:00 */
+  /** 開く時刻の表示 例：12月1日(火) 10:00 ／ 本日 10:00 ／ 明日 10:00 */
   function whenText(t, now = Date.now()) {
     const p = parts(t);
     const days = Math.round((jstMidnight(t) - jstMidnight(now)) / DAY);
-    const day = days === 0 ? '今日' : days === 1 ? '明日' : `${p.m}月${p.d}日(${p.w})`;
+    const day = days === 0 ? '本日' : days === 1 ? '明日' : `${p.m}月${p.d}日(${p.w})`;
     return `${day} ${hm(p)}`;
   }
   /** 時刻だけ 例：20:00 */
