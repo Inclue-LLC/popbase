@@ -237,7 +237,7 @@ async function main() {
       if (hit) {
         const it = room.interactables.find((x) => x.object === hit.object || x.extra === hit.object);
         // キャラクターの絵は、近くにいるときだけ反応（遠くからは歩いていく）
-        if (it && (it.type === 'product' || it.type === 'cart' || it.type === 'exit' || self.group.position.distanceTo(it.pos) < NEAR * 1.6)) return interact(it);
+        if (it && (it.type === 'product' || it.type === 'cart' || it.type === 'exit' || it.type === 'character' || self.group.position.distanceTo(it.pos) < NEAR * 1.6)) return interact(it);
         if (it) { walkTarget = stepToward(it.pos.x, it.pos.z); return; }
       }
       const floor = room.group.getObjectByName('floor');
@@ -331,6 +331,7 @@ async function main() {
     let best = null;
     let bestD = NEAR;
     for (const it of room.interactables) {
+      if (it.type === 'character') continue; // 壁のキャラクターは案内ボタンを出さない（タップで紹介文）
       for (const q of it.alt ? [it.pos, it.alt] : [it.pos]) {
         const d = Math.hypot(q.x - p.x, q.z - p.z);
         if (d < bestD) { bestD = d; best = it; }
