@@ -401,6 +401,8 @@ function trimTransparent(img, key) {
       out.getContext('2d').drawImage(c, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
     }
   } catch { /* 読み取れない画像（別サイトの画像など）はそのまま */ }
+  // 元の画像の高さに対する、絵の部分の高さの割合（キャラクターどうしの大きさの比率に使う）
+  out.frac = out === c ? 1 : out.height / H;
   if (key) trimCache.set(key, out);
   return out;
 }
@@ -411,7 +413,7 @@ function trimTransparent(img, key) {
  * 透明な余白を切り落としてから、決まった枠（高さ 94%）に下揃えで収める。
  * イラストの下の部分（アバター用の足元など）も含めて収め、足元が床・名前の札のすぐ上に来るようにする。
  */
-export async function characterTexture(character, size = 256) {
+export async function characterTexture(character, size = 256, { scale = 1 } = {}) {
   const src = character.image ? await loadImage(character.image) : await svgImage(window.Art.characterSVG(character), size, size);
   const c = makeCanvas(size, size);
   if (src) {
@@ -419,13 +421,23 @@ export async function characterTexture(character, size = 256) {
     const boxH = size * 0.94;
     const boxW = size;
     const pad = Math.max(2, size * 0.01); // 下端に少し余白（端の画素が欠けないように）
-    // 高さをそろえる。横に長い絵は、幅に合わせて縮める
-    const k = Math.min(boxH / img.height, boxW / img.width);
+    // 高さをそろえる。横に長い絵は、幅に合わせて縮める。scale（1 以下）で、ほかのキャラクターとの大きさの比率を反映
+    const k = Math.min(boxH / img.height, boxW / img.width) * Math.max(0.2, Math.min(1, scale));
     const w = img.width * k;
     const h = img.height * k;
     c.getContext('2d').drawImage(img, (size - w) / 2, size - pad - h, w, h);
   }
   return toTexture(c);
+}
+
+/**
+ * キャラクターの絵の「大きさ」：元の画像の高さに対する、絵の部分（透明でないところ）の高さの割合
+ * 同じ大きさの画像（キャンバス）に描いたキャラクターどうしなら、この割合の比がそのまま大きさの比になる
+ */
+export async function characterFrac(character, size = 256) {
+  const src = character.image ? await loadImage(character.image) : await svgImage(window.Art.characterSVG(character), size, size);
+  if (!src) return 1;
+  return trimTransparent(src, character.image || null).frac || 1;
 }
 
 /** 任意の SVG */
