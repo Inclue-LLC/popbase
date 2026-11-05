@@ -262,7 +262,7 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 
 /* イベント一覧（最初の画面） */
 .app.is-list .tabs, .app.is-list .workspace, .app.is-list .eventbar,
-.app.is-list #publishBtn, .app.is-list #previewLink, .app.is-list #status { visibility: hidden; }
+.app.is-list #publishBtn, .app.is-list #previewLink, .app.is-list #status, .app.is-list #saveBtn { visibility: hidden; }
 .app.is-list .tabs, .app.is-list .workspace, .app.is-list .eventbar { display: none; }
 .event-list { max-width: 1080px; margin: 0 auto; padding: 28px 20px 60px; }
 .el-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
@@ -331,3 +331,7 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .color-row { flex-wrap: nowrap; }
 .field .color-row input.hex-input { flex: none; width: 7.6em; min-width: 0; }
 .color-row .btn { white-space: nowrap; }
+
+/* 保存ボタン：未保存の変更があるときは目立たせる */
+#saveBtn { min-width: 6.5em; }
+#saveBtn.is-dirty { border-color: var(--accent); color: var(--accent); }
