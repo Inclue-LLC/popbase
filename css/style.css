@@ -406,6 +406,30 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .es-title { font-weight: 800; font-size: 1.1rem; }
 .es-text { margin-top: 4px !important; font-weight: 700; color: var(--theme-accent, #8a6bd6); }
 .entrance.is-closed #enterBtn, .entrance.is-closed #entPick { display: none; }
+/* オープンまでのカウントダウン */
+.es-count { display: flex; justify-content: center; gap: clamp(8px, 3vw, 18px); margin: 10px 0 6px; font-variant-numeric: tabular-nums; }
+.es-count span { display: grid; justify-items: center; min-width: 3.2em; }
+.es-count b { font-family: var(--font-latin); font-weight: 600; font-size: clamp(1.7rem, 7vw, 2.4rem); line-height: 1.1; color: var(--theme-accent, #8a6bd6); }
+.es-count small { font-size: .72rem; font-weight: 700; color: #7a7075; }
+
+/* イベントが何も予定されていないとき：POP BASE だけの画面（イベントのテーマ・ブランド・キャラクターは出さない） */
+.entrance.is-idle {
+  background:
+    radial-gradient(55% 45% at 82% 18%, rgba(247, 201, 216, .75), transparent 70%),
+    radial-gradient(55% 45% at 12% 85%, rgba(220, 206, 245, .85), transparent 70%),
+    linear-gradient(160deg, #fff4f1, #f6f0fb);
+  color: var(--brand-ink, #2e2729);
+}
+.entrance.is-idle .entrance-inner > :not(.entrance-idle) { display: none !important; }
+.entrance.is-idle .entrance-bg { display: none; }
+.entrance-idle img { width: clamp(76px, 14vw, 104px); height: auto; filter: drop-shadow(0 12px 26px rgba(170, 130, 210, .35)); animation: idle-float 4s ease-in-out infinite; }
+.ei-name { margin: .7rem 0 0; font-family: var(--font-latin); font-weight: 600; letter-spacing: .14em; font-size: clamp(1.6rem, 6vw, 2.4rem); color: #2e2729; }
+.ei-tag { margin: .2rem 0 0; font-weight: 700; letter-spacing: .12em; font-size: .82rem; color: #7a7075; }
+.ei-text { margin: 2rem auto 0; max-width: 26em; line-height: 1.9; font-weight: 500; color: #4a4245; }
+@keyframes idle-float { 50% { transform: translateY(-8px); } }
+@media (prefers-reduced-motion: reduce) { .entrance-idle img { animation: none; } }
+/* イベントがないときは、入口の下のページ（店内・ご案内）も出さない */
+body.shop-idle main { display: none; }
 
 /* キャラクターに話しかけたときの紹介文（背景色はテーマ・管理画面で指定） */
 .toast.toast-note { font-weight: 500; box-shadow: 0 8px 24px rgba(0, 0, 0, .14); width: min(520px, calc(100% - 32px)); max-width: none; line-height: 1.6; border-radius: 18px;

@@ -41,6 +41,8 @@
         try { data = await getJson('/api/published'); } catch { /* サーバーなし（静的ホスティングなど）なら data.js のまま */ }
       }
     }
+    // サーバーには届いたが、お客さんに出すイベントが1つもない（予定もない）
+    window.NO_EVENT = !!data && !previewId && !data.id;
     const event = data?.event || {};
     const hasEvent = Object.values(event).some((v) => v !== '' && v != null);
 

@@ -18,6 +18,13 @@
   <div class="entrance" id="entrance">
     <div class="entrance-bg" id="entBg" aria-hidden="true"></div>
     <div class="entrance-inner">
+      <!-- イベントが何も予定されていないときの画面（ブランド・イベントに関係のない、POP BASE だけの画面） -->
+      <div class="entrance-idle" id="entIdle" hidden>
+        <img src="images/popbase-mark.svg" alt="" width="96" height="103">
+        <p class="ei-name">POP BASE</p>
+        <p class="ei-tag">オンラインポップアップショップ</p>
+        <p class="ei-text">次のポップアップを準備中です。<br>オープンまで、もうしばらくお待ちください。</p>
+      </div>
       <div class="entrance-brand" id="entBrand">
         <img src="images/popbase-mark.svg" alt="" width="72" height="77">
         <p class="entrance-kicker" id="entKicker"></p>
@@ -29,6 +36,10 @@
       <!-- 営業時間外の表示（開店前・本日の営業終了・会期終了） -->
       <div class="entrance-status" id="entStatus" hidden role="status">
         <p class="es-title" id="entStatusTitle"></p>
+        <!-- 次のイベントのオープンまでのカウントダウン -->
+        <div class="es-count" id="entCountdown" hidden aria-live="off">
+          <span><b id="cdD">0</b><small>日</small></span><span><b id="cdH">00</b><small>時間</small></span><span><b id="cdM">00</b><small>分</small></span><span><b id="cdS">00</b><small>秒</small></span>
+        </div>
         <p class="es-text" id="entStatusText"></p>
       </div>
       <p class="entrance-notice" id="entNotice" hidden></p>

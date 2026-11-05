@@ -240,19 +240,29 @@ window.AppReady = (async function () {
   const HS = window.HaneulSchedule;
   let lastOpen = null;
   let serverClosedAt = 0; // サーバーから「営業時間外」と言われた時刻（1分間はそれに従う）
+  let countdownTo = null; // 次のイベントのオープン時刻（カウントダウン中だけ）
   function renderStoreStatus() {
     if (entrancePreview) return;
     const serverSaysClosed = Visit.state === 'closed' && Date.now() - serverClosedAt < 60e3;
     const st = HS.status(SHOP.schedule || {});
     const open = st.state === 'open' && !serverSaysClosed;
+    // 開催中のイベントも次の予定もない（イベントが1つもない／最後のイベントが終わった）：POP BASE だけの画面
+    // （次のイベントが予定されていれば、サーバーはそのイベントを返すので、ここには来ない）
+    const idle = !window.PREVIEW_MODE && (window.NO_EVENT || st.state === 'ended');
+    entrance.classList.toggle('is-idle', idle);
+    $('#entIdle').hidden = !idle;
+    document.body.classList.toggle('shop-idle', idle);
     entrance.classList.toggle('is-closed', !open);
-    $('#entStatus').hidden = open;
-    if (!open) {
+    $('#entStatus').hidden = open || idle;
+    countdownTo = null;
+    if (!open && !idle) {
       const s2 = serverSaysClosed && st.state === 'open' ? { state: 'closed' } : st;
       const when = s2.opensAt ? HS.whenText(s2.opensAt) : '';
       if (s2.state === 'before') {
-        $('#entStatusTitle').textContent = 'まもなくオープン';
+        // 次のイベント：オープンまでのカウントダウン
+        $('#entStatusTitle').textContent = 'オープンまで';
         $('#entStatusText').textContent = `${when} オープン`;
+        countdownTo = s2.opensAt;
       } else if (s2.state === 'closed') {
         $('#entStatusTitle').textContent = '本日の営業は終了しました';
         $('#entStatusText').textContent = when ? `次は ${when} オープンです` : '';
@@ -275,8 +285,23 @@ window.AppReady = (async function () {
       }
     }
   }
+  /* オープンまでのカウントダウン（1秒ごと）。0 になったら入口の表示を「オープン」に切り替える */
+  function tickCountdown() {
+    const box = $('#entCountdown');
+    if (!countdownTo) { box.hidden = true; return; }
+    const ms = countdownTo - Date.now();
+    if (ms <= 0) { countdownTo = null; box.hidden = true; renderStoreStatus(); return; }
+    box.hidden = false;
+    const s = Math.floor(ms / 1000);
+    $('#cdD').textContent = Math.floor(s / 86400);
+    $('#cdH').textContent = String(Math.floor(s / 3600) % 24).padStart(2, '0');
+    $('#cdM').textContent = String(Math.floor(s / 60) % 60).padStart(2, '0');
+    $('#cdS').textContent = String(s % 60).padStart(2, '0');
+  }
   renderStoreStatus();
+  tickCountdown();
   setInterval(renderStoreStatus, 15000);
+  setInterval(tickCountdown, 1000);
 
   /* ---------- お買い物時間の残り（終了5分前から表示） ---------- */
   let warned = { five: false, one: false };
