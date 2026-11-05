@@ -416,8 +416,12 @@ window.AppReady = (async function () {
     return { lines, count, subtotal, shipping, total: subtotal + shipping };
   }
 
-  // カートが空のときのイラスト：アバターの1番目（イベントのキャラクターがいればその1体目）
-  const emptyCartArt = () => { const a = window.AVATARS?.[0]; return a ? (a.character || a) : CHARACTERS[0]; };
+  // カートが空のときのイラスト：いま自分がなっているアバター（店内に入る前は、前回選んだもの→1番目）
+  const emptyCartArt = () => {
+    const id = window.HaneulSelf?.avatar || savedLook()?.avatar;
+    const a = (id && window.HaneulEvent.findAvatar(id)) || window.AVATARS?.[0];
+    return a ? (a.character || a) : CHARACTERS[0];
+  };
 
   function renderCart() {
     const t = totals();
