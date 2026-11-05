@@ -197,7 +197,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .section { padding: clamp(48px, 8vw, 88px) clamp(16px, 4vw, 40px); max-width: 1180px; margin: 0 auto; }
 .section-alt { max-width: none; background: linear-gradient(160deg, color-mix(in srgb, var(--brand-lavender) 35%, var(--bg)), color-mix(in srgb, var(--brand-pink) 25%, var(--bg)) 60%, var(--bg)); }
 .section-head { margin-bottom: 28px; }
-.section-head .eyebrow + h2 { margin-top: 8px; }
+.section-head .eyebrow + h2 { margin-top: 4px; }
 .eyebrow { margin: 0; font-family: var(--font-latin); font-size: .78rem; font-weight: 600; letter-spacing: .25em; color: var(--accent); }
 .section h2 { font-size: clamp(1.4rem, 3.6vw, 2rem); font-weight: 700; }
 .lead { color: var(--ink-soft); margin: .4rem 0 0; }
