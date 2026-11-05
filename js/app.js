@@ -41,6 +41,23 @@ window.AppReady = (async function () {
   if (SHOP.novelty) $('#noveltyInfo').textContent = `税込 ${yen(SHOP.novelty.threshold)} 以上お買い上げで「${SHOP.novelty.name}」をプレゼント。`;
   else $('#noveltyInfo').closest('.info-card').hidden = true;
   renderShippingInfo();
+
+  /* ---------- フッター：規約・ポリシー ----------
+   * Shopify 管理画面「設定 → ポリシー」で作ったページ（https://ストア/policies/…）へのリンク。
+   * Shopify につないでいないお試し表示では、リンクを出さずに「デモです」の注意書きを出す */
+  {
+    const domain = window.SHOPIFY_CONFIG?.domain;
+    const links = $('#footerLinks');
+    if (shopify && domain && links) {
+      links.querySelectorAll('[data-policy]').forEach((a) => {
+        a.href = `https://${domain}/policies/${a.dataset.policy}`;
+        a.target = '_blank';
+        a.rel = 'noopener';
+      });
+    } else if (links) links.hidden = true;
+    const demo = $('#demoNote');
+    if (demo) demo.hidden = !!shopify;
+  }
   function renderShippingInfo() {
     // 送料・発送（店内管理画面の「送料・発送」で設定。送料無料になる金額が 0 なら送料無料なし）
     // 送料の文は管理画面で入力（未入力のとき＝お試し表示だけ、初期の送料から作る）
