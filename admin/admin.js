@@ -1265,9 +1265,14 @@ start();
 /* 上の帯（保存・公開ボタン）の高さを CSS に知らせて、タブをそのすぐ下に固定する（狭い画面では帯が折り返して高くなる） */
 (() => {
   const bar = document.querySelector('.topbar');
+  const eventbar = document.querySelector('.eventbar');
   if (!bar) return;
-  const set = () => document.documentElement.style.setProperty('--topbar-h', `${Math.round(bar.getBoundingClientRect().height)}px`);
+  const root = document.documentElement.style;
+  const set = () => {
+    root.setProperty('--topbar-h', `${Math.round(bar.getBoundingClientRect().height)}px`);
+    root.setProperty('--eventbar-h', `${Math.round(eventbar?.getBoundingClientRect().height || 0)}px`);
+  };
   set();
-  if ('ResizeObserver' in window) new ResizeObserver(set).observe(bar);
+  if ('ResizeObserver' in window) { const ro = new ResizeObserver(set); ro.observe(bar); if (eventbar) ro.observe(eventbar); }
   else window.addEventListener('resize', set);
 })();
