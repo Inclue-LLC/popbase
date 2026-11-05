@@ -151,7 +151,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
 
 .bob { animation: bob 2.4s ease-in-out infinite; }
-@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
 /* ---------- ヘッダー ---------- */
 .site-header {
