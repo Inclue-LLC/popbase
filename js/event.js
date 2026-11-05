@@ -137,6 +137,9 @@
     { group: '商品の画面', key: 'product_bg_color', label: '商品の画面の背景色', hint: '棚の商品をクリックしたときに出る画面で、商品画像の後ろに敷く色', type: 'color', themePath: 'productBg' },
     { group: '購入特典', key: 'novelty', label: '購入特典', hint: '「あり」にすると、カートに「あと○円で特典」、ご案内に特典の説明が出ます', type: 'select',
       options: () => opt([['off', 'なし'], ['on', 'あり']]), value: (ev) => (noveltyOn(ev) ? 'on' : 'off') },
+    { group: '送料・発送', key: 'shipping_fee', label: '送料（円）', hint: 'カートとご案内に出す送料。実際にお会計で請求される送料は Shopify の「配送」の設定なので、同じ金額にしてください', type: 'number' },
+    { group: '送料・発送', key: 'free_shipping_threshold', label: '送料無料になる金額（円）', hint: 'この金額（税込）以上で送料無料。送料無料にしない場合は 0（Shopify の配送の設定と同じにしてください）', type: 'number' },
+    { group: '送料・発送', key: 'shipping_note', label: '発送について', hint: 'ご案内の「発送について」に出す文（例：会期終了後、12月下旬より順次発送します）。改行できます（300文字まで）', type: 'textarea' },
     { group: '購入特典', key: 'novelty_threshold', label: '特典の条件金額（円）', hint: 'この金額（税込）以上のお買い上げで特典が付きます', type: 'number', showIf: (ev) => noveltyOn(ev) },
     { group: '購入特典', key: 'novelty_name', label: '特典の名前', type: 'text', showIf: (ev) => noveltyOn(ev) },
 
@@ -168,7 +171,8 @@
    */
   const NEED = {
     brand: ['required'], title: ['required'], open_at: ['required'], close_at: ['required'], collection: ['required'],
-    novelty: ['default', 'なし'], novelty_name: ['required'], novelty_threshold: ['required'],
+    novelty: ['default', 'なし'], novelty_name: ['required'], novelty_threshold: ['required'], shipping_note: ['required'],
+    shipping_fee: ['default', '600円'], free_shipping_threshold: ['default', '5,000円'],
     product_bg_color: ['default', 'テーマの色'],
     daily_open: ['default', '24時間営業'], daily_close: ['default', '24時間営業'], period: ['default', '日時から自動で作成'],
     theme_preset: ['default', 'Milk Tea'], font: ['default', '初期設定のフォント'],
@@ -200,6 +204,8 @@
     brand: window.SHOP.brand,
     theme: window.SHOP.theme,
     period: window.SHOP.period,
+    shippingFee: window.SHOP.shippingFee,
+    freeShippingThreshold: window.SHOP.freeShippingThreshold,
     layout: JSON.parse(JSON.stringify(window.STORE_LAYOUT)),
     characters: JSON.parse(JSON.stringify(window.CHARACTERS)),
   };
@@ -293,6 +299,10 @@
     S.brand = has(f, 'brand') ? f.brand : original.brand;
     S.productBg = has(f, 'product_bg_color') ? f.product_bg_color : (theme.productBg || ''); // 商品の画面の背景色（空欄ならテーマの色、なければ商品ごとの色）
     // 購入特典：「なし」なら表示しない
+    // 送料・発送（空欄なら初期値）
+    S.shippingFee = has(f, 'shipping_fee') ? Number(f.shipping_fee) : original.shippingFee;
+    S.freeShippingThreshold = has(f, 'free_shipping_threshold') ? Number(f.free_shipping_threshold) : original.freeShippingThreshold;
+    S.shippingNote = has(f, 'shipping_note') ? String(f.shipping_note) : '';
     S.novelty = noveltyOn(f) && has(f, 'novelty_name')
       ? { threshold: has(f, 'novelty_threshold') ? Number(f.novelty_threshold) : NOVELTY_THRESHOLD, name: f.novelty_name }
       : null;
