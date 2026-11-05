@@ -17,13 +17,19 @@
   -webkit-user-select: none;
 }
 /* 全画面：ページ全体を全画面にして、店内を画面いっぱいに広げる（商品詳細・カートはこの上に出る） */
-/* ページごと固定して（スクロールさせない）、iPhone のアドレス欄・ツールバーが出入りしないようにする。
-   店内は、上下左右の端（＝アドレス欄とツールバーの間）にぴったり合わせる */
-html.fs-lock, html.fs-lock body { overflow: hidden; height: 100%; overscroll-behavior: none; }
-body.world-fs { position: fixed; inset: 0; width: 100%; overflow: hidden; }
+/*
+ * 全画面：店内のほか（ヘッダー・見出し・ご案内・フッター）を隠して、ページを「店内だけ」にする。
+ * 店内の高さは、ブラウザの見えている高さ（--fs-h。js/world/main.js が入れる）ちょうどにするので、
+ * ページがスクロールせず、iPhone のアドレス欄・ツールバーも動かない。
+ * （iPhone のブラウザは画面に固定する表示（position: fixed）の位置がずれやすいため、固定は使わない）
+ */
+html.fs-lock, html.fs-lock body { overflow: hidden; overscroll-behavior: none; }
+body.world-fs .site-header, body.world-fs .site-footer, body.world-fs #info,
+body.world-fs .section-store > :not(.world) { display: none !important; }
+body.world-fs main, body.world-fs .section-store { margin: 0; padding: 0; max-width: none; }
 body.world-fs .world {
-  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 40;
-  width: auto; height: auto; min-height: 0;
+  position: relative; z-index: 40;
+  width: 100%; height: var(--fs-h, 100vh); min-height: 0;
   margin: 0; border-radius: 0; box-shadow: none;
 }
 .world-canvas { display: block; width: 100%; height: 100%; cursor: grab; }

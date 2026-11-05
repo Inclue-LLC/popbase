@@ -280,8 +280,7 @@ async function main() {
   let fitKey = '';
   function keepFsFitted() {
     if (!document.body.classList.contains('world-fs')) { fitKey = ''; return; }
-    const v = window.visualViewport;
-    const key = v ? `${v.offsetTop}|${v.offsetLeft}|${v.width}|${v.height}` : `${innerWidth}|${innerHeight}`;
+    const key = `${innerWidth}|${innerHeight}|${scrollY}`;
     if (key !== fitKey) { fitKey = key; fitFs(); }
   }
   /* ---------- 描画ループ ---------- */
@@ -397,25 +396,17 @@ async function main() {
    */
   const vv = window.visualViewport;
   function fitFs() {
-    const s = root.style;
     const fs = document.body.classList.contains('world-fs');
-    // ふだんは CSS（上下左右の端に合わせる）に任せる。見えている範囲が画面とずれているとき
-    // （ページの位置がずれたまま・キーボード・拡大など）だけ、見えている範囲に合わせる
-    if (fs && vv && (vv.offsetTop > 0.5 || window.scrollY > 0)) window.scrollTo(0, 0);
-    const shifted = vv && (Math.abs(vv.offsetTop) > 0.5 || Math.abs(vv.offsetLeft) > 0.5 || vv.height < window.innerHeight - 2);
-    if (!fs || !vv || !shifted) {
-      s.top = s.left = s.width = s.height = s.right = s.bottom = '';
-      return;
-    }
-    s.top = `${vv.offsetTop}px`;
-    s.left = `${vv.offsetLeft}px`;
-    s.width = `${vv.width}px`;
-    s.height = `${vv.height}px`;
-    s.right = s.bottom = 'auto';
+    if (!fs) { root.style.removeProperty('--fs-h'); return; }
+    // 店内の高さを、いま見えている高さちょうどにして、ページを一番上に
+    const h = Math.round(window.innerHeight);
+    if (root.style.getPropertyValue('--fs-h') !== `${h}px`) root.style.setProperty('--fs-h', `${h}px`);
+    if (window.scrollY || window.scrollX) window.scrollTo(0, 0);
   }
   vv?.addEventListener('resize', fitFs);
   vv?.addEventListener('scroll', fitFs);
   window.addEventListener('orientationchange', () => setTimeout(fitFs, 300));
+  window.addEventListener('resize', fitFs);
 
   function setFs(on) {
     // ページを一番上に戻してから固定する（スクロールしたまま固定すると、その分だけ上にずれるため）
