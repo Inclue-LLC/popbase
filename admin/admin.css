@@ -322,3 +322,12 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
   .eventbar select { flex-basis: 100%; }
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pill-active { background: #c9b5f5; color: #2e2729; } }
+
+/* カラーコード（HEX）の入力欄 */
+.hex-input { width: 7.2em; padding: .35em .55em; border-radius: 8px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .85rem; letter-spacing: .04em; }
+.hex-input:focus { border-color: var(--accent); outline: none; }
+.hex-input.is-invalid { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 6%, var(--surface)); }
+.color-row { flex-wrap: nowrap; }
+.field .color-row input.hex-input { flex: none; width: 7.6em; min-width: 0; }
+.color-row .btn { white-space: nowrap; }
