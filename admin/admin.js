@@ -359,6 +359,10 @@ function renderStatus() {
   const miss = E.missingRequired(state.draft.event);
   const missPill = miss.length ? `<span class="pill pill-missing" title="${esc(miss.map((f) => f.label).join('・'))}">必須の未入力 ${miss.length}</span>` : '';
   $('#status').innerHTML = `${pill}${missPill}<span class="saved" title="${esc(savedTitle)}">${saved}</span>`;
+  // 保存ボタン：未保存の変更があれば「保存」、保存中は「保存中…」、なければ「保存済み」
+  const sb = $('#saveBtn');
+  sb.textContent = state.saving ? '保存中…' : state.dirtyLocal ? '保存' : '保存済み ✓';
+  sb.classList.toggle('is-dirty', state.dirtyLocal && !state.saving);
   $('#publishBtn').disabled = !differs || state.saving || state.dirtyLocal;
 }
 
@@ -401,6 +405,19 @@ async function flushSave() {
   if (state.dirtyLocal) { clearTimeout(state.saveTimer); await save(); }
   while (state.saving) await new Promise((r) => setTimeout(r, 100));
 }
+
+/* ---------- 保存ボタン（自動保存に加えて、手動でも保存できる） ---------- */
+async function saveNow() {
+  if (!state.draft) return;
+  const had = state.dirtyLocal;
+  await flushSave();
+  if (state.dirtyLocal) return; // 保存できなかった（理由はトーストで表示済み）
+  toast(had ? '保存しました' : 'すべて保存済みです');
+}
+$('#saveBtn').addEventListener('click', saveNow);
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveNow(); }
+});
 
 /* ---------- 公開・取り消し ---------- */
 $('#publishBtn').addEventListener('click', async () => {
