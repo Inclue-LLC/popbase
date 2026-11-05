@@ -760,7 +760,7 @@ const FORMS = { event: '#eventForm', entrance: '#entranceForm' };
 function renderForm() {
   const ev = state.draft.event;
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
-  const placeholders = { title: base.name, period: E.original.period, novelty_threshold: `例：${E.NOVELTY_THRESHOLD}`, shipping_fee: E.original.shippingFee, free_shipping_threshold: E.original.freeShippingThreshold, shipping_note: '例：会期終了後、12月下旬より順次発送します', novelty_name: 'オリジナルステッカー' };
+  const placeholders = { title: base.name, period: E.original.period, novelty_threshold: `例：${E.NOVELTY_THRESHOLD}`, shipping_fee: '例：600', free_shipping_threshold: '例：5000（空欄なら送料無料なし）', shipping_note: '例：会期終了後、12月下旬より順次発送します', novelty_name: 'オリジナルステッカー' };
   for (const [tab, sel] of Object.entries(FORMS)) {
     const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab && (!f.showIf || f.showIf(ev)));
     const groups = [...new Set(fields.map((f) => f.group))];
