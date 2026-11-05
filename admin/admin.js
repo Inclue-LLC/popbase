@@ -345,7 +345,7 @@ function canonicalCast(v) {
   let obj = v;
   if (typeof obj === 'string') { try { obj = JSON.parse(obj); } catch { obj = null; } }
   if (!obj || !Array.isArray(obj.list)) return '';
-  return JSON.stringify({ use: obj.use !== false, list: obj.list.map((c) => ({ id: c.id, name: c.name || '', en: c.en || '', profile: c.profile || '', color: c.color || '', image: E.imageUrl(c.image) })) });
+  return JSON.stringify({ use: obj.use !== false, list: obj.list.map((c) => ({ id: c.id, name: c.name || '', en: c.en || '', profile: c.profile || '', color: c.color || '', bg: c.bg || '', image: E.imageUrl(c.image) })) });
 }
 function canonicalAvatars(v) {
   let obj = v;
