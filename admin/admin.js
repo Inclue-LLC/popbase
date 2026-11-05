@@ -1,6 +1,6 @@
 /*
  * 店内管理画面
- * イベントを選ぶ（作る・複製する）→ 下書きを編集 → 自動保存 → プレビューで確認 → 「公開する」
+ * イベントを選ぶ（作る・複製する）→ 下書きを編集 → 自動保存 → プレビューで確認 → 「サイトに反映する」
  * お客さんのサイトには、公開したイベントのうち会期中のもの（なければ次に始まるもの）が自動で出る
  */
 import { Preview } from './preview.js';
@@ -155,7 +155,7 @@ function renderEventBar() {
   if (!cur) { $('#eventInfo').innerHTML = ''; return; }
   const [cls, label] = eventStatus(cur);
   // 状態だけを短く出し、説明は印にマウスを乗せると出す
-  const note = cur.active ? 'いまお客さんのサイトに表示されています' : cur.published ? '会期になると自動でお客さんのサイトに表示されます' : '「公開する」を押すと、会期に合わせて表示されます';
+  const note = cur.active ? 'いまお客さんのサイトに表示されています' : cur.published ? '会期になると自動でお客さんのサイトに表示されます' : '「サイトに反映する」を押すと、会期に合わせて表示されます';
   $('#eventInfo').innerHTML = `<span class="pill pill-${cls}" title="${note}">${label}</span>${cur.active ? ' <span class="pill pill-active" title="' + note + '">表示中</span>' : ''}`;
   $('#deleteEventBtn').disabled = !!cur.active;
   $('#deleteEventBtn').title = cur.active ? 'お客さんに表示中のイベントは削除できません' : '';
@@ -229,7 +229,7 @@ function renderEventList() {
       <div class="el-cards">${groups[key].map(card).join('')}</div></section>` : '');
   $('#eventGroups').innerHTML = state.events.length
     ? section('live', '開催中', '') + section('soon', '開催予定', '開始日時になると自動で表示') +
-      section('draftonly', '準備中（未公開）', '「公開する」を押すまで表示されません') + section('ended', '終了', '')
+      section('draftonly', '準備中（未公開）', '「サイトに反映する」を押すまで表示されません') + section('ended', '終了', '')
     : `<div class="el-empty"><h2>イベントがまだありません</h2>
         <p>「＋ 新しいイベント」でイベントを作ると、内装・棚の配置・入口の画面などを、イベントごとに設定できます。</p></div>`;
 }
@@ -441,14 +441,14 @@ $('#publishBtn').addEventListener('click', async () => {
     return;
   }
   await flushSave();
-  if (!confirm('公開します。会期中のイベントなら、お客さんのサイトにすぐ反映されます。よろしいですか？')) return;
+  if (!confirm('サイトに反映します。会期中のイベントなら、お客さんのサイトにすぐ反映されます。よろしいですか？')) return;
   try {
     const pub = await evApi('publish', { method: 'POST', body: { rev: state.draft.rev } });
     state.published = pub;
     state.history.unshift({ at: pub.publishedAt, by: pub.publishedBy });
     await loadEvents(); // お客さんに出すイベントが変わることがある
     const cur = state.events.find((x) => x.id === state.eventId);
-    toast(cur?.active ? '公開しました。お客さんのサイトに表示されています' : '公開しました。会期になると自動でお客さんのサイトに表示されます');
+    toast(cur?.active ? 'サイトに反映しました。お客さんのサイトに表示されています' : 'サイトに反映しました。会期になると自動でお客さんのサイトに表示されます');
     renderStatus();
     renderHistory();
   } catch (e) {
@@ -789,7 +789,7 @@ function renderScheduleStatus() {
     closed: `営業時間外（次は ${st.opensAt ? HS.whenText(st.opensAt) : ''} オープン）`,
     ended: '会期終了（入店できません）',
   }[st.state];
-  el.innerHTML = `この設定で公開すると、今は <b>${esc(text)}</b>${hours ? `　${esc(hours)}` : '　24時間営業'}`;
+  el.innerHTML = `この設定でサイトに反映すると、今は <b>${esc(text)}</b>${hours ? `　${esc(hours)}` : '　24時間営業'}`;
   // 「会期の表示文」の薄い文字（空欄のときに使われる文）も更新
   const per = $('#f_period');
   if (per) per.placeholder = `空欄なら「${HS.periodText(ev) || E.original.period}」`;
