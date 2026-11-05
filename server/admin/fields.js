@@ -6,7 +6,7 @@ const TEXT = ['brand', 'title', 'period', 'left_title', 'left_label', 'right_tit
   'entrance_kicker', 'entrance_heading', 'entrance_message', 'entrance_button'];
 const MULTILINE = ['entrance_notice']; // 改行を許す（300文字まで）
 const COLOR = ['wall_color', 'wall_pattern_color', 'lower_color', 'trim_color', 'floor_color_1', 'floor_color_2', 'rug_color', 'sign_color', 'sign_text_color', 'sign_sub_color',
-  'entrance_color_top', 'entrance_color_bottom', 'entrance_heading_color', 'entrance_text_color', 'product_bg_color', 'avatar_ring_color', 'char_note_color', 'cast_card_color'];
+  'entrance_color_top', 'entrance_color_bottom', 'entrance_heading_color', 'entrance_text_color', 'product_bg_color', 'avatar_ring_color', 'char_note_color'];
 const IMAGE = ['wall_image', 'floor_image', 'entrance_logo', 'entrance_image'];
 const SELECT = {
   theme_preset: ['', 'milktea', 'softpink', 'lavender', 'sage', 'powderblue'],
@@ -173,6 +173,11 @@ function cleanCast(value, imageOk) {
     if (c.color) {
       if (!/^#[0-9a-f]{6}$/i.test(c.color)) throw new InputError(`キャラクター${i + 1}体目の色`);
       item.color = c.color.toLowerCase();
+    }
+    // ご案内の「キャラクター紹介」の枠の色（空欄ならキャラクターの色を淡くしたもの）
+    if (c.bg) {
+      if (!/^#[0-9a-f]{6}$/i.test(c.bg)) throw new InputError(`キャラクター${i + 1}体目の紹介の背景色`);
+      item.bg = c.bg.toLowerCase();
     }
     if (c.image) {
       if (!imageOk(c.image)) throw new InputError(`キャラクター${i + 1}体目の画像`);

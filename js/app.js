@@ -544,11 +544,9 @@ window.AppReady = (async function () {
   function renderCast() {
     // キャラクターを使わないイベント（または0体）では、見出しごと出さない
     document.querySelector('.cast').hidden = !visibleChars().length;
-    // 背景色は管理画面で指定したとき全員同じ色（なければキャラクターごとの淡い色）
-    const bg = window.THEMES?.[SHOP.theme]?.castCard || '';
-    const fixed = bg ? `;--card-bg:${bg};color:${inkFor(bg)}` : '';
+    // 背景色：管理画面でキャラクターごとに指定した色（なければキャラクターの色を淡くしたもの）
     $('#castGrid').innerHTML = visibleChars().map((c) => `
-    <div class="cast-card" style="--c:${c.color || '#e6dcf3'}${fixed}">
+    <div class="cast-card" style="--c:${c.color || '#e6dcf3'}${c.cardBg ? `;--card-bg:${c.cardBg};color:${inkFor(c.cardBg)}` : ''}">
       ${Art.characterSVG(c)}
       <div><h4>${esc(c.name)}<small>${esc(c.en)}</small></h4><p>${esc(c.profile)}</p></div>
     </div>`).join('');

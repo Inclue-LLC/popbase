@@ -135,10 +135,6 @@
     { group: 'フォント', key: 'font', label: 'ショップの基本フォント', hint: '入口・メニュー・商品詳細・店内の看板や値札の文字に使います', type: 'select', options: () => FONTS.map((x) => ({ value: x.value, label: x.label })) },
     { group: 'アバター・キャラクター紹介', key: 'avatar_ring_color', label: 'アバターの下の円の色', hint: '店内で、自分のアバターの足元に出る円の色', type: 'color', themePath: 'avatarRing' },
     { group: 'アバター・キャラクター紹介', key: 'char_note_color', label: 'キャラクター紹介文の背景色', hint: '店内の壁のキャラクターをタップしたときに出る紹介文の背景の色（文字の色は自動で読みやすい色に）', type: 'color', themePath: 'charNote.bg' },
-    { tab: 'characters', group: 'キャラクター紹介の背景色', key: 'cast_card_color', label: 'キャラクター紹介（ページ下）の背景色', hint: 'ページ下の「キャラクター紹介」の枠の色。指定すると全員同じ色になります（文字の色は自動で読みやすい色に）', type: 'color', themePath: 'castCard', defaultLabel: 'キャラクターごとの色', defaultSwatch: '#f3ece6',
-      // すぐ選べる淡い色（いまのキャラクター紹介と同じくらいの薄さ）
-      presets: [['#e3eff8', 'ミズイロ'], ['#fbf2da', 'クリーム'], ['#ece6f7', 'ラベンダー'], ['#f9e5ec', 'ピンク'],
-        ['#e2f1e7', 'ミント'], ['#fbe8dd', 'ピーチ'], ['#f2ebe2', 'ミルクティー'], ['#eeeef1', 'グレー']] },
     { group: '商品の画面', key: 'product_bg_color', label: '商品の画面の背景色', hint: '棚の商品をクリックしたときに出る画面で、商品画像の後ろに敷く色', type: 'color', themePath: 'productBg' },
     { group: '購入特典', key: 'novelty', label: '購入特典', hint: '「あり」にすると、カートに「あと○円で特典」、ご案内に特典の説明が出ます', type: 'select',
       options: () => opt([['off', 'なし'], ['on', 'あり']]), value: (ev) => (noveltyOn(ev) ? 'on' : 'off') },
@@ -178,7 +174,7 @@
     entrance_notice: ['hide'],
     novelty: ['default', 'なし'], novelty_name: ['required'],
     product_bg_color: ['default', 'テーマの色'],
-    daily_open: ['default', '24時間営業'], daily_close: ['default', '24時間営業'], period: ['default', '日時から自動で作成'], cast_card_color: ['default', 'キャラクターごとの色'],
+    daily_open: ['default', '24時間営業'], daily_close: ['default', '24時間営業'], period: ['default', '日時から自動で作成'],
     theme_preset: ['default', 'Milk Tea'], font: ['default', '初期設定のフォント'],
     wall_image: ['default', '壁の色と柄'], wall_pattern: ['default', 'テーマの柄'], floor_image: ['default', '床の種類と色'],
     floor_style: ['default', 'テーマの床'], light: ['default', 'テーマの照明'],
@@ -235,6 +231,9 @@
 
   /* ---------- イベントのキャラクター（cast） ---------- */
   const MAX_CAST = 12;
+  // キャラクター紹介の背景色として、すぐ選べる淡い色（ご案内のキャラクター紹介と同じくらいの薄さ）
+  const CARD_PRESETS = [['#e3eff8', 'ミズイロ'], ['#fbf2da', 'クリーム'], ['#ece6f7', 'ラベンダー'], ['#f9e5ec', 'ピンク'],
+    ['#e2f1e7', 'ミント'], ['#fbe8dd', 'ピーチ'], ['#f2ebe2', 'ミルクティー'], ['#eeeef1', 'グレー']];
   const parseJson = (v) => { if (typeof v !== 'string') return v; try { return JSON.parse(v); } catch { return null; } };
   /**
    * イベントのキャラクターの設定（{ use, list }）。まだ設定していないイベントは、自社の4体
@@ -256,7 +255,7 @@
     window.CAST_ENABLED = c.use;
     window.CAST = c.use ? c.list.filter((x) => x && x.name).map((x) => {
       const o = original.characters.find((y) => y.id === x.id);
-      return { ...(o || {}), id: x.id, name: x.name, en: x.en || '', profile: x.profile || '', color: o?.color || '#e6dcf3', accent: o?.accent || '#b9a3ec', image: imageUrl(x.image) || '', kind: o?.kind || '' };
+      return { ...(o || {}), id: x.id, name: x.name, en: x.en || '', profile: x.profile || '', cardBg: /^#[0-9a-f]{6}$/i.test(x.bg || '') ? x.bg : '', color: o?.color || '#e6dcf3', accent: o?.accent || '#b9a3ec', image: imageUrl(x.image) || '', kind: o?.kind || '' };
     }) : [];
   }
 
@@ -281,7 +280,6 @@
     set(theme.sign, 'bg', 'sign_color');
     // 正面の看板のイベント名・ブランド名の色（棚やテーブルの看板はテーマの色のまま）
     set(theme, 'avatarRing', 'avatar_ring_color');
-    set(theme, 'castCard', 'cast_card_color');
     if (has(f, 'char_note_color')) theme.charNote = { ...(theme.charNote || {}), bg: f.char_note_color, ink: '' };
     set(theme.sign, 'eventInk', 'sign_text_color');
     set(theme.sign, 'brandInk', 'sign_sub_color');
@@ -465,5 +463,5 @@
   }
 
   applyCast(''); // 最初は自社の4体
-  window.HaneulEvent = { avatarCharacters, castOf, applyCast, MAX_CAST, noveltyOn, NOVELTY_THRESHOLD, missingRequired, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
+  window.HaneulEvent = { CARD_PRESETS, avatarCharacters, castOf, applyCast, MAX_CAST, noveltyOn, NOVELTY_THRESHOLD, missingRequired, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
 })();

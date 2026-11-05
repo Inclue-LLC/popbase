@@ -749,16 +749,15 @@ function themeDefault(path) {
   return path.split('.').reduce((o, k) => o?.[k], base);
 }
 
-const FORMS = { event: '#eventForm', entrance: '#entranceForm', characters: '#characterForm' };
+const FORMS = { event: '#eventForm', entrance: '#entranceForm' };
 function renderForm() {
   const ev = state.draft.event;
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
   const placeholders = { title: base.name, period: E.original.period, novelty_threshold: E.NOVELTY_THRESHOLD, novelty_name: 'オリジナルステッカー' };
   for (const [tab, sel] of Object.entries(FORMS)) {
-    // キャラクターの一覧そのもの（type: cast）は、キャラクタータブの専用の編集欄で扱う
-    const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab && f.type !== 'cast' && (!f.showIf || f.showIf(ev)));
+    const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab && (!f.showIf || f.showIf(ev)));
     const groups = [...new Set(fields.map((f) => f.group))];
-    $(sel).innerHTML = (tab === 'characters' ? '' : NEED_LEGEND) + groups.map((g) => `
+    $(sel).innerHTML = NEED_LEGEND + groups.map((g) => `
       <fieldset class="fgroup"><legend>${esc(g)}</legend>
         ${fields.filter((f) => f.group === g).map((f) => fieldHtml(f, f.value ? f.value(ev) : ev[f.key], placeholders)).join('')}
         ${g === '会期・営業時間' ? '<p class="schedule-status" id="scheduleStatus"></p>' : ''}
@@ -1015,6 +1014,14 @@ function castEdits() {
 }
 const newCastId = () => `k_${Math.random().toString(36).slice(2, 10).padEnd(8, '0')}`;
 
+/** キャラクターの色を淡くした色（ご案内のキャラクター紹介の、指定がないときの枠の色に近いもの） */
+function cardTint(hex) {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex || '#e6dcf3');
+  const n = parseInt(m ? m[1] : 'e6dcf3', 16);
+  const mix = (v) => Math.round(v * 0.22 + 255 * 0.78).toString(16).padStart(2, '0');
+  return `#${mix(n >> 16)}${mix((n >> 8) & 255)}${mix(n & 255)}`;
+}
+
 function renderCharacters() {
   const v = castEdits();
   E.applyCast(v);
@@ -1024,7 +1031,7 @@ function renderCharacters() {
     const img = E.imageUrl(x.image);
     return `<div class="char-card" data-i="${i}">
       <div class="char-art">
-        <span class="art" style="background:color-mix(in srgb, ${esc(own?.color || '#e6dcf3')} 25%, transparent)">${window.Art.characterSVG({ ...shown, name: x.name, color: own?.color || '#e6dcf3' })}</span>
+        <span class="art" style="background:${x.bg ? esc(x.bg) : `color-mix(in srgb, ${esc(own?.color || '#e6dcf3')} 25%, transparent)`}">${window.Art.characterSVG({ ...shown, name: x.name, color: own?.color || '#e6dcf3' })}</span>
         <label class="btn btn-small">画像を選ぶ<input type="file" accept="image/png,image/jpeg,image/webp" data-cast-upload hidden></label>
         ${img ? `<button type="button" class="btn btn-small btn-ghost" data-cast-reset="image">${own ? '元の絵に戻す' : '画像を外す'}</button>` : ''}
       </div>
@@ -1032,6 +1039,11 @@ function renderCharacters() {
         <div class="field"><label>名前 <span class="need need-required">必須</span><span class="hint">壁の名前の札・キャラクター紹介・アバター選びに出ます</span></label><input type="text" data-cast-key="name" maxlength="20" value="${esc(x.name || '')}" placeholder="例：ハル" class="${x.name ? '' : 'is-missing'}"></div>
         <div class="field"><label>英語名 <span class="need need-hide">任意・空欄なら非表示</span></label><input type="text" data-cast-key="en" maxlength="30" value="${esc(x.en || '')}" placeholder="例：HARU（空欄なら表示しません）"></div>
         <div class="field"><label>プロフィール <span class="need need-hide">任意・空欄なら非表示</span><span class="hint">ご案内のキャラクター紹介と、店内でキャラクターをタップしたときの紹介文</span></label><textarea data-cast-key="profile" maxlength="200" rows="2" placeholder="キャラクター紹介に出す短い説明（空欄なら表示しません）">${esc(x.profile || '')}</textarea></div>
+        <div class="field"><label>紹介の背景色 <span class="need need-default">任意・空欄ならキャラクターの色を淡く</span><span class="hint">ご案内の「キャラクター紹介」で、このキャラクターの枠の色（文字の色は自動で読みやすい色に）</span></label>
+          <div class="color-wrap"><span class="color-row"><input type="color" data-cast-key="bg" value="${esc(x.bg || cardTint(own?.color))}" aria-label="紹介の背景色（色を選ぶ）">
+            ${hexInput(x.bg || cardTint(own?.color), '紹介の背景色')}
+            ${x.bg ? '<button type="button" class="btn btn-small btn-ghost" data-cast-reset="bg">キャラクターの色に戻す</button>' : '<span class="color-note">キャラクターの色を淡く</span>'}</span>
+          <span class="color-presets">${E.CARD_PRESETS.map(([hex, label]) => `<button type="button" class="color-preset${x.bg === hex ? ' is-on' : ''}" data-cast-bg="${hex}" style="--p:${hex}" title="${esc(label)}"><i></i>${esc(label)}</button>`).join('')}</span></div></div>
         <div class="char-tools">
           <button type="button" class="btn btn-small" data-cast-move="-1" ${i === 0 ? 'disabled' : ''} aria-label="上へ">↑</button>
           <button type="button" class="btn btn-small" data-cast-move="1" ${i === v.list.length - 1 ? 'disabled' : ''} aria-label="下へ">↓</button>
@@ -1073,11 +1085,12 @@ function updateCastArt(i) {
   const own = E.original.characters.find((o) => o.id === x.id);
   const color = own?.color || '#e6dcf3';
   const art = card.querySelector('.art');
-  art.style.background = `color-mix(in srgb, ${color} 25%, transparent)`;
+  art.style.background = x.bg || `color-mix(in srgb, ${color} 25%, transparent)`;
   art.innerHTML = window.Art.characterSVG({ ...(own || {}), ...x, color, image: E.imageUrl(x.image), kind: own?.kind || '' });
 }
 $('#charEditor').addEventListener('change', async (e) => {
   if (e.target.id === 'castUse') { castEdits().use = e.target.checked; castChanged({ rerender: true }); return; }
+  if (e.target.dataset.castKey === 'bg') { castChanged({ rerender: true }); return; } // 色を決めたら「戻す」ボタンなどを出し直す
   if (!e.target.matches('[data-cast-upload]') || !e.target.files[0]) return;
   const i = Number(e.target.closest('[data-i]').dataset.i);
   const file = e.target.files[0];
@@ -1102,8 +1115,10 @@ $('#charEditor').addEventListener('click', (e) => {
   const card = e.target.closest('[data-i]');
   if (!card) return;
   const i = Number(card.dataset.i);
-  if (e.target.closest('[data-cast-reset]')) {
-    v.list[i].image = '';
+  if (e.target.closest('[data-cast-bg]')) {
+    v.list[i].bg = e.target.closest('[data-cast-bg]').dataset.castBg;
+  } else if (e.target.closest('[data-cast-reset]')) {
+    v.list[i][e.target.closest('[data-cast-reset]').dataset.castReset] = '';
   } else if (e.target.closest('[data-cast-move]')) {
     const j = i + Number(e.target.closest('[data-cast-move]').dataset.castMove);
     if (j < 0 || j >= v.list.length) return;
