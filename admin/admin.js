@@ -817,7 +817,7 @@ function unitLabel(v, max) {
  * テーマは配色のセット。個別に色を指定していると、その項目はテーマを変えても変わらないので、
  * 指定がある場合は確認して、テーマの色にそろえる（画像はそのまま） */
 const THEME_KEYS = ['wall_color', 'wall_pattern', 'wall_pattern_color', 'lower_color', 'trim_color', 'floor_style', 'floor_color_1', 'floor_color_2',
-  'rug_color', 'sign_color', 'sign_text_color', 'sign_sub_color', 'product_bg_color', 'light'];
+  'rug_color', 'sign_color', 'sign_text_color', 'sign_sub_color', 'product_bg_color', 'avatar_ring_color', 'char_note_color', 'light'];
 function applyThemeColors() {
   const ev = state.draft.event;
   const set = THEME_KEYS.filter((k) => ev[k] != null && ev[k] !== '');

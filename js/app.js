@@ -539,12 +539,23 @@ window.AppReady = (async function () {
 
   /* ---------- トースト ---------- */
   let toastTimer;
-  function toast(msg) {
+  // 明るい色なら濃い文字、暗い色なら白い文字（キャラクター紹介文の背景色に合わせる）
+  const inkFor = (hex) => {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return '';
+    const n = parseInt(m[1], 16);
+    const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+    return lum > 0.6 ? '#2e2729' : '#ffffff';
+  };
+  function toast(msg, { bg = '', ink = '' } = {}) {
     const el = $('#toast');
     el.textContent = msg;
+    el.style.background = bg;
+    el.style.color = bg ? (ink || inkFor(bg)) : '';
+    el.classList.toggle('toast-note', !!bg);
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+    toastTimer = setTimeout(() => el.classList.remove('show'), bg ? 4500 : 2400); // 紹介文は少し長めに出す
   }
 
   /* ---------- 3D 店内（js/world/）から呼ぶ関数 ---------- */
@@ -559,7 +570,8 @@ window.AppReady = (async function () {
     // 壁のキャラクターに話しかけたとき
     showCharacter(id) {
       const c = (window.CAST || []).find((x) => x.id === id);
-      if (c) toast(`${c.name}：${c.profile}`);
+      const note = window.THEMES?.[SHOP.theme]?.charNote || {};
+      if (c) toast(c.profile ? `${c.name}：${c.profile}` : c.name, { bg: note.bg || '', ink: note.ink || '' });
     },
   };
 

@@ -29,6 +29,8 @@ window.THEMES = {
     rug: '#eadbd1',
     productBg: '#faf6f0', // 商品の画面の背景色
     rugOpacity: 1,
+    avatarRing: '#b58f7d', // 自分のアバターの下の円
+    charNote: { bg: '#e8ddd1', ink: '#51453f' }, // キャラクターに話しかけたときの紹介文
     light: 'day',
     entrance: { top: '#e8ddd1', bottom: '#f8f4ed', glow: 'rgba(181,143,125, .28)', heading: '#51453f', ink: '#51453f', accent: '#b58f7d', button: '#51453f', buttonInk: '#ffffff' }, // 入口の画面
   },
@@ -44,6 +46,8 @@ window.THEMES = {
     rug: '#f7d8e4',
     productBg: '#fff8f9', // 商品の画面の背景色
     rugOpacity: 1,
+    avatarRing: '#d986aa', // 自分のアバターの下の円
+    charNote: { bg: '#f3dadd', ink: '#393238' }, // キャラクターに話しかけたときの紹介文
     light: 'day',
     entrance: { top: '#f3dadd', bottom: '#fbf2ed', glow: 'rgba(217,134,170, .28)', heading: '#393238', ink: '#393238', accent: '#d986aa', button: '#393238', buttonInk: '#ffffff' }, // 入口の画面
   },
@@ -59,6 +63,8 @@ window.THEMES = {
     rug: '#eaddf6',
     productBg: '#faf7fe', // 商品の画面の背景色
     rugOpacity: 1,
+    avatarRing: '#b18acb', // 自分のアバターの下の円
+    charNote: { bg: '#e9dff2', ink: '#443c50' }, // キャラクターに話しかけたときの紹介文
     light: 'day',
     entrance: { top: '#e9dff2', bottom: '#faf7fc', glow: 'rgba(177,138,203, .28)', heading: '#443c50', ink: '#443c50', accent: '#b18acb', button: '#443c50', buttonInk: '#ffffff' }, // 入口の画面
   },
@@ -74,6 +80,8 @@ window.THEMES = {
     rug: '#dcece1',
     productBg: '#f6faf6', // 商品の画面の背景色
     rugOpacity: 1,
+    avatarRing: '#82ad94', // 自分のアバターの下の円
+    charNote: { bg: '#dfeae0', ink: '#3e4c43' }, // キャラクターに話しかけたときの紹介文
     light: 'day',
     entrance: { top: '#dfeae0', bottom: '#f7f9f5', glow: 'rgba(130,173,148, .28)', heading: '#3e4c43', ink: '#3e4c43', accent: '#82ad94', button: '#3e4c43', buttonInk: '#ffffff' }, // 入口の画面
   },
@@ -89,6 +97,8 @@ window.THEMES = {
     rug: '#e0ecf8',
     productBg: '#f6fafe', // 商品の画面の背景色
     rugOpacity: 1,
+    avatarRing: '#87b2d3', // 自分のアバターの下の円
+    charNote: { bg: '#deeaf3', ink: '#3b4756' }, // キャラクターに話しかけたときの紹介文
     light: 'day',
     entrance: { top: '#deeaf3', bottom: '#f7fafc', glow: 'rgba(135,178,211, .28)', heading: '#3b4756', ink: '#3b4756', accent: '#87b2d3', button: '#3b4756', buttonInk: '#ffffff' }, // 入口の画面
   },

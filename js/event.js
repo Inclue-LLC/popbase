@@ -134,6 +134,8 @@
     { group: '棚の看板', key: 'right_label', label: '右の棚（日本語）', hint: '例：文具・雑貨・バッグ', type: 'text', placeholderPath: 'const.（空欄なら表示しません）' },
     { group: '棚の看板', key: 'right_title', label: '右の棚（英字）', hint: '例：STATIONERY & GOODS', type: 'text', placeholderPath: 'const.（空欄なら表示しません）' },
     { group: 'フォント', key: 'font', label: 'ショップの基本フォント', hint: '入口・メニュー・商品詳細・店内の看板や値札の文字に使います', type: 'select', options: () => FONTS.map((x) => ({ value: x.value, label: x.label })) },
+    { group: 'アバター・キャラクター紹介', key: 'avatar_ring_color', label: 'アバターの下の円の色', hint: '店内で、自分のアバターの足元に出る円の色', type: 'color', themePath: 'avatarRing' },
+    { group: 'アバター・キャラクター紹介', key: 'char_note_color', label: 'キャラクター紹介文の背景色', hint: '店内の壁のキャラクターをタップしたときに出る紹介文の背景の色（文字の色は自動で読みやすい色に）', type: 'color', themePath: 'charNote.bg' },
     { group: '商品の画面', key: 'product_bg_color', label: '商品の画面の背景色', hint: '棚の商品をクリックしたときに出る画面で、商品画像の後ろに敷く色', type: 'color', themePath: 'productBg' },
     { group: '購入特典', key: 'novelty', label: '購入特典', hint: '「あり」にすると、カートに「あと○円で特典」、ご案内に特典の説明が出ます', type: 'select',
       options: () => opt([['off', 'なし'], ['on', 'あり']]), value: (ev) => (noveltyOn(ev) ? 'on' : 'off') },
@@ -275,6 +277,8 @@
     if (has(f, 'rug_color')) { theme.rug = f.rug_color; theme.rugOpacity = 1; }
     set(theme.sign, 'bg', 'sign_color');
     // 正面の看板のイベント名・ブランド名の色（棚やテーブルの看板はテーマの色のまま）
+    set(theme, 'avatarRing', 'avatar_ring_color');
+    if (has(f, 'char_note_color')) theme.charNote = { ...(theme.charNote || {}), bg: f.char_note_color, ink: '' };
     set(theme.sign, 'eventInk', 'sign_text_color');
     set(theme.sign, 'brandInk', 'sign_sub_color');
     set(theme, 'light', 'light');
