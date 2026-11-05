@@ -258,7 +258,7 @@ $('#eventSel').addEventListener('change', (e) => openEvent(e.target.value));
 async function createEvent({ copyFrom = null } = {}) {
   const src = copyFrom && state.events.find((x) => x.id === copyFrom);
   const title = prompt(src
-    ? `「${src.title || ''}」の内装・入口の画面・キャラクターなどの設定を引き継いで、新しいイベントを作ります。\n（会期・コレクション・サブタイトルは引き継ぎません）\n\n新しいイベントの名前：`
+    ? `「${src.title || ''}」の内装・入口の画面・キャラクターなどの設定を引き継いで、新しいイベントを作ります。\n（会期・コレクションは引き継ぎません）\n\n新しいイベントの名前：`
     : '新しいイベントの名前（看板に出るイベント名。あとから変えられます）：');
   if (title == null) return;
   if (!title.trim()) { toast('イベント名を入れてください', { error: true }); return; }
@@ -743,7 +743,7 @@ function themeDefault(path) {
   if (path.startsWith('const.')) return path.slice(6);
   if (path === 'shop.brand') return ev.brand || E.original.brand;
   if (path === 'schedule.period') return window.HaneulSchedule.periodText(ev) || E.original.period;
-  if (path === 'shop.themeLabel') return ev.subtitle ? `${ev.title || base.name} ― ${ev.subtitle}` : (ev.title || base.name);
+  if (path === 'shop.themeLabel') return ev.title || base.name;
   if (path.startsWith('shop.')) return E.original[path.slice(5)];
   if (path.startsWith('layout.')) return path.split('.').slice(1).reduce((o, k) => o?.[k], E.original.layout);
   return path.split('.').reduce((o, k) => o?.[k], base);
@@ -753,7 +753,7 @@ const FORMS = { event: '#eventForm', entrance: '#entranceForm' };
 function renderForm() {
   const ev = state.draft.event;
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
-  const placeholders = { title: base.name, subtitle: '（空欄なら表示しません）', period: E.original.period, novelty_threshold: E.NOVELTY_THRESHOLD, novelty_name: 'オリジナルステッカー' };
+  const placeholders = { title: base.name, period: E.original.period, novelty_threshold: E.NOVELTY_THRESHOLD, novelty_name: 'オリジナルステッカー' };
   for (const [tab, sel] of Object.entries(FORMS)) {
     const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab && (!f.showIf || f.showIf(ev)));
     const groups = [...new Set(fields.map((f) => f.group))];

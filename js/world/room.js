@@ -75,29 +75,18 @@ export async function buildRoom(theme) {
   /* ---------- 奥の壁：看板・キャラクター・会期 ---------- */
   // 看板の幅は、イベント名などの長さに合わせて 5.2m〜8.8m で伸び縮みする
   const signH = 1.5;
-  // サブタイトルは管理画面で入力したときだけ。空欄なら2行（ブランド名・イベント名）の看板にする
-  const subtitle = window.SHOP.subtitle || '';
+  // 3行目は会期（営業時間があれば続けて）。会期も営業時間もなければ2行（ブランド名・イベント名）の看板にする
+  const period = [window.SHOP.period, window.SHOP.hours].filter(Boolean).join('　');
   const signLines = [
     // ブランド名・イベント名の色は管理画面で指定できる（なければテーマの看板の色）
-    { text: window.SHOP.brand, size: subtitle ? 0.18 : 0.22, color: theme.sign.brandInk || theme.sign.sub, spacing: 14 },
-    { text: theme.name, size: subtitle ? 0.48 : 0.56, color: theme.sign.eventInk || theme.sign.ink },
-    ...(subtitle ? [{ text: subtitle, size: 0.2, weight: 700, color: theme.sign.eventInk || theme.sign.ink }] : []),
+    { text: window.SHOP.brand, size: period ? 0.18 : 0.22, color: theme.sign.brandInk || theme.sign.sub, spacing: 14 },
+    { text: theme.name, size: period ? 0.48 : 0.56, color: theme.sign.eventInk || theme.sign.ink },
+    ...(period ? [{ text: period, size: 0.2, weight: 700, color: theme.sign.eventInk || theme.sign.ink }] : []),
   ];
   const signW = Math.min(8.8, Math.max(5.2, T.signTextWidth(signLines, signH) + 0.9));
   const sign = plane(signW, signH, basic(T.signTexture(signLines, theme.sign, signW, signH), { transparent: true }));
   sign.position.set(0, 3.15, -HALF_D + 0.03);
   group.add(sign);
-
-  // 会期の札（営業時間があれば2行）
-  const hours = window.SHOP.hours || '';
-  const plateH = hours ? 0.56 : 0.36;
-  const plate = plane(2.2, plateH, basic(T.signTexture(hours
-    ? [{ text: window.SHOP.period, size: 0.42 }, { text: hours, size: 0.34, weight: 700 }]
-    : [{ text: window.SHOP.period, size: 0.62 }], theme.sign, 2.2, plateH, { radius: 0.08 }), { transparent: true }));
-  // 会期の札は看板と重ならない位置へ（看板が広いときは右へずらす）
-  plate.position.set(Math.min(5.65, Math.max(4.6, signW / 2 + 1.2)), 3.35, -HALF_D + 0.03);
-  plate.rotation.z = -0.06;
-  group.add(plate);
 
   // このイベントのキャラクター（管理画面の「キャラクター」タブ）。人数が多いときは間隔と大きさを詰めて壁に収める
   const chars = window.CAST || [];
