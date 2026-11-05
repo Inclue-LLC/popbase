@@ -412,3 +412,13 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
   font-size: 1.1rem; line-height: 30px; font-weight: 700; cursor: pointer;
 }
 .toast-close:hover { background: color-mix(in srgb, currentColor 24%, transparent); }
+
+/* スマホ・タブレット：紹介文は、右下の移動スティックと左のスタンプにかからない位置に出す */
+@media (pointer: coarse) {
+  .toast.toast-note {
+    left: 60px; right: 12px; width: auto; max-width: 520px; margin-left: auto;
+    bottom: calc(152px + env(safe-area-inset-bottom));
+    transform: translate(0, 30px);
+  }
+  .toast.toast-note.show { transform: translate(0, 0); }
+}
