@@ -120,7 +120,7 @@ export async function buildRoom(theme) {
     const nameTag = plane(tagW, 0.2, basic(T.signTexture([{ text: c.name, size: 0.7 }], { bg: '#ffffff', ink: '#3a3346' }, tagW, 0.2, { radius: 0.1 }), { transparent: true }));
     nameTag.position.set(x, tagY, -HALF_D + 0.05);
     group.add(nameTag);
-    interactables.push({ type: 'character', id: c.id, label: `${c.name}のグッズを見る`, object: m, pos: new THREE.Vector3(x, 0, -HALF_D + 0.6) });
+    interactables.push({ type: 'character', id: c.id, label: `${c.name}のプロフィール`, object: m, pos: new THREE.Vector3(x, 0, -HALF_D + 0.6) });
   }
 
   /* ---------- 左右の棚 ---------- */
