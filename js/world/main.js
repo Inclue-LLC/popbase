@@ -381,8 +381,30 @@ async function main() {
    * Fullscreen API がない環境（iPhone の Safari など）でも、画面いっぱいの表示になる。 */
   const fsBtn = $('#fullscreenBtn');
   const docEl = document.documentElement;
+  /*
+   * スマホのブラウザ（iPhone の Chrome・Safari など）は、上のアドレス欄や下のツールバーが画面に重なるため、
+   * 「画面いっぱい」にすると上下が隠れてしまう。実際に見えている範囲（visualViewport）に店内を合わせる。
+   */
+  const vv = window.visualViewport;
+  function fitFs() {
+    const s = root.style;
+    if (!document.body.classList.contains('world-fs') || !vv) {
+      s.top = s.left = s.width = s.height = s.right = s.bottom = '';
+      return;
+    }
+    s.top = `${vv.offsetTop}px`;
+    s.left = `${vv.offsetLeft}px`;
+    s.width = `${vv.width}px`;
+    s.height = `${vv.height}px`;
+    s.right = s.bottom = 'auto';
+  }
+  vv?.addEventListener('resize', fitFs);
+  vv?.addEventListener('scroll', fitFs);
+  window.addEventListener('orientationchange', () => setTimeout(fitFs, 300));
+
   function setFs(on) {
     document.body.classList.toggle('world-fs', on);
+    fitFs();
     fsBtn.textContent = on ? '全画面をやめる' : '全画面';
     if (on) root.focus({ preventScroll: true });
     else root.scrollIntoView({ block: 'center' });
