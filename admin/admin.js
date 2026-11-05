@@ -866,9 +866,11 @@ function fieldHtml(f, value, placeholders) {
     </select>`;
   } else if (f.type === 'select') {
     const opts = f.options();
-    const first = f.key === 'theme_preset' ? [{ value: '', label: `サイトの初期設定（${window.THEMES[E.original.theme]?.name || ''}）` }] : [];
-    input = `<select id="${id}" data-key="${f.key}">${[...first, ...opts].map((o) =>
-      `<option value="${esc(o.value)}" ${String(value ?? '') === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`;
+    // ベースのテーマは、未選択（または削除したテーマ）なら初期設定のテーマ（Milk Tea）を選んだ状態で出す
+    let cur = String(value ?? '');
+    if (f.key === 'theme_preset' && !opts.some((o) => o.value === cur)) cur = E.original.theme;
+    input = `<select id="${id}" data-key="${f.key}">${opts.map((o) =>
+      `<option value="${esc(o.value)}" ${cur === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`;
   } else if (f.type === 'color') {
     const def = themeDefault(f.themePath) || '#ffffff';
     const v = value || def;

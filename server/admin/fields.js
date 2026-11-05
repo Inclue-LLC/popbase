@@ -9,7 +9,7 @@ const COLOR = ['wall_color', 'wall_pattern_color', 'lower_color', 'trim_color', 
   'entrance_color_top', 'entrance_color_bottom', 'entrance_heading_color', 'entrance_text_color', 'product_bg_color'];
 const IMAGE = ['wall_image', 'floor_image', 'entrance_logo', 'entrance_image'];
 const SELECT = {
-  theme_preset: ['', 'milktea', 'softpink', 'lavender', 'sage', 'powderblue', 'base', 'sky', 'night', 'holiday', 'spring'],
+  theme_preset: ['', 'milktea', 'softpink', 'lavender', 'sage', 'powderblue'],
   wall_pattern: ['', 'clouds', 'stars', 'flowers', 'hearts', 'dots', 'stripes', 'gingham', 'none'],
   floor_style: ['', 'wood', 'check', 'tile', 'carpet'],
   light: ['', 'day', 'night'],
@@ -75,6 +75,8 @@ function cleanEvent(event, imageOk) {
       if (!/^#[0-9a-f]{6}$/i.test(v)) throw new InputError(k);
       out[k] = v.toLowerCase();
     } else if (SELECT[k]) {
+      // 以前のテーマ（削除したもの）が入っているイベントは、初期設定（Milk Tea）に戻す
+      if (k === 'theme_preset' && !SELECT[k].includes(v)) { out[k] = ''; continue; }
       if (!SELECT[k].includes(v)) throw new InputError(k);
       out[k] = v;
     } else if (NUMBER.includes(k)) {
