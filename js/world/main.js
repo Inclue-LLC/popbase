@@ -389,6 +389,36 @@ async function main() {
    * ページ全体を全画面にして、店内を画面いっぱいに広げる。
    * Fullscreen API がない環境（iPhone の Safari など）でも、画面いっぱいの表示になる。 */
   const fsBtn = $('#fullscreenBtn');
+
+  /* ---------- 確認用：画面の大きさの数値（URL に ?debug=1 を付けたときだけ） ----------
+   * iPhone で全画面が合わないときの原因を、実際の数値で確かめるためのもの。お客さんには出ない */
+  if (new URLSearchParams(location.search).get('debug') === '1') {
+    const probe = (unit) => {
+      const d = document.createElement('div');
+      d.style.cssText = `position:absolute;left:-9999px;top:0;width:1px;height:100${unit};visibility:hidden;`;
+      document.body.appendChild(d);
+      return d;
+    };
+    const pr = { svh: probe('svh'), dvh: probe('dvh'), lvh: probe('lvh'), vh: probe('vh') };
+    const box = document.createElement('pre');
+    box.style.cssText = 'position:absolute;left:8px;top:56px;z-index:30;margin:0;padding:6px 8px;border-radius:8px;'
+      + 'background:rgba(0,0,0,.72);color:#fff;font:11px/1.35 ui-monospace,Menlo,monospace;pointer-events:none;white-space:pre;';
+    root.appendChild(box);
+    const r = (n) => Math.round(n);
+    setInterval(() => {
+      const v = window.visualViewport;
+      const w = root.getBoundingClientRect();
+      box.textContent = [
+        `全画面: ${document.body.classList.contains('world-fs') ? 'はい' : 'いいえ'}`,
+        `innerHeight: ${r(innerHeight)}  outer: ${r(outerHeight)}`,
+        `visualViewport: h ${v ? r(v.height) : '-'} top ${v ? r(v.offsetTop) : '-'}`,
+        `svh ${r(pr.svh.offsetHeight)} dvh ${r(pr.dvh.offsetHeight)} lvh ${r(pr.lvh.offsetHeight)} vh ${r(pr.vh.offsetHeight)}`,
+        `店内: top ${r(w.top)} 高さ ${r(w.height)} 下端 ${r(w.bottom)}`,
+        `scrollY: ${r(scrollY)}  画面: ${screen.width}x${screen.height}`,
+        navigator.userAgent.includes('CriOS') ? 'ブラウザ: iPhone の Chrome' : /Safari/.test(navigator.userAgent) && /iPhone/.test(navigator.userAgent) ? 'ブラウザ: iPhone の Safari' : `ブラウザ: ${navigator.userAgent.slice(0, 40)}`,
+      ].join('\n');
+    }, 400);
+  }
   const docEl = document.documentElement;
   /*
    * スマホのブラウザ（iPhone の Chrome・Safari など）は、上のアドレス欄や下のツールバーが画面に重なるため、
@@ -396,12 +426,8 @@ async function main() {
    */
   const vv = window.visualViewport;
   function fitFs() {
-    const fs = document.body.classList.contains('world-fs');
-    if (!fs) { root.style.removeProperty('--fs-h'); return; }
-    // 店内の高さを、いま見えている高さちょうどにして、ページを一番上に
-    const h = Math.round(window.innerHeight);
-    if (root.style.getPropertyValue('--fs-h') !== `${h}px`) root.style.setProperty('--fs-h', `${h}px`);
-    if (window.scrollY || window.scrollX) window.scrollTo(0, 0);
+    // 高さは CSS（100svh）で決まるので、ここではページを一番上に戻すだけ
+    if (document.body.classList.contains('world-fs') && (window.scrollY || window.scrollX)) window.scrollTo(0, 0);
   }
   vv?.addEventListener('resize', fitFs);
   vv?.addEventListener('scroll', fitFs);

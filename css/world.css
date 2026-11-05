@@ -19,8 +19,8 @@
 /* 全画面：ページ全体を全画面にして、店内を画面いっぱいに広げる（商品詳細・カートはこの上に出る） */
 /*
  * 全画面：店内のほか（ヘッダー・見出し・ご案内・フッター）を隠して、ページを「店内だけ」にする。
- * 店内の高さは、ブラウザの見えている高さ（--fs-h。js/world/main.js が入れる）ちょうどにするので、
- * ページがスクロールせず、iPhone のアドレス欄・ツールバーも動かない。
+ * 店内の高さは 100svh（アドレス欄・ツールバーが「出ているとき」の見える高さ）。いちばん狭いときの
+ * 見える範囲に必ず収まり、ページがスクロールしないので、iPhone のアドレス欄・ツールバーも動かない。
  * （iPhone のブラウザは画面に固定する表示（position: fixed）の位置がずれやすいため、固定は使わない）
  */
 html.fs-lock, html.fs-lock body { overflow: hidden; overscroll-behavior: none; }
@@ -29,7 +29,7 @@ body.world-fs .section-store > :not(.world) { display: none !important; }
 body.world-fs main, body.world-fs .section-store { margin: 0; padding: 0; max-width: none; }
 body.world-fs .world {
   position: relative; z-index: 40;
-  width: 100%; height: var(--fs-h, 100vh); min-height: 0;
+  width: 100%; height: 100vh; height: 100svh; min-height: 0;
   margin: 0; border-radius: 0; box-shadow: none;
 }
 .world-canvas { display: block; width: 100%; height: 100%; cursor: grab; }
