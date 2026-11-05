@@ -15,18 +15,19 @@
 window.THEMES = {
   /*
    * やさしい色の 5 パターン（壁はギンガムチェック）。初期設定は Milk Tea（js/data.js の SHOP.theme）
-   * 指定した色：壁ベース・壁チェック・床の色1/2・会場限定テーブルの下の色・棚の色
-   * それ以外（腰壁・看板・入口など）は、その色から合わせて作っている
+   * 指定いただいた色：壁・壁のチェック・腰壁・見切り・床（タイル・目地）・会場限定テーブルの下・看板（地・大きい文字・小さい文字）・
+   * 商品の画面の背景・棚。それ以外（棚の板と奥・天井・入口）は、その色から合わせて作っている
    */
   milktea: {
     name: 'Milk Tea',
     title: 'ミルクティー',
-    wall: { color: '#f8f4ed', pattern: 'gingham', patternColor: '#e8ddd1', lower: '#fcfaf5', trim: '#d2c7bd' },
-    floor: { style: 'tile', colors: ['#fcfaf5', '#e8dfd5'] },
+    wall: { color: '#f8f4ed', pattern: 'gingham', patternColor: '#e8ddd1', lower: '#e9ded2', trim: '#cdbeaf' },
+    floor: { style: 'tile', colors: ['#fcfaf5', '#e8dfd5'] }, // タイル・目地
     ceiling: '#fcfaf5',
     shelf: { board: '#ece2d8', edge: '#dccbb9', back: '#f4efea' }, // 棚の色 #dccbb9
-    sign: { bg: '#ffffff', ink: '#2e2729', sub: '#827975', style: 'board' },
+    sign: { bg: '#fffcf8', ink: '#51453f', sub: '#b58f7d', style: 'board' },
     rug: '#eadbd1',
+    productBg: '#faf6f0', // 商品の画面の背景色
     rugOpacity: 1,
     light: 'day',
     entrance: { top: '#e8ddd1', bottom: '#f8f4ed', glow: 'rgba(255, 255, 255, .55)' },
@@ -35,12 +36,13 @@ window.THEMES = {
   softpink: {
     name: 'Soft Pink',
     title: 'ソフトピンク',
-    wall: { color: '#fbf2ed', pattern: 'gingham', patternColor: '#f3dadd', lower: '#fffaf8', trim: '#dbc5c7' },
-    floor: { style: 'tile', colors: ['#fffaf8', '#ede1e0'] },
+    wall: { color: '#fbf2ed', pattern: 'gingham', patternColor: '#f3dadd', lower: '#f1ddd2', trim: '#dcc8bf' },
+    floor: { style: 'tile', colors: ['#fffaf8', '#ede1e0'] }, // タイル・目地
     ceiling: '#fffaf8',
     shelf: { board: '#f3eae1', edge: '#e9d9c8', back: '#f8f4ee' }, // 棚の色 #e9d9c8
-    sign: { bg: '#ffffff', ink: '#2e2729', sub: '#87787a', style: 'board' },
+    sign: { bg: '#ffffff', ink: '#393238', sub: '#d986aa', style: 'board' },
     rug: '#f7d8e4',
+    productBg: '#fff8f9', // 商品の画面の背景色
     rugOpacity: 1,
     light: 'day',
     entrance: { top: '#f3dadd', bottom: '#fbf2ed', glow: 'rgba(255, 255, 255, .55)' },
@@ -49,12 +51,13 @@ window.THEMES = {
   lavender: {
     name: 'Lavender Dream',
     title: 'ラベンダードリーム',
-    wall: { color: '#faf7fc', pattern: 'gingham', patternColor: '#e9dff2', lower: '#fdfbff', trim: '#d3c9da' },
-    floor: { style: 'tile', colors: ['#fdfbff', '#e9e1ef'] },
+    wall: { color: '#faf7fc', pattern: 'gingham', patternColor: '#e9dff2', lower: '#eee5f3', trim: '#d6c8e0' },
+    floor: { style: 'tile', colors: ['#fdfbff', '#e9e1ef'] }, // タイル・目地
     ceiling: '#fdfbff',
     shelf: { board: '#efe9f4', edge: '#e2d7eb', back: '#f6f3f9' }, // 棚の色 #e2d7eb
-    sign: { bg: '#ffffff', ink: '#2e2729', sub: '#827a83', style: 'board' },
+    sign: { bg: '#ffffff', ink: '#443c50', sub: '#b18acb', style: 'board' },
     rug: '#eaddf6',
+    productBg: '#faf7fe', // 商品の画面の背景色
     rugOpacity: 1,
     light: 'day',
     entrance: { top: '#e9dff2', bottom: '#faf7fc', glow: 'rgba(255, 255, 255, .55)' },
@@ -63,12 +66,13 @@ window.THEMES = {
   sage: {
     name: 'Sage Mint',
     title: 'セージミント',
-    wall: { color: '#f7f9f5', pattern: 'gingham', patternColor: '#dfeae0', lower: '#fbfdf9', trim: '#cad3ca' },
-    floor: { style: 'tile', colors: ['#fbfdf9', '#e1e9df'] },
+    wall: { color: '#f7f9f5', pattern: 'gingham', patternColor: '#dfeae0', lower: '#e6ede3', trim: '#c6d4c5' },
+    floor: { style: 'tile', colors: ['#fbfdf9', '#e1e9df'] }, // タイル・目地
     ceiling: '#fbfdf9',
     shelf: { board: '#e7ede6', edge: '#d4dfd2', back: '#f2f5f2' }, // 棚の色 #d4dfd2
-    sign: { bg: '#ffffff', ink: '#2e2729', sub: '#7e7f7b', style: 'board' },
+    sign: { bg: '#fffdf9', ink: '#3e4c43', sub: '#82ad94', style: 'board' },
     rug: '#dcece1',
+    productBg: '#f6faf6', // 商品の画面の背景色
     rugOpacity: 1,
     light: 'day',
     entrance: { top: '#dfeae0', bottom: '#f7f9f5', glow: 'rgba(255, 255, 255, .55)' },
@@ -77,12 +81,13 @@ window.THEMES = {
   powderblue: {
     name: 'Powder Blue',
     title: 'パウダーブルー',
-    wall: { color: '#f7fafc', pattern: 'gingham', patternColor: '#deeaf3', lower: '#fcfdff', trim: '#c9d3db' },
-    floor: { style: 'tile', colors: ['#fcfdff', '#e1e9f0'] },
+    wall: { color: '#f7fafc', pattern: 'gingham', patternColor: '#deeaf3', lower: '#e5eef5', trim: '#c8d9e5' },
+    floor: { style: 'tile', colors: ['#fcfdff', '#e1e9f0'] }, // タイル・目地
     ceiling: '#fcfdff',
     shelf: { board: '#e8f0f6', edge: '#d6e4ef', back: '#f3f7fa' }, // 棚の色 #d6e4ef
-    sign: { bg: '#ffffff', ink: '#2e2729', sub: '#7d7f84', style: 'board' },
+    sign: { bg: '#ffffff', ink: '#3b4756', sub: '#87b2d3', style: 'board' },
     rug: '#e0ecf8',
+    productBg: '#f6fafe', // 商品の画面の背景色
     rugOpacity: 1,
     light: 'day',
     entrance: { top: '#deeaf3', bottom: '#f7fafc', glow: 'rgba(255, 255, 255, .55)' },

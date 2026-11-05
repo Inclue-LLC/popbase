@@ -134,7 +134,7 @@
     { group: '棚の看板', key: 'right_title', label: '右の棚（英字）', type: 'text', placeholderPath: 'layout.right.title' },
     { group: '棚の看板', key: 'right_label', label: '右の棚（日本語）', type: 'text', placeholderPath: 'layout.right.label' },
     { group: 'フォント', key: 'font', label: 'ショップの基本フォント', hint: '入口・メニュー・商品詳細・店内の看板や値札の文字に使います', type: 'select', options: () => FONTS.map((x) => ({ value: x.value, label: x.label })) },
-    { group: '商品の画面', key: 'product_bg_color', label: '商品の画面の背景色', hint: '棚の商品をクリックしたときに出る画面で、商品画像の後ろに敷く色', type: 'color', themePath: 'const.#f6f0fb' },
+    { group: '商品の画面', key: 'product_bg_color', label: '商品の画面の背景色', hint: '棚の商品をクリックしたときに出る画面で、商品画像の後ろに敷く色', type: 'color', themePath: 'productBg' },
     { group: '購入特典', key: 'novelty', label: '購入特典', hint: '「あり」にすると、カートに「あと○円で特典」、ご案内に特典の説明が出ます', type: 'select',
       options: () => opt([['off', 'なし'], ['on', 'あり']]), value: (ev) => (noveltyOn(ev) ? 'on' : 'off') },
     { group: '購入特典', key: 'novelty_threshold', label: '特典の条件金額（円）', hint: 'この金額（税込）以上のお買い上げで特典が付きます', type: 'number', showIf: (ev) => noveltyOn(ev) },
@@ -170,7 +170,7 @@
     brand: ['required'], title: ['required'], open_at: ['required'], close_at: ['required'], collection: ['required'],
     subtitle: ['hide'], entrance_notice: ['hide'],
     novelty: ['default', 'なし'], novelty_name: ['required'],
-    product_bg_color: ['default', '初期の色（商品ごとの薄い色）'],
+    product_bg_color: ['default', 'テーマの色'],
     daily_open: ['default', '24時間営業'], daily_close: ['default', '24時間営業'], period: ['default', '日時から自動で作成'],
     theme_preset: ['default', 'サイトの初期設定のテーマ'], font: ['default', '初期設定のフォント'],
     wall_image: ['default', '壁の色と柄'], wall_pattern: ['default', 'テーマの柄'], floor_image: ['default', '床の種類と色'],
@@ -261,7 +261,7 @@
     S.hours = HS?.hoursText(S.schedule) || '';
     S.brand = has(f, 'brand') ? f.brand : original.brand;
     S.subtitle = has(f, 'subtitle') ? f.subtitle : ''; // 未記入なら表示しない
-    S.productBg = has(f, 'product_bg_color') ? f.product_bg_color : ''; // 商品の画面の背景色（空欄なら商品ごとの色）
+    S.productBg = has(f, 'product_bg_color') ? f.product_bg_color : (theme.productBg || ''); // 商品の画面の背景色（空欄ならテーマの色、なければ商品ごとの色）
     // 購入特典：「なし」なら表示しない
     S.novelty = noveltyOn(f) && has(f, 'novelty_name')
       ? { threshold: has(f, 'novelty_threshold') ? Number(f.novelty_threshold) : NOVELTY_THRESHOLD, name: f.novelty_name }
