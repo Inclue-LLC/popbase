@@ -126,7 +126,7 @@ window.AppReady = (async function () {
     const escAttr = (v) => String(v).replace(/[&<>"']/g, '');
     $('#entPickGrid').innerHTML = window.AVATARS.map((a) => `
       <button type="button" class="pick-char" role="radio" data-avatar="${escAttr(a.id)}" aria-checked="${a.id === pickSel}"
-        style="--c:${a.character ? a.character.color : '#e3e6f0'}">
+        style="--c:${a.character ? a.character.color : '#e3e6f0'}${a.character?.cardBg ? `;--card-bg:${a.character.cardBg}` : ''}">
         ${Art.characterSVG(a.character || { image: a.image })}<span>${esc(a.name)}</span></button>`).join('');
   }
   function openEntrancePick() {

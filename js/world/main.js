@@ -167,7 +167,7 @@ async function main() {
     // 選べるアバター：キャラクター＋管理画面で追加したアバター（window.AVATARS）
     const escName = (v) => String(v).replace(/[&<>"']/g, '');
     $('#pickChars').innerHTML = window.AVATARS.map((a) => `
-      <button class="pick-char" data-avatar="${escName(a.id)}" aria-pressed="${pick.avatar === a.id}" style="--c:${a.character ? a.character.color : '#e3e6f0'}">
+      <button class="pick-char" data-avatar="${escName(a.id)}" aria-pressed="${pick.avatar === a.id}" style="--c:${a.character ? a.character.color : '#e3e6f0'}${a.character?.cardBg ? `;--card-bg:${a.character.cardBg}` : ''}">
         ${window.Art.characterSVG(a.character || { image: a.image })}<span>${escName(a.name)}</span></button>`).join('');
   }
   $('#pickChars').addEventListener('click', (e) => {
