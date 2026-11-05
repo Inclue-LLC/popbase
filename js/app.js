@@ -449,7 +449,7 @@ window.AppReady = (async function () {
         <button class="ci-remove" data-remove="${p.id}" aria-label="${p.name} を削除">削除</button>
       </li>`).join('') : `
       <li class="cart-empty">
-        <p>バッグはまだ空っぽです</p>
+        <p>カートは空です</p>
       </li>`;
 
     $('#cartSummary').innerHTML = t.lines.length ? `
