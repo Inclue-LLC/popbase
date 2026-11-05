@@ -394,18 +394,25 @@
    *   ※ キャラクター紹介・入口での表示/非表示（「キャラクター」タブ）とは別に設定する
    *   各要素は { id, name, image, character? }（character があればキャラクターの絵、なければ image を使う）
    */
+  /**
+   * アバターにするキャラクター：このイベントにキャラクターが登録されていればそのキャラクターだけ、
+   * いなければ（または「キャラクターを使う」をオフにしていれば）自社の4体
+   */
+  const avatarCharacters = () => (window.CAST_ENABLED && window.CAST?.length ? window.CAST : window.CHARACTERS);
+
   function applyAvatars(value) {
     let v = value || {};
     if (typeof v === 'string') { try { v = JSON.parse(v); } catch { v = {}; } }
     const hide = new Set(Array.isArray(v.hide) ? v.hide : []);
-    const list = window.CHARACTERS.filter((c) => !hide.has(c.id))
+    const base = avatarCharacters();
+    const list = base.filter((c) => !hide.has(c.id))
       .map((c) => ({ id: c.id, name: c.name, image: c.image || '', character: c }));
     for (const a of Array.isArray(v.custom) ? v.custom : []) {
       const image = imageUrl(a.image);
       if (a && a.id && a.name && image) list.push({ id: a.id, name: a.name, image });
     }
     // すべて外された場合でも、最初のキャラクターは選べるようにする
-    if (!list.length) list.push({ id: window.CHARACTERS[0].id, name: window.CHARACTERS[0].name, image: window.CHARACTERS[0].image || '', character: window.CHARACTERS[0] });
+    if (!list.length) list.push({ id: base[0].id, name: base[0].name, image: base[0].image || '', character: base[0] });
     window.AVATARS = list;
     return list;
   }
@@ -415,7 +422,7 @@
     const list = window.AVATARS || applyAvatars(null);
     const hit = list.find((a) => a.id === id);
     if (hit) return hit;
-    const c = window.CHARACTERS.find((x) => x.id === id);
+    const c = (window.CAST || []).find((x) => x.id === id) || window.CHARACTERS.find((x) => x.id === id);
     if (c) return { id: c.id, name: c.name, image: c.image || '', character: c };
     return list[0];
   }
@@ -451,5 +458,5 @@
   }
 
   applyCast(''); // 最初は自社の4体
-  window.HaneulEvent = { castOf, applyCast, MAX_CAST, noveltyOn, NOVELTY_THRESHOLD, missingRequired, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
+  window.HaneulEvent = { avatarCharacters, castOf, applyCast, MAX_CAST, noveltyOn, NOVELTY_THRESHOLD, missingRequired, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
 })();

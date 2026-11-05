@@ -189,7 +189,8 @@ function cleanAvatars(value, imageOk) {
   let v = value;
   if (typeof v === 'string') { try { v = JSON.parse(v); } catch { throw new InputError('avatars'); } }
   if (!v || typeof v !== 'object' || Array.isArray(v)) throw new InputError('avatars');
-  const hide = Array.isArray(v.hide) ? [...new Set(v.hide.filter((id) => CHARACTER_IDS.includes(id)))] : [];
+  // 外すキャラクター：自社の4体（haru など）か、イベントのキャラクター（k_xxxx）
+  const hide = Array.isArray(v.hide) ? [...new Set(v.hide.filter((id) => typeof id === 'string' && (CHARACTER_IDS.includes(id) || /^k_[a-z0-9]{6,16}$/.test(id))))] : [];
   const custom = Array.isArray(v.custom) ? v.custom : [];
   if (custom.length > MAX_CUSTOM_AVATARS) throw new InputError('avatars.custom');
   const seen = new Set();

@@ -1100,7 +1100,7 @@ $('#charEditor').addEventListener('click', (e) => {
     if (j < 0 || j >= v.list.length) return;
     [v.list[i], v.list[j]] = [v.list[j], v.list[i]];
   } else if (e.target.closest('[data-cast-delete]')) {
-    if (!confirm(`「${v.list[i].name || '名前なし'}」をこのイベントのキャラクターから削除します。よろしいですか？\n（アバターや、ほかのイベントには影響しません）`)) return;
+    if (!confirm(`「${v.list[i].name || '名前なし'}」をこのイベントのキャラクターから削除します。よろしいですか？\n（アバターからも外れます。ほかのイベントには影響しません）`)) return;
     v.list.splice(i, 1);
   } else return;
   castChanged({ rerender: true });
@@ -1124,15 +1124,19 @@ const newAvatarId = () => `c_${Array.from(crypto.getRandomValues(new Uint8Array(
 function renderAvatars() {
   const v = avatarEdits();
   E.applyCharacters(state.draft.event.characters);
+  E.applyCast(state.draft.event.cast, state.draft.event.characters);
   const list = E.applyAvatars(v);
-  $('#avBuiltin').innerHTML = E.original.characters.map((o) => {
-    const c = window.CHARACTERS.find((x) => x.id === o.id);
-    const on = !v.hide.includes(o.id);
+  // キャラクターのアバター：このイベントのキャラクター（いなければ自社の4体）
+  const own = !(window.CAST_ENABLED && window.CAST?.length);
+  $('#avBuiltinNote').textContent = own
+    ? 'このイベントにはキャラクターが登録されていないため、自社の4体（ハル・ビョル・タルビ・ゴミ）をアバターにしています。'
+    : '「キャラクター」タブで登録したキャラクターを、アバターにしています（自社の4体は出しません）。';
+  $('#avBuiltin').innerHTML = E.avatarCharacters().map((c) => {
+    const on = !v.hide.includes(c.id);
     return `<label class="av-chip ${on ? '' : 'is-off'}">
       <span class="art">${window.Art.characterSVG(c)}</span>
       <b>${esc(c.name)}</b>
-      <span class="check"><input type="checkbox" data-av-builtin="${esc(o.id)}" ${on ? 'checked' : ''}> アバターとして選べる</span>
-      ${c.hidden ? '<small>キャラクター紹介・入口には<br>表示していません</small>' : ''}
+      <span class="check"><input type="checkbox" data-av-builtin="${esc(c.id)}" ${on ? 'checked' : ''}> アバターとして選べる</span>
     </label>`;
   }).join('');
   $('#avCount').textContent = `（${v.custom.length} / ${MAX_AVATARS}）`;

@@ -23,7 +23,7 @@ const GRACE_MS = (Number(process.env.RECONNECT_SECONDS) || 30) * 1000;
 
 // クライアント（js/world/avatars.js・js/event.js）と同じ値
 const AVATARS = ['haru', 'byeol', 'dalbit', 'gomi'];
-const CUSTOM_AVATAR = /^c_[a-z0-9]{6,16}$/; // 管理画面で追加したアバター
+const CUSTOM_AVATAR = /^[ck]_[a-z0-9]{6,16}$/; // 管理画面で追加したアバター（c_）・イベントのキャラクター（k_）
 const avatarOk = (v) => typeof v === 'string' && (AVATARS.includes(v) || CUSTOM_AVATAR.test(v));
 const EMOTE_COUNT = 6;
 const BOUNDS = 6.8; // 店内の広さ（±m）
