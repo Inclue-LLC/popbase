@@ -8,7 +8,6 @@
 
 window.SHOP = {
   brand: 'STUDIO HANEUL',
-  brandKana: 'スタジオハヌル',
   // お店の名前（入れ替わる各ポップアップに共通。ページ上部・入口の上の小さい文字・ブラウザのタブに出る）
   title: 'POP BASE',
   theme: 'milktea', // 店内の内装テーマ（js/themes.js のキー：milktea / softpink / lavender / sage / powderblue / base / sky / night / holiday / spring）
