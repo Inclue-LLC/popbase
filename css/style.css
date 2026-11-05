@@ -164,8 +164,6 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 }
 .logo { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-latin); font-weight: 600; font-size: 1.1rem; letter-spacing: .04em; color: var(--ink); text-decoration: none; white-space: nowrap; }
 .logo-mark { width: 30px; height: auto; }
-.logo small { display: inline-block; max-width: 14em; overflow: hidden; text-overflow: ellipsis; margin-left: .3em; padding-left: .8em; border-left: 1px solid var(--line); font-family: var(--font); font-size: .7rem; font-weight: 700; letter-spacing: .1em; color: var(--ink-soft); }
-@media (max-width: 520px) { .logo small { display: none; } }
 .nav { display: flex; gap: 4px; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
 .nav a {
   color: var(--ink-soft); text-decoration: none; font-weight: 700; font-size: .9rem;
