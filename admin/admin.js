@@ -889,7 +889,7 @@ document.addEventListener('keydown', (e) => {
 function fieldHtml(f, value, placeholders) {
   const id = `f_${f.key}`;
   const label = `<label for="${id}">${esc(f.label)}${needBadge(f)}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`;
-  const defaultColorLabel = String(f.themePath || '').startsWith('const.') ? '初期の色' : 'テーマの色';
+  const defaultColorLabel = f.defaultLabel || (String(f.themePath || '').startsWith('const.') ? '初期の色' : 'テーマの色');
   let input = '';
   if (f.type === 'text' || f.type === 'number') {
     let ph = f.placeholderPath ? themeDefault(f.placeholderPath) : placeholders[f.key];
@@ -918,12 +918,13 @@ function fieldHtml(f, value, placeholders) {
     input = `<select id="${id}" data-key="${f.key}">${opts.map((o) =>
       `<option value="${esc(o.value)}" ${cur === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`;
   } else if (f.type === 'color') {
-    const def = themeDefault(f.themePath) || '#ffffff';
+    const def = themeDefault(f.themePath) || f.defaultSwatch || '#ffffff';
     const v = value || def;
-    input = `<span class="color-row"><input id="${id}" data-key="${f.key}" type="color" value="${esc(v)}" aria-label="${esc(f.label)}（色を選ぶ）">
+    input = `${f.presets ? '<div class="color-wrap">' : ''}<span class="color-row"><input id="${id}" data-key="${f.key}" type="color" value="${esc(v)}" aria-label="${esc(f.label)}（色を選ぶ）">
       ${hexInput(v, f.label)}
       <span class="color-note">${value ? '' : defaultColorLabel}</span>
-      ${value ? `<button type="button" class="btn btn-small btn-ghost" data-reset="${f.key}">${defaultColorLabel}に戻す</button>` : ''}</span>`;
+      ${value ? `<button type="button" class="btn btn-small btn-ghost" data-reset="${f.key}">${defaultColorLabel}に戻す</button>` : ''}</span>
+      ${f.presets ? `<span class="color-presets">${f.presets.map(([hex, name]) => `<button type="button" class="color-preset${String(value).toLowerCase() === hex ? ' is-on' : ''}" data-preset="${f.key}" data-hex="${hex}" style="--p:${hex}" title="${esc(name)}"><i></i>${esc(name)}</button>`).join('')}</span></div>` : ''}`;
   } else if (f.type === 'image') {
     const url = E.imageUrl(value);
     input = `<span class="image-row">
@@ -983,6 +984,13 @@ for (const sel of Object.values(FORMS)) {
     }
   });
   form.addEventListener('click', (e) => {
+    const preset = e.target.closest('[data-preset]');
+    if (preset) {
+      state.draft.event[preset.dataset.preset] = preset.dataset.hex;
+      renderForm();
+      changed();
+      return;
+    }
     const reset = e.target.closest('[data-reset]');
     if (!reset) return;
     state.draft.event[reset.dataset.reset] = '';
