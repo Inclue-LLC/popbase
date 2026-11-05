@@ -275,6 +275,15 @@ async function main() {
     Visit.send({ t: 'move', x: +st.x.toFixed(2), z: +st.z.toFixed(2), ry: +st.ry.toFixed(2), m: st.m });
   }
 
+  // 全画面のあいだは、見えている範囲が変わっていないかを毎フレーム確かめる
+  // （iPhone のブラウザは、ツールバーの出入りで resize が届かないことがあるため）
+  let fitKey = '';
+  function keepFsFitted() {
+    if (!document.body.classList.contains('world-fs')) { fitKey = ''; return; }
+    const v = window.visualViewport;
+    const key = v ? `${v.offsetTop}|${v.offsetLeft}|${v.width}|${v.height}` : `${innerWidth}|${innerHeight}`;
+    if (key !== fitKey) { fitKey = key; fitFs(); }
+  }
   /* ---------- 描画ループ ---------- */
   let visible = true;
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(root);
@@ -367,6 +376,7 @@ async function main() {
 
   function frame() {
     const dt = Math.min(clock.getDelta(), 0.1);
+    keepFsFitted();
     if (visible && !document.hidden && room) {
       update(dt);
       renderer.render(scene, camera);
@@ -388,6 +398,8 @@ async function main() {
   const vv = window.visualViewport;
   function fitFs() {
     const s = root.style;
+    // 全画面のあいだはページがスクロールしないよう、一番上に固定しておく
+    if (document.body.classList.contains('world-fs') && (window.scrollY || window.scrollX)) window.scrollTo(0, 0);
     if (!document.body.classList.contains('world-fs') || !vv) {
       s.top = s.left = s.width = s.height = s.right = s.bottom = '';
       return;
