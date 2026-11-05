@@ -354,7 +354,7 @@ async function main() {
       const escHtml = (v) => String(v).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
       if (best) promptBtn.innerHTML = `<b>${best.type === 'product' ? 'この商品を見る' : escHtml(best.label)}</b>` +
         (best.type === 'product' ? `<span>${escHtml(best.label)}　¥${best.price.toLocaleString('ja-JP')}</span>` : '') +
-        '<kbd>Enter</kbd>';
+        '<i class="prompt-go" aria-hidden="true">›</i>'; // 案内そのものをクリック（タップ）すると、その動作をする
     }
 
     const w = root.clientWidth;

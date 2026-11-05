@@ -2,7 +2,7 @@
  * 操作
  *   PC   : WASD / 矢印キーで移動、ドラッグ（店内をつかんで動かす向き）・Q/E で視点を回す、ホイールで寄る/引く、床クリックでそこへ歩く
  *   スマホ: 左下のスティックで移動、画面スワイプで視点、床タップでそこへ歩く
- *   共通 : Enter / Space で近くの商品を見る、1〜6 でスタンプ
+ *   共通 : 1〜6 でスタンプ（商品を見る・カートを見るなどは、画面の案内をクリック）
  */
 export class Controls {
   constructor(root, canvas, { onTap, onInteract, onEmote }) {
@@ -21,8 +21,9 @@ export class Controls {
       if (!active() || typing(e)) return;
       const k = e.key.toLowerCase();
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd', 'q', 'e'].includes(k)) e.preventDefault();
-      // Enter の既定の動き（開いた画面のボタンが押されてしまう）を止めてから反応する
-      if (k === 'enter' || k === ' ') { e.preventDefault(); onInteract(); return; }
+      // Enter / Space では何もしない（商品を見る・カートを見るなどは、画面の案内をクリック）。
+      // ただし Enter の既定の動き（開いた画面のボタンが押されてしまう）は止めておく
+      if (k === 'enter' || k === ' ') { e.preventDefault(); return; }
       if (/^[1-6]$/.test(k)) { onEmote(Number(k) - 1); return; }
       this.keys.add(k);
     });
