@@ -122,7 +122,9 @@ body.world-fs .world {
   border-radius: 50%; background: rgba(255, 255, 255, .92); box-shadow: 0 4px 10px rgba(0, 0, 0, .2);
 }
 @media (pointer: coarse) {
-  .joystick { display: block; }
+  /* スマホ・タブレット：右手の親指で動かせるよう、移動のスティックを右下、スタンプを左下に */
+  .joystick { display: block; left: auto; right: 22px; }
+  .hud-emotes { right: auto; left: 12px; }
   .hud-help { display: none; }
   .hud-prompt { bottom: 150px; }
   .hud-emotes { flex-direction: column; bottom: 22px; }
