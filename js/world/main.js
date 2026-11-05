@@ -98,8 +98,6 @@ async function main() {
   // 前に選んだアバターが管理画面で外されていたら、最初のアバターに替える
   if (look && !window.AVATARS.some((a) => a.id === look.avatar)) look = { avatar: window.AVATARS[0].id };
   const self = new Avatar({ avatar: look?.avatar || window.AVATARS[0].id, isSelf: true, labelsEl });
-  // カートが空のときのイラストなどで、いまの自分のアバターを使えるようにする
-  window.HaneulSelf = self;
   self.group.position.copy(SPAWN);
   scene.add(self.group);
 

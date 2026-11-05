@@ -416,13 +416,6 @@ window.AppReady = (async function () {
     return { lines, count, subtotal, shipping, total: subtotal + shipping };
   }
 
-  // カートが空のときのイラスト：いま自分がなっているアバター（店内に入る前は、前回選んだもの→1番目）
-  const emptyCartArt = () => {
-    const id = window.HaneulSelf?.avatar || savedLook()?.avatar;
-    const a = (id && window.HaneulEvent.findAvatar(id)) || window.AVATARS?.[0];
-    return a ? (a.character || a) : CHARACTERS[0];
-  };
-
   function renderCart() {
     const t = totals();
     for (const id of ['#cartCount', '#hudCartCount']) {
@@ -455,7 +448,6 @@ window.AppReady = (async function () {
         <button class="ci-remove" data-remove="${p.id}" aria-label="${p.name} を削除">削除</button>
       </li>`).join('') : `
       <li class="cart-empty">
-        ${Art.characterSVG(emptyCartArt(), 'empty-char')}
         <p>バッグはまだ空っぽです</p>
       </li>`;
 
