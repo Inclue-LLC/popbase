@@ -78,9 +78,10 @@ export async function buildRoom(theme) {
   // サブタイトルは管理画面で入力したときだけ。空欄なら2行（ブランド名・イベント名）の看板にする
   const subtitle = window.SHOP.subtitle || '';
   const signLines = [
-    { text: window.SHOP.brand, size: subtitle ? 0.18 : 0.22, color: theme.sign.sub, spacing: 14 },
-    { text: theme.name, size: subtitle ? 0.48 : 0.56 },
-    ...(subtitle ? [{ text: subtitle, size: 0.2, weight: 700 }] : []),
+    // ブランド名・イベント名の色は管理画面で指定できる（なければテーマの看板の色）
+    { text: window.SHOP.brand, size: subtitle ? 0.18 : 0.22, color: theme.sign.brandInk || theme.sign.sub, spacing: 14 },
+    { text: theme.name, size: subtitle ? 0.48 : 0.56, color: theme.sign.eventInk || theme.sign.ink },
+    ...(subtitle ? [{ text: subtitle, size: 0.2, weight: 700, color: theme.sign.eventInk || theme.sign.ink }] : []),
   ];
   const signW = Math.min(8.8, Math.max(5.2, T.signTextWidth(signLines, signH) + 0.9));
   const sign = plane(signW, signH, basic(T.signTexture(signLines, theme.sign, signW, signH), { transparent: true }));
