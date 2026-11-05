@@ -61,7 +61,16 @@
   }
 
   // 管理画面でイラストを画像に差し替えた場合は、その画像を表示する
+  // イラストのないキャラクター（イベントで追加して画像をまだ選んでいない）は、色の丸に名前の頭文字
+  function placeholderSVG(c) {
+    const initial = String(c.name || '?').trim().charAt(0) || '?';
+    const esc = (s) => s.replace(/[&<>"']/g, '');
+    return `<circle cx="50" cy="54" r="38" fill="${esc(c.color || '#e6dcf3')}"/><circle cx="50" cy="54" r="38" fill="#fff" opacity=".18"/>
+      <text x="50" y="66" text-anchor="middle" font-size="34" font-weight="700" fill="#fff" font-family="sans-serif">${esc(initial)}</text>`;
+  }
+
   function characterSVG(c, cls = '') {
+    if (!c.image && !bodies[c.kind]) return `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true">${placeholderSVG(c)}</svg>`;
     if (c.image) {
       const src = String(c.image).replace(/["<>]/g, '');
       return `<img class="char-img ${cls}" src="${src}" alt="" aria-hidden="true" loading="lazy">`;

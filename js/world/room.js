@@ -99,14 +99,18 @@ export async function buildRoom(theme) {
   plate.rotation.z = -0.06;
   group.add(plate);
 
-  const chars = window.CHARACTERS.filter((c) => !c.hidden); // 管理画面で「表示しない」にしたキャラクターは除く
+  // このイベントのキャラクター（管理画面の「キャラクター」タブ）。人数が多いときは間隔と大きさを詰めて壁に収める
+  const chars = window.CAST || [];
+  const gap = Math.min(1.35, 10.5 / Math.max(chars.length, 1));
+  const size = Math.min(1.1, gap * 0.86);
   for (let i = 0; i < chars.length; i++) {
     const c = chars[i];
-    const x = (i - (chars.length - 1) / 2) * 1.35;
-    const m = plane(1.1, 1.1, basic(await T.characterTexture(c), { transparent: true, alphaTest: 0.05 }));
-    m.position.set(x, 1.95, -HALF_D + 0.05);
+    const x = (i - (chars.length - 1) / 2) * gap;
+    const m = plane(size, size, basic(await T.characterTexture(c), { transparent: true, alphaTest: 0.05 }));
+    m.position.set(x, 1.4 + size / 2, -HALF_D + 0.05);
     group.add(m);
-    const nameTag = plane(0.7, 0.2, basic(T.signTexture([{ text: c.name, size: 0.7 }], { bg: '#ffffff', ink: '#3a3346' }, 0.7, 0.2, { radius: 0.1 }), { transparent: true }));
+    const tagW = Math.min(0.7, gap * 0.9);
+    const nameTag = plane(tagW, 0.2, basic(T.signTexture([{ text: c.name, size: 0.7 }], { bg: '#ffffff', ink: '#3a3346' }, tagW, 0.2, { radius: 0.1 }), { transparent: true }));
     nameTag.position.set(x, 1.32, -HALF_D + 0.05);
     group.add(nameTag);
     interactables.push({ type: 'character', id: c.id, label: `${c.name}のグッズを見る`, object: m, pos: new THREE.Vector3(x, 0, -HALF_D + 0.6) });

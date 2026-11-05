@@ -21,7 +21,7 @@ const SELECT = {
 const NUMBER = ['novelty_threshold'];
 const DATETIME = ['open_at', 'close_at'];     // 'YYYY-MM-DDTHH:MM'（日本時間）
 const TIME = ['daily_open', 'daily_close'];   // 'HH:MM'
-const JSON_KEYS = ['characters', 'avatars']; // 中身が入れ子のもの（Shopify には JSON として保存）
+const JSON_KEYS = ['characters', 'avatars', 'cast']; // 中身が入れ子のもの（Shopify には JSON として保存）
 const HANDLE = ['collection']; // Shopify のコレクションのハンドル（このイベントで店内に並べる商品）
 const KEYS = [...TEXT, ...MULTILINE, ...COLOR, ...IMAGE, ...Object.keys(SELECT), ...NUMBER, ...JSON_KEYS, ...DATETIME, ...TIME, ...HANDLE];
 const schedule = require('../../js/schedule.js');
@@ -97,6 +97,8 @@ function cleanEvent(event, imageOk) {
       out[k] = v;
     } else if (k === 'characters') {
       out[k] = cleanCharacters(v, imageOk);
+    } else if (k === 'cast') {
+      out[k] = cleanCast(v, imageOk);
     } else if (k === 'avatars') {
       out[k] = cleanAvatars(v, imageOk);
     }
@@ -144,6 +146,41 @@ function cleanCharacters(value, imageOk) {
     if (item.name || item.en || item.profile || item.color || item.image || item.hidden) out[id] = item;
   }
   return out;
+}
+
+/* イベントのキャラクター：{ use: true/false, list: [{ id, name, en, profile, color, image }]（12体まで） }
+ * id は自社の4体（haru など）か、追加したもの（k_xxxx） */
+const MAX_CAST = 12;
+function cleanCast(value, imageOk) {
+  let v = value;
+  if (typeof v === 'string') { try { v = JSON.parse(v); } catch { throw new InputError('cast'); } }
+  if (!v || typeof v !== 'object' || Array.isArray(v) || !Array.isArray(v.list)) throw new InputError('cast');
+  if (v.list.length > MAX_CAST) throw new InputError(`キャラクターは${MAX_CAST}体までです`);
+  const seen = new Set();
+  const text = (x, max, i, key, multi = false) => {
+    if (x == null || x === '') return '';
+    if (typeof x !== 'string' || x.length > max) throw new InputError(`キャラクター${i + 1}体目の${key}`);
+    return multi ? x.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f]/g, '') : x.replace(/[\u0000-\u001f]/g, '');
+  };
+  const list = v.list.map((c, i) => {
+    if (!c || typeof c !== 'object') throw new InputError('cast');
+    const ok = typeof c.id === 'string' && (CHARACTER_IDS.includes(c.id) || /^k_[a-z0-9]{6,16}$/.test(c.id));
+    if (!ok || seen.has(c.id)) throw new InputError(`キャラクター${i + 1}体目の ID`);
+    seen.add(c.id);
+    const name = text(c.name, 20, i, '名前').trim();
+    if (!name) throw new InputError(`キャラクター${i + 1}体目の名前を入れてください`);
+    const item = { id: c.id, name, en: text(c.en, 30, i, '英語名'), profile: text(c.profile, 200, i, 'プロフィール', true), color: '', image: '' };
+    if (c.color) {
+      if (!/^#[0-9a-f]{6}$/i.test(c.color)) throw new InputError(`キャラクター${i + 1}体目の色`);
+      item.color = c.color.toLowerCase();
+    }
+    if (c.image) {
+      if (!imageOk(c.image)) throw new InputError(`キャラクター${i + 1}体目の画像`);
+      item.image = { id: String(c.image.id), url: String(c.image.url) };
+    }
+    return item;
+  });
+  return { use: v.use !== false, list };
 }
 
 /* アバター：{ hide: [キャラクターID], custom: [{ id: 'c_xxxx', name, image }]（12個まで） } */
