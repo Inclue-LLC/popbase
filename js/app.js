@@ -548,11 +548,12 @@ window.AppReady = (async function () {
   /* ---------- トースト ---------- */
   let toastTimer;
   // 明るい色なら濃い文字、暗い色なら白い文字（キャラクター紹介文の背景色に合わせる）
-  function toast(msg, { bg = '', ink = '' } = {}) {
+  function toast(msg, { bg = '', ink = '', title = '' } = {}) {
     const el = $('#toast');
     if (bg) {
       // キャラクター紹介文：右上に閉じるボタン（すぐ消したい人向け）
-      el.innerHTML = `<span class="toast-text">${esc(msg)}</span><button type="button" class="toast-close" aria-label="紹介文を閉じる">×</button>`;
+      // 名前は見出しの行、紹介文はその下（管理画面で入れた改行のまま）
+      el.innerHTML = `${title ? `<span class="toast-title">${esc(title)}</span>` : ''}${msg ? `<span class="toast-text">${esc(msg)}</span>` : ''}<button type="button" class="toast-close" aria-label="紹介文を閉じる">×</button>`;
       el.querySelector('.toast-close').addEventListener('click', (e) => {
         e.stopPropagation();
         clearTimeout(toastTimer);
@@ -566,7 +567,9 @@ window.AppReady = (async function () {
     el.classList.toggle('toast-note', !!bg);
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), bg ? 6000 : 2400); // 紹介文は少し長めに出す（閉じるボタンですぐ消せる）
+    // 紹介文は長さに合わせて長めに出す（6〜15秒。閉じるボタンですぐ消せる）
+    const wait = bg ? Math.min(15000, 6000 + String(msg).length * 60) : 2400;
+    toastTimer = setTimeout(() => el.classList.remove('show'), wait);
   }
 
   /* ---------- 3D 店内（js/world/）から呼ぶ関数 ---------- */
@@ -589,7 +592,7 @@ window.AppReady = (async function () {
     showCharacter(id) {
       const c = (window.CAST || []).find((x) => x.id === id);
       const note = window.THEMES?.[SHOP.theme]?.charNote || {};
-      if (c) toast(c.profile ? `${c.name}：${c.profile}` : c.name, { bg: note.bg || '', ink: note.ink || '' });
+      if (c) toast(c.profile || '', { title: c.name, bg: note.bg || '', ink: note.ink || '' });
     },
   };
 
