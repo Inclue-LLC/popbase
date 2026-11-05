@@ -7,7 +7,24 @@
  * EMOTES の数は server/visit.js の EMOTE_COUNT と合わせてください。
  */
 import * as THREE from '../../vendor/three.module.min.js';
-import { characterTexture, shadowTexture } from './textures.js';
+import { characterTexture, characterFrac, shadowTexture } from './textures.js';
+
+/*
+ * アバターどうしの大きさの比率：選べるアバター（window.AVATARS）のうち、いちばん大きく描かれた絵を基準にして、
+ * ほかはその比率で小さく表示する（壁のキャラクターと同じ考え方）
+ */
+let ratioKey = '';
+let ratioMax = null;
+const srcOf = (a) => a.character || { id: a.id, image: a.image };
+function maxFrac() {
+  const list = window.AVATARS || [];
+  const key = list.map((a) => `${a.id}|${srcOf(a).image || ''}`).join(',');
+  if (key !== ratioKey || !ratioMax) {
+    ratioKey = key;
+    ratioMax = Promise.all(list.map((a) => characterFrac(srcOf(a)))).then((f) => Math.max(...f, 0.01));
+  }
+  return ratioMax;
+}
 
 export const EMOTES = ['👋', '❤️', '✨', '😆', '👍', '🎁'];
 
@@ -60,9 +77,11 @@ export class Avatar {
     this.avatar = avatar;
     // キャラクターならその絵、管理画面で追加したアバターならアップロードした画像
     const a = window.HaneulEvent.findAvatar(avatar);
-    const src = a.character || { id: a.id, image: a.image };
-    const key = `${a.id}|${src.image || ''}`;
-    if (!texCache.has(key)) texCache.set(key, characterTexture(src, 256));
+    const src = srcOf(a);
+    const [frac, max] = await Promise.all([characterFrac(src), maxFrac()]);
+    const scale = Math.min(1, frac / max);
+    const key = `${a.id}|${src.image || ''}|${scale.toFixed(3)}`;
+    if (!texCache.has(key)) texCache.set(key, characterTexture(src, 256, { scale }));
     const tex = await texCache.get(key);
     this.sprite.material.map = tex;
     this.sprite.material.needsUpdate = true;

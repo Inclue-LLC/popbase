@@ -102,18 +102,23 @@ export async function buildRoom(theme) {
   // このイベントのキャラクター（管理画面の「キャラクター」タブ）。人数が多いときは間隔と大きさを詰めて壁に収める
   const chars = window.CAST || [];
   const gap = Math.min(1.35, 10.5 / Math.max(chars.length, 1));
-  // 絵の大きさは、名前の札（1.4m）から看板の下端までのすき間に収める（看板に重ならないように）
+  // 名前の札（中心 1.3m・高さ 0.2m）の上に少しすき間をあけて絵を置き、看板の下端までのすき間に収める
+  const tagY = 1.3;
+  const artBottom = tagY + 0.1 + 0.08;
   const signBottom = 3.15 - signH / 2;
-  const size = Math.min(gap * 0.86, signBottom - 0.12 - 1.4);
+  const size = Math.min(gap * 0.86, signBottom - 0.1 - artBottom);
+  // キャラクターどうしの大きさの比率：いちばん大きいキャラクターを枠いっぱいにして、ほかはその比率で小さく
+  const fracs = await Promise.all(chars.map((c) => T.characterFrac(c)));
+  const maxFrac = Math.max(...fracs, 0.01);
   for (let i = 0; i < chars.length; i++) {
     const c = chars[i];
     const x = (i - (chars.length - 1) / 2) * gap;
-    const m = plane(size, size, basic(await T.characterTexture(c), { transparent: true, alphaTest: 0.05 }));
-    m.position.set(x, 1.4 + size / 2, -HALF_D + 0.05);
+    const m = plane(size, size, basic(await T.characterTexture(c, 256, { scale: fracs[i] / maxFrac }), { transparent: true, alphaTest: 0.05 }));
+    m.position.set(x, artBottom + size / 2, -HALF_D + 0.05);
     group.add(m);
     const tagW = Math.min(0.7, gap * 0.9);
     const nameTag = plane(tagW, 0.2, basic(T.signTexture([{ text: c.name, size: 0.7 }], { bg: '#ffffff', ink: '#3a3346' }, tagW, 0.2, { radius: 0.1 }), { transparent: true }));
-    nameTag.position.set(x, 1.32, -HALF_D + 0.05);
+    nameTag.position.set(x, tagY, -HALF_D + 0.05);
     group.add(nameTag);
     interactables.push({ type: 'character', id: c.id, label: `${c.name}のグッズを見る`, object: m, pos: new THREE.Vector3(x, 0, -HALF_D + 0.6) });
   }
