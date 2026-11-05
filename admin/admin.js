@@ -1261,3 +1261,13 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 start();
+
+/* 上の帯（保存・公開ボタン）の高さを CSS に知らせて、タブをそのすぐ下に固定する（狭い画面では帯が折り返して高くなる） */
+(() => {
+  const bar = document.querySelector('.topbar');
+  if (!bar) return;
+  const set = () => document.documentElement.style.setProperty('--topbar-h', `${Math.round(bar.getBoundingClientRect().height)}px`);
+  set();
+  if ('ResizeObserver' in window) new ResizeObserver(set).observe(bar);
+  else window.addEventListener('resize', set);
+})();
