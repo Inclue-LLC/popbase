@@ -646,7 +646,7 @@ function renderPalette() {
       ${thumb(p)}
       <span><span class="pname">${esc(p.name)}</span><br>
       <span class="pmeta">${yen(p.price)}${p.limited ? ' ・<span class="tag-limited">会場限定</span>' : ''}${p.stock === 0 ? ' ・<span class="tag-sold">在庫なし</span>' : ''}<br>
-      ${at ? `${esc(placeText(at))}${places.length > 1 ? ` ほか${places.length - 1}か所` : ''}` : '未配置'}${limit < 99 ? `（${places.length}/${limit}個）` : places.length > 1 ? `（${places.length}個）` : ''}</span></span></li>`;
+      ${at ? `${esc(placeText(at))}${places.length > 1 ? ` ほか${places.length - 1}か所` : ''}` : '未配置'}</span></span></li>`;
   }).join('') || '<li class="pmeta">該当する商品がありません</li>';
 }
 $('#search').addEventListener('input', renderPalette);
