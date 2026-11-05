@@ -409,8 +409,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 /* オープンまでのカウントダウン */
 .es-count { display: flex; justify-content: center; gap: clamp(8px, 3vw, 18px); margin: 10px 0 6px; font-variant-numeric: tabular-nums; }
 .es-count span { display: grid; justify-items: center; min-width: 3.2em; }
-/* 数字の色は、入口の「POP BASE」の文字と同じ */
-.es-count b { font-family: var(--font-latin); font-weight: 600; font-size: clamp(1.7rem, 7vw, 2.4rem); line-height: 1.1; color: var(--ent-ink, var(--theme-ink, var(--brand-ink))); }
+.es-count b { font-family: var(--font-latin); font-weight: 600; font-size: clamp(1.7rem, 7vw, 2.4rem); line-height: 1.1; color: var(--theme-accent, #8a6bd6); }
 .es-count small { font-size: .72rem; font-weight: 700; color: #7a7075; }
 
 /* イベントが何も予定されていないとき：POP BASE だけの画面（イベントのテーマ・ブランド・キャラクターは出さない） */
