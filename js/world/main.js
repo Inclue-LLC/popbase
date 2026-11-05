@@ -408,7 +408,9 @@ async function main() {
   window.addEventListener('orientationchange', () => setTimeout(fitFs, 300));
   window.addEventListener('resize', fitFs);
 
+  let scrollBeforeFs = null; // 全画面にする前のページの位置（やめたら、そこに戻す）
   function setFs(on) {
+    if (on && !document.body.classList.contains('world-fs')) scrollBeforeFs = window.scrollY;
     // ページを一番上に戻してから固定する（スクロールしたまま固定すると、その分だけ上にずれるため）
     if (on) window.scrollTo(0, 0);
     document.body.classList.toggle('world-fs', on);
@@ -418,7 +420,7 @@ async function main() {
     setTimeout(fitFs, 900);
     fsBtn.textContent = on ? '全画面をやめる' : '全画面';
     if (on) root.focus({ preventScroll: true });
-    else root.scrollIntoView({ block: 'center' });
+    else restoreScroll();
   }
   fsBtn.addEventListener('click', () => {
     const on = !document.body.classList.contains('world-fs');
@@ -430,6 +432,15 @@ async function main() {
       setFs(false);
     }
   });
+  // 全画面をやめたら、全画面にする前のページの位置に戻す（店内が画面いっぱいになって、スクロールしにくくならないように）
+  function restoreScroll() {
+    const y = scrollBeforeFs;
+    scrollBeforeFs = null;
+    requestAnimationFrame(() => {
+      if (y != null) window.scrollTo(0, y);
+      else root.scrollIntoView({ block: 'start' });
+    });
+  }
   // 退店・時間切れ・閉店などで、ほかの場所（js/app.js）から全画面が外されたときも、
   // ボタンの文字・店内の大きさ・ブラウザの全画面をそろえる
   new MutationObserver(() => {
