@@ -112,8 +112,8 @@
     { group: '会期・営業時間', key: 'daily_open', label: '毎日の開店時刻', hint: '閉店時刻とセットで設定。空欄なら会期中は24時間営業', type: 'time' },
     { group: '会期・営業時間', key: 'daily_close', label: '毎日の閉店時刻', hint: '閉店5分前から店内にタイマーを表示し、時間になると自動で退店', type: 'time' },
     { group: '会期・営業時間', key: 'period', label: '会期の表示文', hint: '看板の下の行・入口・ご案内に出す文。空欄なら上の日時から自動で作ります', type: 'text', placeholderPath: 'schedule.period' },
-    { group: '送料・発送', key: 'shipping_fee', label: '送料（円）', hint: 'カートとご案内に出す送料（0 なら送料無料）。実際にお会計で請求される送料は Shopify の「配送」の設定なので、同じ金額にしてください', type: 'number' },
-    { group: '送料・発送', key: 'free_shipping_threshold', label: '送料無料になる金額（円）', hint: 'この金額（税込）以上で送料無料（Shopify の配送の設定と同じにしてください）。空欄なら送料無料にしません', type: 'number' },
+    { group: '送料・発送', key: 'shipping_text', label: '送料', hint: 'ご案内の「送料」に出す文（例：全国一律550円（税込））。改行できます（300文字まで）', type: 'textarea' },
+    { group: '送料・発送', key: 'free_shipping_threshold', label: '送料無料になる金額（円）', hint: 'この金額（税込）以上で、カートの送料を「無料」と表示し、届かないときは「あと○円で送料無料」と表示します（Shopify の配送の設定と同じにしてください）。空欄なら表示しません', type: 'number' },
     { group: '送料・発送', key: 'shipping_note', label: '発送について', hint: 'ご案内の「発送について」に出す文（例：会期終了後、12月下旬より順次発送します）。改行できます（300文字まで）', type: 'textarea' },
     { group: 'イベント', key: 'theme_preset', label: 'ベースのテーマ', hint: '下の項目で空欄のものは、このテーマの値になります', type: 'select', options: () => Object.entries(window.THEMES).filter(([k]) => k !== 'event').map(([k, t]) => ({ value: k, label: t.name })) },
     { group: '壁', key: 'wall_image', label: '壁紙の画像', hint: '横長の画像（例: 2048×540px）。指定すると柄より優先', type: 'image' },
@@ -171,8 +171,8 @@
    */
   const NEED = {
     brand: ['required'], title: ['required'], open_at: ['required'], close_at: ['required'], collection: ['required'],
-    novelty: ['default', 'なし'], novelty_name: ['required'], novelty_threshold: ['required'], shipping_note: ['required'], shipping_fee: ['required'],
-    free_shipping_threshold: ['default', '送料無料なし'],
+    novelty: ['default', 'なし'], novelty_name: ['required'], novelty_threshold: ['required'], shipping_note: ['required'], shipping_text: ['required'],
+    free_shipping_threshold: ['hide'],
     product_bg_color: ['default', 'テーマの色'],
     daily_open: ['default', '24時間営業'], daily_close: ['default', '24時間営業'], period: ['default', '日時から自動で作成'],
     theme_preset: ['default', 'Milk Tea'], font: ['default', '初期設定のフォント'],
@@ -300,7 +300,7 @@
     S.productBg = has(f, 'product_bg_color') ? f.product_bg_color : (theme.productBg || ''); // 商品の画面の背景色（空欄ならテーマの色、なければ商品ごとの色）
     // 購入特典：「なし」なら表示しない
     // 送料・発送（空欄なら初期値）
-    S.shippingFee = has(f, 'shipping_fee') ? Number(f.shipping_fee) : original.shippingFee;
+    S.shippingText = has(f, 'shipping_text') ? String(f.shipping_text) : '';
     S.freeShippingThreshold = has(f, 'free_shipping_threshold') ? Number(f.free_shipping_threshold) : 0; // 空欄なら送料無料なし
     S.shippingNote = has(f, 'shipping_note') ? String(f.shipping_note) : '';
     S.novelty = noveltyOn(f) && has(f, 'novelty_name')
