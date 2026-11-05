@@ -34,8 +34,8 @@ body.world-fs .world {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   will-change: transform;
 }
-/* 自分の名前は表示しない（スタンプだけ出す） */
-.avatar-label.is-self .al-emote {
+/* スタンプ（自分も他のお客さんも同じ）：ふだんは見えず、押したときだけ出て、自動で消える */
+.avatar-label .al-emote {
   order: -1; font-size: 30px; line-height: 1; opacity: 0;
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .2));
 }
