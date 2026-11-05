@@ -97,8 +97,8 @@ window.THEMES = {
 
 /* 店内のどこに何を並べるか（商品の `display: 'left' | 'right' | 'island'` で個別に上書きできます） */
 window.STORE_LAYOUT = {
-  left: { title: 'PLUSH & CHARM', label: 'ぬいぐるみ・キーホルダー', categories: ['plush', 'keychain'] },
-  right: { title: 'STATIONERY & GOODS', label: '文具・雑貨・バッグ', categories: ['stationery', 'living', 'bag'] },
+  left: { title: '', label: '', categories: ['plush', 'keychain'] }, // 看板の文字は管理画面で（空なら看板を出さない）
+  right: { title: '', label: '', categories: ['stationery', 'living', 'bag'] },
   island: { title: 'LIMITED', label: '会場限定テーブル' }, // limited: true の商品が並びます
 };
 

@@ -140,12 +140,16 @@ export async function buildRoom(theme) {
     unit.add(top);
 
     const lay = window.STORE_LAYOUT[side] || { title: '', label: '' };
-    const zs = plane(2.8, 0.7, basic(T.signTexture([
-      { text: lay.title, size: 0.5, spacing: 4 },
-      { text: lay.label, size: 0.3, color: theme.sign.sub },
-    ], theme.sign, 2.8, 0.7), { transparent: true }));
-    zs.position.set(0, shelfH + 0.55, -shelfDepth / 2 + 0.03);
-    unit.add(zs);
+    // 棚の看板：英字・日本語のうち入っているものだけ。どちらも空なら看板を出さない
+    const signLines = [
+      lay.title && { text: lay.title, size: lay.label ? 0.5 : 0.56, spacing: 4 },
+      lay.label && { text: lay.label, size: lay.title ? 0.3 : 0.44, color: lay.title ? theme.sign.sub : theme.sign.ink },
+    ].filter(Boolean);
+    if (signLines.length) {
+      const zs = plane(2.8, 0.7, basic(T.signTexture(signLines, theme.sign, 2.8, 0.7), { transparent: true }));
+      zs.position.set(0, shelfH + 0.55, -shelfDepth / 2 + 0.03);
+      unit.add(zs);
+    }
 
     // 管理画面で配置した棚（3段×5枠）なら枠どおりに、未設定なら商品数に合わせて自動で並べる
     const byId = Object.fromEntries(window.PRODUCTS.map((x) => [x.id, x]));

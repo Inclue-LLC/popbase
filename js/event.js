@@ -129,10 +129,10 @@
     { group: '看板・照明', key: 'sign_text_color', label: '看板の大きい文字の色', hint: 'イベント名・棚の英字・「LIMITED」など', type: 'color', themePath: 'sign.ink' },
     { group: '看板・照明', key: 'sign_sub_color', label: '看板の小さい文字の色', hint: 'イベント名の上のブランド名・棚の日本語・「会場限定テーブル」など', type: 'color', themePath: 'sign.sub' },
     { group: '看板・照明', key: 'light', label: '照明', type: 'select', options: () => opt([['', 'テーマのまま'], ['day', '明るい'], ['night', '夜（暗め＋スポットライト）']]) },
-    { group: '棚の看板', key: 'left_title', label: '左の棚（英字）', type: 'text', placeholderPath: 'layout.left.title' },
-    { group: '棚の看板', key: 'left_label', label: '左の棚（日本語）', type: 'text', placeholderPath: 'layout.left.label' },
-    { group: '棚の看板', key: 'right_title', label: '右の棚（英字）', type: 'text', placeholderPath: 'layout.right.title' },
-    { group: '棚の看板', key: 'right_label', label: '右の棚（日本語）', type: 'text', placeholderPath: 'layout.right.label' },
+    { group: '棚の看板', key: 'left_label', label: '左の棚（日本語）', hint: '例：ぬいぐるみ・キーホルダー', type: 'text', placeholderPath: 'const.（空欄なら表示しません）' },
+    { group: '棚の看板', key: 'left_title', label: '左の棚（英字）', hint: '例：PLUSH & CHARM', type: 'text', placeholderPath: 'const.（空欄なら表示しません）' },
+    { group: '棚の看板', key: 'right_label', label: '右の棚（日本語）', hint: '例：文具・雑貨・バッグ', type: 'text', placeholderPath: 'const.（空欄なら表示しません）' },
+    { group: '棚の看板', key: 'right_title', label: '右の棚（英字）', hint: '例：STATIONERY & GOODS', type: 'text', placeholderPath: 'const.（空欄なら表示しません）' },
     { group: 'フォント', key: 'font', label: 'ショップの基本フォント', hint: '入口・メニュー・商品詳細・店内の看板や値札の文字に使います', type: 'select', options: () => FONTS.map((x) => ({ value: x.value, label: x.label })) },
     { group: '商品の画面', key: 'product_bg_color', label: '商品の画面の背景色', hint: '棚の商品をクリックしたときに出る画面で、商品画像の後ろに敷く色', type: 'color', themePath: 'productBg' },
     { group: '購入特典', key: 'novelty', label: '購入特典', hint: '「あり」にすると、カートに「あと○円で特典」、ご案内に特典の説明が出ます', type: 'select',
@@ -175,8 +175,7 @@
     theme_preset: ['default', 'Milk Tea'], font: ['default', '初期設定のフォント'],
     wall_image: ['default', '壁の色と柄'], wall_pattern: ['default', 'テーマの柄'], floor_image: ['default', '床の種類と色'],
     floor_style: ['default', 'テーマの床'], light: ['default', 'テーマの照明'],
-    left_title: ['default', '初期の看板の文字'], left_label: ['default', '初期の看板の文字'],
-    right_title: ['default', '初期の看板の文字'], right_label: ['default', '初期の看板の文字'],
+    left_title: ['hide'], left_label: ['hide'], right_title: ['hide'], right_label: ['hide'],
     novelty_threshold: ['default', '3,000円'],
     entrance_kicker: ['default', 'POP BASE'], entrance_heading: ['default', 'ブランド名'],
     entrance_message: ['default', 'イベント名（＋サブタイトル）'], entrance_button: ['default', '「お店に入る」'],
@@ -285,8 +284,9 @@
 
     const L = window.STORE_LAYOUT;
     for (const side of ['left', 'right']) {
-      L[side].title = has(f, `${side}_title`) ? f[`${side}_title`] : original.layout[side].title;
-      L[side].label = has(f, `${side}_label`) ? f[`${side}_label`] : original.layout[side].label;
+      // 棚の看板の文字は、未記入なら表示しない（英字・日本語とも空なら看板ごと出さない）
+      L[side].title = has(f, `${side}_title`) ? f[`${side}_title`] : '';
+      L[side].label = has(f, `${side}_label`) ? f[`${side}_label`] : '';
     }
     window.applyThemeMeta?.('event');
     return theme;
