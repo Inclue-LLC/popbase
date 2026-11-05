@@ -30,7 +30,7 @@ window.THEMES = {
     productBg: '#faf6f0', // 商品の画面の背景色
     rugOpacity: 1,
     light: 'day',
-    entrance: { top: '#e8ddd1', bottom: '#f8f4ed', glow: 'rgba(255, 255, 255, .55)' },
+    entrance: { top: '#e8ddd1', bottom: '#f8f4ed', glow: 'rgba(181,143,125, .28)', heading: '#51453f', ink: '#51453f', accent: '#b58f7d', button: '#51453f', buttonInk: '#ffffff' }, // 入口の画面
   },
 
   softpink: {
@@ -45,7 +45,7 @@ window.THEMES = {
     productBg: '#fff8f9', // 商品の画面の背景色
     rugOpacity: 1,
     light: 'day',
-    entrance: { top: '#f3dadd', bottom: '#fbf2ed', glow: 'rgba(255, 255, 255, .55)' },
+    entrance: { top: '#f3dadd', bottom: '#fbf2ed', glow: 'rgba(217,134,170, .28)', heading: '#393238', ink: '#393238', accent: '#d986aa', button: '#393238', buttonInk: '#ffffff' }, // 入口の画面
   },
 
   lavender: {
@@ -60,7 +60,7 @@ window.THEMES = {
     productBg: '#faf7fe', // 商品の画面の背景色
     rugOpacity: 1,
     light: 'day',
-    entrance: { top: '#e9dff2', bottom: '#faf7fc', glow: 'rgba(255, 255, 255, .55)' },
+    entrance: { top: '#e9dff2', bottom: '#faf7fc', glow: 'rgba(177,138,203, .28)', heading: '#443c50', ink: '#443c50', accent: '#b18acb', button: '#443c50', buttonInk: '#ffffff' }, // 入口の画面
   },
 
   sage: {
@@ -75,7 +75,7 @@ window.THEMES = {
     productBg: '#f6faf6', // 商品の画面の背景色
     rugOpacity: 1,
     light: 'day',
-    entrance: { top: '#dfeae0', bottom: '#f7f9f5', glow: 'rgba(255, 255, 255, .55)' },
+    entrance: { top: '#dfeae0', bottom: '#f7f9f5', glow: 'rgba(130,173,148, .28)', heading: '#3e4c43', ink: '#3e4c43', accent: '#82ad94', button: '#3e4c43', buttonInk: '#ffffff' }, // 入口の画面
   },
 
   powderblue: {
@@ -90,7 +90,7 @@ window.THEMES = {
     productBg: '#f6fafe', // 商品の画面の背景色
     rugOpacity: 1,
     light: 'day',
-    entrance: { top: '#deeaf3', bottom: '#f7fafc', glow: 'rgba(255, 255, 255, .55)' },
+    entrance: { top: '#deeaf3', bottom: '#f7fafc', glow: 'rgba(135,178,211, .28)', heading: '#3b4756', ink: '#3b4756', accent: '#87b2d3', button: '#3b4756', buttonInk: '#ffffff' }, // 入口の画面
   },
 
 };
@@ -117,7 +117,10 @@ window.applyThemeMeta = function applyThemeMeta(key) {
   root.setProperty('--theme-top', t.entrance.top);
   root.setProperty('--theme-bottom', t.entrance.bottom);
   // ピンクのにじみ・見出しの色（テーマで指定したときだけ）
-  for (const [prop, v] of [['--theme-glow', t.entrance.glow], ['--theme-heading', t.entrance.heading]]) {
+  // 入口の画面の配色（テーマに合わせる）：にじみ・見出し・文字・アクセント・ボタン
+  const en = t.entrance;
+  for (const [prop, v] of [['--theme-glow', en.glow], ['--theme-heading', en.heading], ['--theme-ink', en.ink],
+    ['--theme-accent', en.accent], ['--theme-btn', en.button], ['--theme-btn-ink', en.buttonInk]]) {
     if (v) root.setProperty(prop, v); else root.removeProperty(prop);
   }
   document.querySelectorAll('[data-bind="themeLabel"]').forEach((el) => { el.textContent = window.SHOP.themeLabel; });
