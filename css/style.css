@@ -417,3 +417,4 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 @media (pointer: coarse) {
   .toast.toast-note { bottom: calc(152px + env(safe-area-inset-bottom)); }
 }
+.pre-line { white-space: pre-line; }

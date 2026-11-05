@@ -4,7 +4,7 @@
  */
 const TEXT = ['brand', 'title', 'period', 'left_title', 'left_label', 'right_title', 'right_label', 'novelty_name',
   'entrance_kicker', 'entrance_heading', 'entrance_message', 'entrance_button'];
-const MULTILINE = ['entrance_notice']; // 改行を許す（300文字まで）
+const MULTILINE = ['entrance_notice', 'shipping_note']; // 改行を許す（300文字まで）
 const COLOR = ['wall_color', 'wall_pattern_color', 'lower_color', 'trim_color', 'floor_color_1', 'floor_color_2', 'rug_color', 'sign_color', 'sign_text_color', 'sign_sub_color',
   'entrance_color_top', 'entrance_color_bottom', 'entrance_heading_color', 'entrance_text_color', 'product_bg_color', 'avatar_ring_color', 'char_note_color'];
 const IMAGE = ['wall_image', 'floor_image', 'entrance_logo', 'entrance_image'];
@@ -18,7 +18,7 @@ const SELECT = {
   // js/event.js の FONTS と同じ値
   font: ['', 'mplus-maru', 'zen-maru', 'kosugi-maru', 'kiwi-maru', 'noto-sans', 'zen-kaku', 'noto-serif', 'yusei', 'hachi-maru', 'dotgothic'],
 };
-const NUMBER = ['novelty_threshold'];
+const NUMBER = ['novelty_threshold', 'shipping_fee', 'free_shipping_threshold'];
 const DATETIME = ['open_at', 'close_at'];     // 'YYYY-MM-DDTHH:MM'（日本時間）
 const TIME = ['daily_open', 'daily_close'];   // 'HH:MM'
 const JSON_KEYS = ['characters', 'avatars', 'cast']; // 中身が入れ子のもの（Shopify には JSON として保存）
@@ -50,6 +50,7 @@ function missingRequired(event = {}) {
   // 購入特典を「あり」にしたときは、特典の名前も必須
   if (event.novelty === 'on' && blank(event.novelty_name)) miss.push('特典の名前');
   if (event.novelty === 'on' && blank(event.novelty_threshold)) miss.push('特典の条件金額');
+  if (blank(event.shipping_note)) miss.push('発送について');
   return miss;
 }
 

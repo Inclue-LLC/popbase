@@ -40,7 +40,15 @@ window.AppReady = (async function () {
   // 購入特典（管理画面で特典の名前が空欄なら表示しない）
   if (SHOP.novelty) $('#noveltyInfo').textContent = `税込 ${yen(SHOP.novelty.threshold)} 以上お買い上げで「${SHOP.novelty.name}」をプレゼント。`;
   else $('#noveltyInfo').closest('.info-card').hidden = true;
-  $('#shippingInfo').textContent = `全国一律 ${yen(SHOP.shippingFee)}。${yen(SHOP.freeShippingThreshold)} 以上で送料無料。`;
+  renderShippingInfo();
+  function renderShippingInfo() {
+    // 送料・発送（店内管理画面の「送料・発送」で設定。送料無料になる金額が 0 なら送料無料なし）
+    const free = SHOP.freeShippingThreshold > 0;
+    $('#shippingInfo').textContent = !SHOP.shippingFee ? '送料無料。'
+      : `全国一律 ${yen(SHOP.shippingFee)}。${free ? `${yen(SHOP.freeShippingThreshold)} 以上で送料無料。` : ''}`;
+    $('#shippingNote').textContent = SHOP.shippingNote || '';
+    $('#shippingNote').closest('.info-card').hidden = !SHOP.shippingNote;
+  }
 
   /* ---------- 入口 ----------
    * 文字・画像・色は店内管理画面の「入口の画面」で設定（SHOP.entrance。js/event.js の applyEvent で反映）。
@@ -413,7 +421,8 @@ window.AppReady = (async function () {
     const count = lines.reduce((s, l) => s + l.q, 0);
     const subtotal = lines.reduce((s, l) => s + l.p.price * l.q, 0);
     // Shopify 連携時は、送料の最終額は Shopify の購入手続きで計算されます（ここでは目安）
-    const shipping = subtotal === 0 || subtotal >= SHOP.freeShippingThreshold ? 0 : SHOP.shippingFee;
+    const free = SHOP.freeShippingThreshold > 0 && subtotal >= SHOP.freeShippingThreshold;
+    const shipping = subtotal === 0 || free ? 0 : SHOP.shippingFee;
     return { lines, count, subtotal, shipping, total: subtotal + shipping };
   }
 
@@ -459,7 +468,7 @@ window.AppReady = (async function () {
         <div class="total"><dt>合計（税込）${shopify ? '<small>目安</small>' : ''}</dt><dd>${yen(t.total)}</dd></div>
       </dl>
       ${shopify ? '<p class="hint">送料の最終金額は、次の購入手続き画面（Shopify）で確定します</p>' : ''}
-      ${t.shipping ? `<p class="hint">あと ${yen(SHOP.freeShippingThreshold - t.subtotal)} で送料無料</p>` : ''}` : '';
+      ${t.shipping && SHOP.freeShippingThreshold > 0 ? `<p class="hint">あと ${yen(SHOP.freeShippingThreshold - t.subtotal)} で送料無料</p>` : ''}` : '';
     $('#checkoutBtn').disabled = t.lines.length === 0;
     document.dispatchEvent(new CustomEvent('haneul:cart', { detail: { count: t.count } }));
   }
