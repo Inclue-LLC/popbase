@@ -760,7 +760,8 @@ const FORMS = { event: '#eventForm', entrance: '#entranceForm' };
 function renderForm() {
   const ev = state.draft.event;
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
-  const placeholders = { title: base.name, period: E.original.period, novelty_threshold: `例：${E.NOVELTY_THRESHOLD}`, shipping_fee: '例：600', free_shipping_threshold: '例：5000（空欄なら送料無料なし）', shipping_note: '例：会期終了後、12月下旬より順次発送します', novelty_name: 'オリジナルステッカー' };
+  // 入力欄の薄い文字は「空欄ならどうなるか」だけ（記入例は出さない。必須の欄は何も出さない）
+  const placeholders = { free_shipping_threshold: '空欄なら送料無料にしません' };
   for (const [tab, sel] of Object.entries(FORMS)) {
     const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab && (!f.showIf || f.showIf(ev)));
     const groups = [...new Set(fields.map((f) => f.group))];
@@ -791,7 +792,7 @@ function renderScheduleStatus() {
   el.innerHTML = `この設定で公開すると、今は <b>${esc(text)}</b>${hours ? `　${esc(hours)}` : '　24時間営業'}`;
   // 「会期の表示文」の薄い文字（空欄のときに使われる文）も更新
   const per = $('#f_period');
-  if (per) per.placeholder = HS.periodText(ev) || E.original.period;
+  if (per) per.placeholder = `空欄なら「${HS.periodText(ev) || E.original.period}」`;
   el.dataset.state = st.state;
 }
 setInterval(() => { if (state.draft) renderScheduleStatus(); }, 30000);
@@ -844,7 +845,7 @@ function applyThemeColors() {
  * 正しいコードになった時点で、見本（input[type=color]）に入れて、いつもの処理（保存・プレビュー）に回す。 */
 function hexInput(color, label) {
   return `<input type="text" class="hex-input" value="${esc(String(color || '').toUpperCase())}" maxlength="9" spellcheck="false"
-    autocomplete="off" inputmode="text" placeholder="#RRGGBB" aria-label="${esc(label)}（カラーコード）">`;
+    autocomplete="off" inputmode="text" aria-label="${esc(label)}（カラーコード）">`;
 }
 function normalizeHex(text) {
   const s = String(text || '')
@@ -899,8 +900,10 @@ function fieldHtml(f, value, placeholders) {
   const defaultColorLabel = f.defaultLabel || (String(f.themePath || '').startsWith('const.') ? '初期の色' : 'テーマの色');
   let input = '';
   if (f.type === 'text' || f.type === 'number') {
+    // 薄い文字は「空欄ならどうなるか」だけ。必須の欄には出さない
     let ph = f.placeholderPath ? themeDefault(f.placeholderPath) : placeholders[f.key];
-    if (f.need === 'required' && ph) ph = `例：${ph}`; // 必須の欄は、入力済みに見えないよう「例：」を付ける
+    if (f.need === 'required') ph = '';
+    else if (ph && f.placeholderPath && !String(ph).startsWith('空欄')) ph = `空欄なら「${ph}」`;
     input = `<input id="${id}" data-key="${f.key}" type="${f.type}" value="${esc(value ?? '')}" placeholder="${esc(ph ?? '')}" ${f.type === 'number' ? 'min="0" step="100"' : 'maxlength="120"'}>`;
     // 文字数の上限がある項目は、残りを表示（全角2・半角1で数える）
     if (f.maxUnits) input = `<span class="unit-row">${input}<span class="unit-count" data-count-for="${f.key}">${unitLabel(value, f.maxUnits)}</span></span>`;
@@ -1043,9 +1046,9 @@ function renderCharacters() {
         ${img ? `<button type="button" class="btn btn-small btn-ghost" data-cast-reset="image">${own ? '元の絵に戻す' : '画像を外す'}</button>` : ''}
       </div>
       <div class="char-fields">
-        <div class="field"><label>名前 <span class="need need-required">必須</span><span class="hint">壁の名前の札・キャラクター紹介・アバター選びに出ます</span></label><input type="text" data-cast-key="name" maxlength="20" value="${esc(x.name || '')}" placeholder="例：ハル" class="${x.name ? '' : 'is-missing'}"></div>
-        <div class="field"><label>英語名 <span class="need need-hide">任意・空欄なら非表示</span></label><input type="text" data-cast-key="en" maxlength="30" value="${esc(x.en || '')}" placeholder="例：HARU（空欄なら表示しません）"></div>
-        <div class="field"><label>プロフィール <span class="need need-hide">任意・空欄なら非表示</span><span class="hint">ご案内のキャラクター紹介と、店内でキャラクターをタップしたときの紹介文</span></label><textarea data-cast-key="profile" maxlength="200" rows="2" placeholder="キャラクター紹介に出す短い説明（空欄なら表示しません）">${esc(x.profile || '')}</textarea></div>
+        <div class="field"><label>名前 <span class="need need-required">必須</span><span class="hint">壁の名前の札・キャラクター紹介・アバター選びに出ます</span></label><input type="text" data-cast-key="name" maxlength="20" value="${esc(x.name || '')}" class="${x.name ? '' : 'is-missing'}"></div>
+        <div class="field"><label>英語名 <span class="need need-hide">任意・空欄なら非表示</span></label><input type="text" data-cast-key="en" maxlength="30" value="${esc(x.en || '')}" placeholder="空欄なら表示しません"></div>
+        <div class="field"><label>プロフィール <span class="need need-hide">任意・空欄なら非表示</span><span class="hint">ご案内のキャラクター紹介と、店内でキャラクターをタップしたときの紹介文</span></label><textarea data-cast-key="profile" maxlength="200" rows="2" placeholder="空欄なら表示しません">${esc(x.profile || '')}</textarea></div>
         <div class="field"><label>紹介の背景色 <span class="need need-default">任意・空欄ならキャラクターの色を淡く</span><span class="hint">ご案内の「キャラクター紹介」で、このキャラクターの枠の色（文字の色は自動で読みやすい色に）</span></label>
           <div class="color-wrap"><span class="color-row"><input type="color" data-cast-key="bg" value="${esc(x.bg || cardTint(own?.color))}" aria-label="紹介の背景色（色を選ぶ）">
             ${hexInput(x.bg || cardTint(own?.color), '紹介の背景色')}
@@ -1176,7 +1179,7 @@ function renderAvatars() {
   $('#avList').innerHTML = v.custom.length ? v.custom.map((a, i) => `
     <li class="av-item" data-i="${i}">
       <img src="${esc(E.imageUrl(a.image))}" alt="">
-      <input type="text" data-av-name maxlength="12" value="${esc(a.name)}" aria-label="アバターの名前" placeholder="名前（12文字まで）">
+      <input type="text" data-av-name maxlength="12" value="${esc(a.name)}" aria-label="アバターの名前（12文字まで）">
       <span class="av-actions">
         <button type="button" class="icon" data-av-move="-1" ${i === 0 ? 'disabled' : ''} aria-label="上へ">↑</button>
         <button type="button" class="icon" data-av-move="1" ${i === v.custom.length - 1 ? 'disabled' : ''} aria-label="下へ">↓</button>
