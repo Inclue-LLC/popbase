@@ -398,9 +398,10 @@ async function main() {
   const vv = window.visualViewport;
   function fitFs() {
     const s = root.style;
-    // 全画面のあいだはページがスクロールしないよう、一番上に固定しておく
-    if (document.body.classList.contains('world-fs') && (window.scrollY || window.scrollX)) window.scrollTo(0, 0);
-    if (!document.body.classList.contains('world-fs') || !vv) {
+    const fs = document.body.classList.contains('world-fs');
+    // ふだんは CSS（上下左右の端に合わせる）に任せる。キーボードや拡大などで、見えている範囲が
+    // 画面より狭くなっているときだけ、見えている範囲に合わせる
+    if (!fs || !vv || vv.height >= window.innerHeight - 2) {
       s.top = s.left = s.width = s.height = s.right = s.bottom = '';
       return;
     }
@@ -416,9 +417,7 @@ async function main() {
 
   function setFs(on) {
     document.body.classList.toggle('world-fs', on);
-    // ページを一番上に戻してから合わせる（スクロールした位置によって、ツールバーの出方が変わり、はみ出すことがあるため）。
-    // ツールバーが出たり引っ込んだりするのを待って、少しあとにももう一度合わせる
-    if (on) window.scrollTo(0, 0);
+    document.documentElement.classList.toggle('fs-lock', on); // ページごと固定（スクロール・ツールバーの出入りを止める）
     fitFs();
     setTimeout(fitFs, 350);
     setTimeout(fitFs, 900);
@@ -440,6 +439,7 @@ async function main() {
   // ボタンの文字・店内の大きさ・ブラウザの全画面をそろえる
   new MutationObserver(() => {
     const on = document.body.classList.contains('world-fs');
+    if (!on) document.documentElement.classList.remove('fs-lock');
     if (!on && fsBtn.textContent !== '全画面') {
       fsBtn.textContent = '全画面';
       fitFs();
