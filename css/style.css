@@ -118,7 +118,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .entrance-brand .entrance-kicker { font-family: var(--font-latin); font-weight: 600; letter-spacing: .12em; font-size: clamp(.95rem, 2.4vw, 1.15rem); color: var(--ent-ink, var(--theme-ink, var(--brand-ink))); }
 .entrance-brand.is-text img { display: none; }
 .entrance-brand.is-text .entrance-kicker { font-family: inherit; font-weight: 700; letter-spacing: .3em; font-size: .85rem; color: var(--ent-ink, var(--theme-ink, var(--ink-soft))); }
-.logo-big { font-family: var(--font-latin); font-size: clamp(2rem, 7.4vw, 4rem); font-weight: 600; letter-spacing: .04em; line-height: 1.15; margin: .1em 0 .2em; color: var(--ent-heading, var(--theme-heading, var(--brand-ink))); text-shadow: 0 2px 24px rgba(255, 255, 255, .7); }
+.logo-big { font-family: var(--font-latin); font-size: clamp(1.7rem, 6.2vw, 3.3rem); font-weight: 600; letter-spacing: .04em; line-height: 1.15; margin: .1em 0 .2em; color: var(--ent-heading, var(--theme-heading, var(--brand-ink))); text-shadow: 0 2px 24px rgba(255, 255, 255, .7); }
 .entrance-logo { display: block; max-width: min(80vw, 560px); max-height: 32vh; margin: 0 auto .4rem; object-fit: contain; }
 .entrance-notice {
   display: inline-block; max-width: min(36em, 100%); margin: -.4rem 0 1.4rem;
@@ -127,7 +127,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
   white-space: pre-line;
 }
 .entrance-notice + .btn { display: table; margin: 0 auto; }
-.entrance-theme { font-weight: 700; margin: .2rem 0 1rem; }
+.entrance-theme { font-weight: 700; font-size: clamp(1.15rem, 3.6vw, 1.45rem); margin: .2rem 0 1rem; }
 .entrance-cast { display: flex; justify-content: center; gap: clamp(4px, 2vw, 18px); margin: 0 auto 1rem; }
 .entrance-cast svg, .entrance-cast .char-img { width: clamp(60px, 16vw, 110px); height: auto; }
 .entrance-period { font-weight: 700; margin: 0 0 1.4rem; white-space: pre-line; }
