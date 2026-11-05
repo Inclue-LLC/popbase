@@ -761,7 +761,7 @@ function renderForm() {
   const ev = state.draft.event;
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
   // 入力欄の薄い文字は「空欄ならどうなるか」だけ（記入例は出さない。必須の欄は何も出さない）
-  const placeholders = { free_shipping_threshold: '空欄なら送料無料にしません' };
+  const placeholders = { free_shipping_threshold: '空欄なら表示しません' };
   for (const [tab, sel] of Object.entries(FORMS)) {
     const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab && (!f.showIf || f.showIf(ev)));
     const groups = [...new Set(fields.map((f) => f.group))];

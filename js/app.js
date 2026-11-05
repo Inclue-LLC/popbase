@@ -43,9 +43,10 @@ window.AppReady = (async function () {
   renderShippingInfo();
   function renderShippingInfo() {
     // 送料・発送（店内管理画面の「送料・発送」で設定。送料無料になる金額が 0 なら送料無料なし）
+    // 送料の文は管理画面で入力（未入力のとき＝お試し表示だけ、初期の送料から作る）
     const free = SHOP.freeShippingThreshold > 0;
-    $('#shippingInfo').textContent = !SHOP.shippingFee ? '送料無料。'
-      : `全国一律 ${yen(SHOP.shippingFee)}。${free ? `${yen(SHOP.freeShippingThreshold)} 以上で送料無料。` : ''}`;
+    $('#shippingInfo').textContent = SHOP.shippingText || (!SHOP.shippingFee ? '送料無料。'
+      : `全国一律 ${yen(SHOP.shippingFee)}。${free ? `${yen(SHOP.freeShippingThreshold)} 以上で送料無料。` : ''}`);
     $('#shippingNote').textContent = SHOP.shippingNote || '';
     $('#shippingNote').closest('.info-card').hidden = !SHOP.shippingNote;
   }
@@ -423,7 +424,7 @@ window.AppReady = (async function () {
     // Shopify 連携時は、送料の最終額は Shopify の購入手続きで計算されます（ここでは目安）
     const free = SHOP.freeShippingThreshold > 0 && subtotal >= SHOP.freeShippingThreshold;
     const shipping = subtotal === 0 || free ? 0 : SHOP.shippingFee;
-    return { lines, count, subtotal, shipping, total: subtotal + shipping };
+    return { lines, count, subtotal, shipping, free, total: subtotal + shipping };
   }
 
   function renderCart() {
@@ -464,11 +465,11 @@ window.AppReady = (async function () {
     $('#cartSummary').innerHTML = t.lines.length ? `
       <dl>
         <div><dt>小計</dt><dd>${yen(t.subtotal)}</dd></div>
-        <div><dt>送料</dt><dd>${t.shipping ? yen(t.shipping) : '無料'}</dd></div>
-        <div class="total"><dt>合計（税込）${shopify ? '<small>目安</small>' : ''}</dt><dd>${yen(t.total)}</dd></div>
+        <div><dt>送料</dt><dd>${t.free ? '無料' : shopify ? 'お会計時に計算' : t.shipping ? yen(t.shipping) : '無料'}</dd></div>
+        <div class="total"><dt>${shopify && !t.free ? '合計（税込・送料別）' : '合計（税込）'}</dt><dd>${yen(shopify && !t.free ? t.subtotal : t.total)}</dd></div>
       </dl>
-      ${shopify ? '<p class="hint">送料の最終金額は、次の購入手続き画面（Shopify）で確定します</p>' : ''}
-      ${t.shipping && SHOP.freeShippingThreshold > 0 ? `<p class="hint">あと ${yen(SHOP.freeShippingThreshold - t.subtotal)} で送料無料</p>` : ''}` : '';
+      ${shopify && !t.free ? '<p class="hint">送料は、次の購入手続き画面（Shopify）で計算されます</p>' : ''}
+      ${!t.free && SHOP.freeShippingThreshold > 0 ? `<p class="hint">あと ${yen(SHOP.freeShippingThreshold - t.subtotal)} で送料無料</p>` : ''}` : '';
     $('#checkoutBtn').disabled = t.lines.length === 0;
     document.dispatchEvent(new CustomEvent('haneul:cart', { detail: { count: t.count } }));
   }
