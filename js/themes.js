@@ -2,7 +2,7 @@
  * POP UP テーマ（店内の内装）
  * --------------------------------------------------
  * 壁紙・腰壁・床・天井・棚・看板・入口の色をテーマごとに定義します。
- * 使うテーマは data.js の SHOP.theme で指定します（URL の ?theme=night でも切り替え可）。
+ * 使うテーマは data.js の SHOP.theme で指定します（URL の ?theme=sage でも切り替え可）。
  *
  * 新しいテーマを作るときは、既存のテーマをコピーして色と柄を変えるだけでOKです。
  *
@@ -93,71 +93,6 @@ window.THEMES = {
     entrance: { top: '#deeaf3', bottom: '#f7fafc', glow: 'rgba(255, 255, 255, .55)' },
   },
 
-  // POP BASE の基本テーマ（ロゴのラベンダー・ピンク・クリーム）
-  base: {
-    name: 'Lavender Base',
-    title: 'POP BASE の基本の内装',
-    wall: { color: '#f4eefb', pattern: 'dots', patternColor: '#ead9f3', lower: '#fff4f1', trim: '#dccef5' },
-    floor: { style: 'tile', colors: ['#fffaf8', '#f6edf1'] },
-    ceiling: '#fffafb',
-    shelf: { board: '#f6eee3', edge: '#e4d5c1', back: '#faf5ee' }, // 淡いベージュ（棚・会場限定テーブル・レジの台）
-    sign: { bg: '#ffffff', ink: '#2e2729', sub: '#d9729a', style: 'board' },
-    rug: '#f7c9d8',
-    light: 'day',
-    entrance: { top: '#dccef5', bottom: '#fff4f1', glow: 'rgba(247, 201, 216, .75)' },
-  },
-
-  sky: {
-    name: 'Sky Walk',
-    title: '空のおさんぽ',
-    wall: { color: '#d6ecfb', pattern: 'clouds', patternColor: '#ffffff', lower: '#ffffff', trim: '#9cc9ea' },
-    floor: { style: 'wood', colors: ['#ecd9bd', '#e2caa8'] },
-    ceiling: '#f7fbff',
-    shelf: { board: '#ffffff', edge: '#d9c6ad', back: '#f4f9fe' },
-    sign: { bg: '#ffffff', ink: '#4a90c8', sub: '#e0607e', style: 'board' },
-    rug: '#ffffff',
-    light: 'day',
-    entrance: { top: '#9fd3f7', bottom: '#fde7f0' },
-  },
-
-  night: {
-    name: 'Starry Night',
-    title: '星降る夜のおさんぽ',
-    wall: { color: '#283063', pattern: 'stars', patternColor: '#ffd76a', lower: '#1d2350', trim: '#ffd76a' },
-    floor: { style: 'carpet', colors: ['#1b1f44', '#232a5a'] },
-    ceiling: '#141838',
-    shelf: { board: '#3a4280', edge: '#ffd76a', back: '#222a5a' },
-    sign: { bg: '#141838', ink: '#ffe9a0', sub: '#c9b8f0', style: 'neon' },
-    rug: '#c9b8f0',
-    light: 'night',
-    entrance: { top: '#141838', bottom: '#4a3567', heading: '#ffffff' },
-  },
-
-  holiday: {
-    name: 'Holiday Party',
-    title: 'ハヌルのホリデーパーティー',
-    wall: { color: '#fbf3e6', pattern: 'stripes', patternColor: '#f3d9d4', lower: '#2f6b4f', trim: '#c94a4a' },
-    floor: { style: 'check', colors: ['#f6efe4', '#c94a4a'] },
-    ceiling: '#fffaf2',
-    shelf: { board: '#fffaf2', edge: '#b8864f', back: '#fff6ea' },
-    sign: { bg: '#c94a4a', ink: '#ffffff', sub: '#ffe9a0', style: 'board' },
-    rug: '#2f6b4f',
-    light: 'day',
-    entrance: { top: '#2f6b4f', bottom: '#c94a4a', heading: '#ffffff' },
-  },
-
-  spring: {
-    name: 'Spring Picnic',
-    title: 'はるのピクニック',
-    wall: { color: '#fde8ee', pattern: 'flowers', patternColor: '#ffffff', lower: '#bfe3c6', trim: '#f29ab2' },
-    floor: { style: 'tile', colors: ['#fffaf0', '#f1e4cf'] },
-    ceiling: '#fffafc',
-    shelf: { board: '#ffffff', edge: '#e8c9a8', back: '#fff5f8' },
-    sign: { bg: '#ffffff', ink: '#e0607e', sub: '#4f9a6e', style: 'board' },
-    rug: '#bfe3c6',
-    light: 'day',
-    entrance: { top: '#ffd4e0', bottom: '#e6f6e0' },
-  },
 };
 
 /* 店内のどこに何を並べるか（商品の `display: 'left' | 'right' | 'island'` で個別に上書きできます） */

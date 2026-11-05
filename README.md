@@ -181,10 +181,10 @@ MAX_PER_IP=100 VISIT_MINUTES=2 WARN_MINUTES=1 npm start
 
 ## 内装テーマ
 
-テーマのひな形は **`js/themes.js`** にあります（`sky` / `night` / `holiday` / `spring`）。
+テーマのひな形は **`js/themes.js`** にあります（`milktea` / `softpink` / `lavender` / `sage` / `powderblue`）。
 イベントごとの細かい変更（壁紙画像・色・会期・看板の文字）は、Shopify のメタオブジェクトでひな形を上書きします。
 
-- 確認用: URL に `?theme=night` を付ける、または店内の下の「内装テーマ（確認用）」で切り替え（Shopify 連携時は非表示）
+- 確認用: URL に `?theme=sage` を付ける、または店内の下の「内装テーマ（確認用）」で切り替え（Shopify 連携時は非表示）
 - 新しいひな形: 既存テーマをコピーして色・柄を変更
 
 | キー | テーマ | 壁 | 床 |
@@ -194,11 +194,6 @@ MAX_PER_IP=100 VISIT_MINUTES=2 WARN_MINUTES=1 npm start
 | `lavender` | Lavender Dream | ラベンダーのギンガムチェック | 淡いラベンダーのタイル |
 | `sage` | Sage Mint | ミントのギンガムチェック | 淡いグリーンのタイル |
 | `powderblue` | Powder Blue | 水色のギンガムチェック | 淡いブルーのタイル |
-| `base` | Lavender Base | ラベンダーの水玉 | クリームのタイル |
-| `sky` | Sky Walk 空のおさんぽ | 雲柄 | 木目 |
-| `night` | Starry Night 星降る夜のおさんぽ | 星柄（夜の照明・ネオン看板） | カーペット |
-| `holiday` | Holiday Party ハヌルのホリデーパーティー | ストライプ＋緑の腰壁 | 赤白チェック |
-| `spring` | Spring Picnic はるのピクニック | 花柄 | タイル |
 
 ## キャラクター・アバターについて
 
