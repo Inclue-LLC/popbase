@@ -103,18 +103,21 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
   text-align: center;
   padding: 24px 16px;
 }
-.entrance { color: var(--ent-ink, var(--ink)); }
+.entrance { color: var(--ent-ink, var(--theme-ink, var(--ink))); }
+/* 入口のボタンは内装のテーマの色 */
+.entrance .btn-primary { background: var(--theme-btn, var(--primary)); color: var(--theme-btn-ink, var(--primary-ink));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-btn, #6b5a8e) 28%, transparent); }
 .entrance-bg { position: absolute; inset: 0; z-index: 0; background: center / cover no-repeat; }
 .entrance-inner { position: relative; z-index: 2; transition: opacity .5s, transform .6s; }
 /* 設定を読み込むまで中身を出さない（初期値が一瞬見えるのを防ぐ） */
 .entrance:not(.is-ready) .entrance-inner { opacity: 0; }
-.entrance-kicker { letter-spacing: .3em; font-weight: 700; color: var(--ent-ink, var(--ink-soft)); margin: 0; font-size: .85rem; }
+.entrance-kicker { letter-spacing: .3em; font-weight: 700; color: var(--ent-ink, var(--theme-ink, var(--ink-soft))); margin: 0; font-size: .85rem; }
 /* 入口の上：お店のロゴ（POP BASE のマーク＋文字）。管理画面で文字を設定したときは文字だけ */
 .entrance-brand { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 0 0 .6rem; }
 .entrance-brand img { width: clamp(52px, 9vw, 72px); height: auto; filter: drop-shadow(0 8px 18px rgba(170, 130, 210, .3)); }
-.entrance-brand .entrance-kicker { font-family: var(--font-latin); font-weight: 600; letter-spacing: .12em; font-size: clamp(.95rem, 2.4vw, 1.15rem); color: var(--ent-ink, var(--brand-ink)); }
+.entrance-brand .entrance-kicker { font-family: var(--font-latin); font-weight: 600; letter-spacing: .12em; font-size: clamp(.95rem, 2.4vw, 1.15rem); color: var(--ent-ink, var(--theme-ink, var(--brand-ink))); }
 .entrance-brand.is-text img { display: none; }
-.entrance-brand.is-text .entrance-kicker { font-family: inherit; font-weight: 700; letter-spacing: .3em; font-size: .85rem; color: var(--ent-ink, var(--ink-soft)); }
+.entrance-brand.is-text .entrance-kicker { font-family: inherit; font-weight: 700; letter-spacing: .3em; font-size: .85rem; color: var(--ent-ink, var(--theme-ink, var(--ink-soft))); }
 .logo-big { font-family: var(--font-latin); font-size: clamp(2rem, 7.4vw, 4rem); font-weight: 600; letter-spacing: .04em; line-height: 1.15; margin: .1em 0 .2em; color: var(--ent-heading, var(--theme-heading, var(--brand-ink))); text-shadow: 0 2px 24px rgba(255, 255, 255, .7); }
 .entrance-logo { display: block; max-width: min(80vw, 560px); max-height: 32vh; margin: 0 auto .4rem; object-fit: contain; }
 .entrance-notice {
@@ -336,7 +339,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .entrance-wait p, .entrance-ended p { margin: 0; }
 .ew-title, .ee-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 4px !important; }
 .ew-pos { font-weight: 700; }
-.ew-pos b { font-size: 2.4rem; color: #9b80e0; margin: 0 .1em; }
+.ew-pos b { font-size: 2.4rem; color: var(--theme-accent, #9b80e0); margin: 0 .1em; }
 .ew-est { font-weight: 700; color: #6f6880; min-height: 1.5em; }
 .ew-note { font-size: .85rem; margin-top: 8px !important; }
 .ew-small { font-size: .74rem; color: #6f6880; margin-top: 6px !important; }
@@ -371,7 +374,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
   background: color-mix(in srgb, var(--c) 22%, #fff); font-weight: 700; font-size: .85rem; color: #3a3346;
 }
 .ep-grid .pick-char svg, .ep-grid .pick-char .char-img { width: 100%; max-width: 72px; height: auto; aspect-ratio: 1; }
-.ep-grid .pick-char[aria-checked="true"] { border-color: #9b80e0; box-shadow: 0 0 0 3px rgba(155, 128, 224, .3); }
+.ep-grid .pick-char[aria-checked="true"] { border-color: var(--theme-accent, #9b80e0); box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent, #9b80e0) 35%, transparent); }
 .ep-note { margin: 0 0 12px; font-size: .78rem; color: #6f6880; }
 .entrance-pick .link-btn { margin-top: 8px; }
 
@@ -390,5 +393,5 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 }
 .entrance-status p { margin: 0; }
 .es-title { font-weight: 800; font-size: 1.1rem; }
-.es-text { margin-top: 4px !important; font-weight: 700; color: #8a6bd6; }
+.es-text { margin-top: 4px !important; font-weight: 700; color: var(--theme-accent, #8a6bd6); }
 .entrance.is-closed #enterBtn, .entrance.is-closed #entPick { display: none; }

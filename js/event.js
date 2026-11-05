@@ -155,8 +155,8 @@
     { tab: 'entrance', group: '画像', key: 'entrance_image', label: '背景の画像', hint: '画面いっぱいに表示（例: 1920×1080px）。設定すると背景の色と雲の飾りは表示しません', type: 'image' },
     { tab: 'entrance', group: '色', key: 'entrance_color_top', label: '背景の色（上）', type: 'color', themePath: 'entrance.top' },
     { tab: 'entrance', group: '色', key: 'entrance_color_bottom', label: '背景の色（下）', type: 'color', themePath: 'entrance.bottom' },
-    { tab: 'entrance', group: '色', key: 'entrance_heading_color', label: '大きい見出しの色', type: 'color', themePath: 'const.#ffffff' },
-    { tab: 'entrance', group: '色', key: 'entrance_text_color', label: 'そのほかの文字の色', type: 'color', themePath: 'const.#3a3346' },
+    { tab: 'entrance', group: '色', key: 'entrance_heading_color', label: '大きい見出しの色', type: 'color', themePath: 'entrance.heading' },
+    { tab: 'entrance', group: '色', key: 'entrance_text_color', label: 'そのほかの文字の色', type: 'color', themePath: 'entrance.ink' },
     { tab: 'entrance', group: '表示', key: 'entrance_characters', label: 'キャラクター', type: 'select', options: () => opt([['', '表示する'], ['hide', '表示しない']]) },
   ];
   /*
