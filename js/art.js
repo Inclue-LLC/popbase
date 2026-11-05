@@ -71,7 +71,7 @@
 
   /*
    * キャラクターどうしの大きさの比率（店内の壁・アバターと同じ考え方）
-   * 透明な余白を切り落とした絵の高さ ÷ 元の画像の高さ ＝ 絵の大きさ。いちばん大きいキャラクターを 100% として、
+   * 透明な余白を除いた絵の高さ（アップロードした画像のピクセル数）で比べる。いちばん高いキャラクターを 100% として、
    * ほかはその比率で小さく、正方形の枠に下揃えで描いた画像（data URL）を用意しておく。
    * 用意できるまで（または読み取れない画像）は、アップロードした画像をそのまま表示する。
    */
@@ -109,17 +109,20 @@
     const done = await Promise.all(list.map(async (c) => {
       try {
         const img = await loadImg(String(c.image));
-        return img ? { url: String(c.image), ...trim(img) } : null;
+        if (!img) return null;
+        const t = trim(img);
+        return { url: String(c.image), canvas: t.canvas, px: t.frac * img.height };
       } catch { return null; }
     }));
     const ok = done.filter(Boolean);
-    const max = Math.max(0.01, ...ok.map((x) => x.frac));
+    const max = Math.max(0.01, ...ok.map((x) => x.px));
     const S = 320;
     for (const x of ok) {
       const c = document.createElement('canvas');
       c.width = S; c.height = S;
       const box = S * 0.94;
-      const k = Math.min(box / x.canvas.height, S / x.canvas.width) * Math.max(0.2, Math.min(1, x.frac / max));
+      let k = (box / x.canvas.height) * Math.max(0.2, Math.min(1, x.px / max));
+      if (x.canvas.width * k > S) k = S / x.canvas.width; // はみ出すほど横に長い絵だけ幅に合わせて縮める
       const w = x.canvas.width * k;
       const h = x.canvas.height * k;
       c.getContext('2d').drawImage(x.canvas, (S - w) / 2, S - 3 - h, w, h);
