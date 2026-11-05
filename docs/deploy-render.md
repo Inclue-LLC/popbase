@@ -23,8 +23,8 @@ Render は、GitHub のリポジトリの決まったブランチを公開しま
 ## 2. Render にサーバーを作る
 
 1. https://render.com で、GitHub のアカウントでサインアップします
-2. 画面の案内に沿って、Render から `Inclue-LLC/studiohaneul-popup` を読めるように GitHub を許可します
-3. 「New ＋」→「**Blueprint**」→ リポジトリ `studiohaneul-popup` を選びます
+2. 画面の案内に沿って、Render から `Inclue-LLC/popbase` を読めるように GitHub を許可します
+3. 「New ＋」→「**Blueprint**」→ リポジトリ `popbase` を選びます
 4. `render.yaml` の内容（サーバー `popbase`）が表示されます。次の 2 つを入力します
    - `ADMIN_INITIAL_USER` … 管理画面のログイン名（半角英数字、例: `staff`）
    - `ADMIN_INITIAL_PASSWORD` … パスワード（10文字以上。ほかで使っていないもの）
