@@ -98,8 +98,9 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 }
 .pcard:hover { border-color: var(--line); }
 .pcard.is-selected { border-color: var(--primary); }
-/* 在庫数まで置き終わって、もう置けない商品だけ暗くする */
-.pcard.is-full { opacity: .55; }
+/* 1つでも置いた商品は少し暗く、在庫数まで置き終わってもう置けない商品はさらに暗く */
+.pcard.is-placed { opacity: .7; }
+.pcard.is-placed.is-full { opacity: .4; }
 .pcard .thumb { width: 44px; height: 44px; border-radius: 8px; background: var(--surface-2); display: grid; place-items: center; overflow: hidden; }
 .thumb { flex: none; }
 /* 枠いっぱいに、切れずに収める（グリッドの中では height: 100% が効かないことがあるので、枠の大きさを直接指定） */
