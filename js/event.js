@@ -3,7 +3,7 @@
  * --------------------------------------------------
  * 管理画面（admin/）・サイト・Shopify 連携で共通に使う形と変換処理です。
  *
- * イベント設定 event … { title, subtitle, period, theme_preset, wall_image, wall_color, ... }
+ * イベント設定 event … { title, period, theme_preset, wall_image, wall_color, ... }
  *   キーは Shopify のメタオブジェクト「POP UPイベント」のフィールドと同じ。
  *   空欄（'' / undefined）はベースのテーマの値を使う。
  *   画像は URL 文字列、または管理画面では { id, url }。
@@ -89,7 +89,7 @@
     const L = window.STORE_LAYOUT || {};
     const t = window.THEMES?.event || window.THEMES?.[S.theme] || {};
     const parts = [
-      S.brand, S.period, S.hours, S.subtitle, t.name,
+      S.brand, S.period, S.hours, t.name,
       L.left?.title, L.left?.label, L.right?.title, L.right?.label, L.island?.title, L.island?.label,
       ...(window.PRODUCTS || []).map((p) => `${p.name}¥${p.price}`),
       ...(window.CHARACTERS || []).map((c) => c.name),
@@ -107,12 +107,11 @@
     { group: 'イベント', key: 'brand', label: 'ブランド名', hint: '店内の看板の上の行・ページ上部のロゴなど（全角15文字・半角30文字まで）', type: 'text', maxUnits: 30, placeholderPath: 'shop.brand' },
     { group: 'イベント', key: 'title', label: 'イベント名', hint: '看板の大きな文字。長さに合わせて看板の幅が広がります（全角14文字・半角28文字まで）', type: 'text', maxUnits: 28 },
     { group: 'イベント', key: 'collection', label: 'Shopify のコレクション', hint: 'このイベントで店内に並べる商品のコレクション。Shopify で作ったコレクションから選びます', type: 'collection', showIf: () => !!window.ADMIN_SHOPIFY },
-    { group: 'イベント', key: 'subtitle', label: 'サブタイトル', hint: '看板の下の行。空欄なら表示しません（全角20文字・半角40文字まで）', type: 'text', maxUnits: 40 },
     { group: '会期・営業時間', key: 'open_at', label: '開始日時', hint: 'この日時になると入店できるようになります（日本時間）', type: 'datetime' },
     { group: '会期・営業時間', key: 'close_at', label: '終了日時', hint: 'この日時で閉店し、店内のお客さんは自動で退店します', type: 'datetime' },
     { group: '会期・営業時間', key: 'daily_open', label: '毎日の開店時刻', hint: '閉店時刻とセットで設定。空欄なら会期中は24時間営業', type: 'time' },
     { group: '会期・営業時間', key: 'daily_close', label: '毎日の閉店時刻', hint: '閉店5分前から店内にタイマーを表示し、時間になると自動で退店', type: 'time' },
-    { group: '会期・営業時間', key: 'period', label: '会期の表示文', hint: '看板の札・入口・ご案内に出す文。空欄なら上の日時から自動で作ります', type: 'text', placeholderPath: 'schedule.period' },
+    { group: '会期・営業時間', key: 'period', label: '会期の表示文', hint: '看板の下の行・入口・ご案内に出す文。空欄なら上の日時から自動で作ります', type: 'text', placeholderPath: 'schedule.period' },
     { group: 'イベント', key: 'theme_preset', label: 'ベースのテーマ', hint: '下の項目で空欄のものは、このテーマの値になります', type: 'select', options: () => Object.entries(window.THEMES).filter(([k]) => k !== 'event').map(([k, t]) => ({ value: k, label: t.name })) },
     { group: '壁', key: 'wall_image', label: '壁紙の画像', hint: '横長の画像（例: 2048×540px）。指定すると柄より優先', type: 'image' },
     { group: '壁', key: 'wall_color', label: '壁の色', type: 'color', themePath: 'wall.color' },
@@ -126,7 +125,7 @@
     { group: '床', key: 'floor_color_2', label: '床の色 2', type: 'color', themePath: 'floor.colors.1' },
     { group: '床', key: 'rug_color', label: '会場限定テーブルの下の色', hint: 'テーブルの下に敷く楕円の色。指定した色のまま表示します', type: 'color', themePath: 'rug' },
     { group: '看板・照明', key: 'sign_color', label: '看板の色', type: 'color', themePath: 'sign.bg' },
-    { group: '看板・照明', key: 'sign_text_color', label: 'イベント名の色', hint: '正面の看板のイベント名（とサブタイトル）の文字の色', type: 'color', themePath: 'sign.ink' },
+    { group: '看板・照明', key: 'sign_text_color', label: 'イベント名の色', hint: '正面の看板のイベント名と会期の文字の色', type: 'color', themePath: 'sign.ink' },
     { group: '看板・照明', key: 'sign_sub_color', label: 'ブランド名の色', hint: '正面の看板の、イベント名の上のブランド名の文字の色', type: 'color', themePath: 'sign.sub' },
     { group: '看板・照明', key: 'light', label: '照明', type: 'select', options: () => opt([['', 'テーマのまま'], ['day', '明るい'], ['night', '夜（暗め＋スポットライト）']]) },
     { group: '棚の看板', key: 'left_label', label: '左の棚（日本語）', hint: '例：ぬいぐるみ・キーホルダー', type: 'text', placeholderPath: 'const.（空欄なら表示しません）' },
@@ -152,7 +151,7 @@
     /* 入口の画面（管理画面の「入口の画面」タブ） */
     { tab: 'entrance', group: '文字', key: 'entrance_kicker', label: '上の小さい文字', type: 'text', placeholderPath: 'shop.title' },
     { tab: 'entrance', group: '文字', key: 'entrance_heading', label: '大きい見出し', hint: 'ロゴ画像を設定した場合は、画像の代替テキストになります', type: 'text', placeholderPath: 'shop.brand' },
-    { tab: 'entrance', group: '文字', key: 'entrance_message', label: '見出しの下の文字', hint: '空欄ならイベント名とサブタイトル', type: 'text', placeholderPath: 'shop.themeLabel' },
+    { tab: 'entrance', group: '文字', key: 'entrance_message', label: '見出しの下の文字', hint: '空欄ならイベント名', type: 'text', placeholderPath: 'shop.themeLabel' },
     { tab: 'entrance', group: '文字', key: 'entrance_notice', label: 'お知らせ', hint: '会期の下に表示（例: 12/1 新作入荷！）。空欄なら表示しません', type: 'textarea' },
     { tab: 'entrance', group: '文字', key: 'entrance_button', label: 'ボタンの文字', type: 'text', placeholderPath: 'const.お店に入る' },
     { tab: 'entrance', group: '画像', key: 'entrance_logo', label: 'ロゴ画像', hint: '大きい見出しの代わりに表示。背景が透明な PNG がおすすめ', type: 'image' },
@@ -172,7 +171,7 @@
    */
   const NEED = {
     brand: ['required'], title: ['required'], open_at: ['required'], close_at: ['required'], collection: ['required'],
-    subtitle: ['hide'], entrance_notice: ['hide'],
+    entrance_notice: ['hide'],
     novelty: ['default', 'なし'], novelty_name: ['required'],
     product_bg_color: ['default', 'テーマの色'],
     daily_open: ['default', '24時間営業'], daily_close: ['default', '24時間営業'], period: ['default', '日時から自動で作成'],
@@ -182,7 +181,7 @@
     left_title: ['hide'], left_label: ['hide'], right_title: ['hide'], right_label: ['hide'],
     novelty_threshold: ['default', '3,000円'],
     entrance_kicker: ['default', 'POP BASE'], entrance_heading: ['default', 'ブランド名'],
-    entrance_message: ['default', 'イベント名（＋サブタイトル）'], entrance_button: ['default', '「お店に入る」'],
+    entrance_message: ['default', 'イベント名'], entrance_button: ['default', '「お店に入る」'],
     entrance_logo: ['default', '大きい見出しの文字'], entrance_image: ['default', '背景の色'],
     entrance_characters: ['default', '表示する'],
     cast: ['default', '自社の4体のキャラクター'], avatars: ['default', '4体のキャラクター'],
@@ -293,7 +292,6 @@
     S.period = has(f, 'period') ? f.period : (HS?.periodText(S.schedule) || original.period);
     S.hours = HS?.hoursText(S.schedule) || '';
     S.brand = has(f, 'brand') ? f.brand : original.brand;
-    S.subtitle = has(f, 'subtitle') ? f.subtitle : ''; // 未記入なら表示しない
     S.productBg = has(f, 'product_bg_color') ? f.product_bg_color : (theme.productBg || ''); // 商品の画面の背景色（空欄ならテーマの色、なければ商品ごとの色）
     // 購入特典：「なし」なら表示しない
     S.novelty = noveltyOn(f) && has(f, 'novelty_name')

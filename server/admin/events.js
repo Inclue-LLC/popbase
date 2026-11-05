@@ -63,7 +63,7 @@ function summary(x, activeId) {
 }
 
 /** 複製するときに引き継がない項目（イベント名・会期・コレクションは新しく決める） */
-const NOT_COPIED = ['title', 'subtitle', 'open_at', 'close_at', 'period', 'collection', 'daily_open', 'daily_close'];
+const NOT_COPIED = ['title', 'open_at', 'close_at', 'period', 'collection', 'daily_open', 'daily_close'];
 function copyForNew(event = {}, title = '') {
   const out = { ...event };
   for (const k of NOT_COPIED) out[k] = '';

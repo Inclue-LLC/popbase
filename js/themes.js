@@ -120,9 +120,8 @@ window.applyThemeMeta = function applyThemeMeta(key) {
   const k = window.THEMES[key] ? key : Object.keys(window.THEMES)[0];
   const t = window.THEMES[k];
   window.SHOP.theme = k;
-  // 入口の「イベント名 ― サブタイトル」。サブタイトルは管理画面で入力したときだけ（テーマの title は使わない）
-  const sub = window.SHOP.subtitle || '';
-  window.SHOP.themeLabel = sub ? `${t.name} ― ${sub}` : t.name;
+  // 入口に出すイベント名
+  window.SHOP.themeLabel = t.name;
   const root = document.documentElement.style;
   root.setProperty('--theme-top', t.entrance.top);
   root.setProperty('--theme-bottom', t.entrance.bottom);
