@@ -65,7 +65,7 @@ body.world-fs .world {
 .hud-actions { display: flex; gap: 6px; }
 .hud-btn {
   padding: .35em .9em; border-radius: 999px; border: 0;
-  background: rgba(255, 255, 255, .9); color: #3a3346; font-weight: 700; font-size: .82rem;
+  background: rgba(255, 255, 255, .9); color: var(--theme-ink, #3a3346); font-weight: 700; font-size: .82rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
 }
 .hud-btn:hover { background: #fff; }
@@ -73,7 +73,7 @@ body.world-fs .world {
 .hud-cart-count {
   position: absolute; top: -6px; right: -6px;
   min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
-  background: #d9729a; color: #fff; font-size: .68rem; font-weight: 800; line-height: 18px;
+  background: var(--theme-btn, #d9729a); color: #fff; font-size: .68rem; font-weight: 800; line-height: 18px;
 }
 .hud-cart-count[hidden] { display: none; }
 .hud-cart.bump { animation: bump .4s; }
@@ -87,9 +87,10 @@ body.world-fs .world {
   font-size: .9rem; white-space: nowrap; max-width: calc(100vw - 48px);
   animation: promptIn .25s ease;
 }
-.prompt-btn b { color: #8a6bd6; }
-.prompt-btn span { overflow: hidden; text-overflow: ellipsis; color: #6f6880; }
-.prompt-btn kbd { font: inherit; font-size: .72rem; padding: .1em .5em; border-radius: 6px; background: #f3edfb; color: #6f6880; }
+.prompt-btn b { color: var(--theme-btn, #8a6bd6); } /* 「この商品を見る」などはテーマの色 */
+.prompt-btn { border: 2px solid color-mix(in srgb, var(--theme-accent, #b9a3ec) 55%, transparent); }
+.prompt-btn span { overflow: hidden; text-overflow: ellipsis; color: color-mix(in srgb, var(--theme-ink, #6f6880) 70%, #fff); }
+.prompt-btn kbd { font: inherit; font-size: .72rem; padding: .1em .5em; border-radius: 6px; background: color-mix(in srgb, var(--theme-accent, #b9a3ec) 22%, #fff); color: #6f6880; }
 @keyframes promptIn { from { opacity: 0; transform: translateY(8px); } }
 
 .hud-emotes { right: 12px; bottom: 12px; display: flex; gap: 6px; }

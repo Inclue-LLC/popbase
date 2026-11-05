@@ -549,13 +549,23 @@ window.AppReady = (async function () {
   };
   function toast(msg, { bg = '', ink = '' } = {}) {
     const el = $('#toast');
-    el.textContent = msg;
+    if (bg) {
+      // キャラクター紹介文：右上に閉じるボタン（すぐ消したい人向け）
+      el.innerHTML = `<span class="toast-text">${esc(msg)}</span><button type="button" class="toast-close" aria-label="紹介文を閉じる">×</button>`;
+      el.querySelector('.toast-close').addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearTimeout(toastTimer);
+        el.classList.remove('show');
+      });
+    } else {
+      el.textContent = msg;
+    }
     el.style.background = bg;
     el.style.color = bg ? (ink || inkFor(bg)) : '';
     el.classList.toggle('toast-note', !!bg);
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), bg ? 4500 : 2400); // 紹介文は少し長めに出す
+    toastTimer = setTimeout(() => el.classList.remove('show'), bg ? 6000 : 2400); // 紹介文は少し長めに出す（閉じるボタンですぐ消せる）
   }
 
   /* ---------- 3D 店内（js/world/）から呼ぶ関数 ---------- */
