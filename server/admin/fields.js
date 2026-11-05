@@ -9,7 +9,7 @@ const COLOR = ['wall_color', 'wall_pattern_color', 'lower_color', 'trim_color', 
   'entrance_color_top', 'entrance_color_bottom', 'entrance_heading_color', 'entrance_text_color', 'product_bg_color'];
 const IMAGE = ['wall_image', 'floor_image', 'entrance_logo', 'entrance_image'];
 const SELECT = {
-  theme_preset: ['', 'base', 'sky', 'night', 'holiday', 'spring'],
+  theme_preset: ['', 'milktea', 'softpink', 'lavender', 'sage', 'powderblue', 'base', 'sky', 'night', 'holiday', 'spring'],
   wall_pattern: ['', 'clouds', 'stars', 'flowers', 'hearts', 'dots', 'stripes', 'gingham', 'none'],
   floor_style: ['', 'wood', 'check', 'tile', 'carpet'],
   light: ['', 'day', 'night'],

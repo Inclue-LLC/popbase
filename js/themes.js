@@ -13,6 +13,81 @@
  * light          : 'day' | 'night'（night は店内を暗めにして棚をスポットライトで照らす）
  */
 window.THEMES = {
+  /*
+   * やさしい色の 5 パターン（壁はギンガムチェック）。初期設定は Milk Tea（js/data.js の SHOP.theme）
+   * 指定した色：壁ベース・壁チェック・床の色1/2・会場限定テーブルの下の色・棚の色
+   * それ以外（腰壁・看板・入口など）は、その色から合わせて作っている
+   */
+  milktea: {
+    name: 'Milk Tea',
+    title: 'ミルクティー',
+    wall: { color: '#f8f4ed', pattern: 'gingham', patternColor: '#e8ddd1', lower: '#fcfaf5', trim: '#d2c7bd' },
+    floor: { style: 'tile', colors: ['#fcfaf5', '#e8dfd5'] },
+    ceiling: '#fcfaf5',
+    shelf: { board: '#ece2d8', edge: '#dccbb9', back: '#f4efea' }, // 棚の色 #dccbb9
+    sign: { bg: '#ffffff', ink: '#2e2729', sub: '#827975', style: 'board' },
+    rug: '#eadbd1',
+    rugOpacity: 1,
+    light: 'day',
+    entrance: { top: '#e8ddd1', bottom: '#f8f4ed', glow: 'rgba(255, 255, 255, .55)' },
+  },
+
+  softpink: {
+    name: 'Soft Pink',
+    title: 'ソフトピンク',
+    wall: { color: '#fbf2ed', pattern: 'gingham', patternColor: '#f3dadd', lower: '#fffaf8', trim: '#dbc5c7' },
+    floor: { style: 'tile', colors: ['#fffaf8', '#ede1e0'] },
+    ceiling: '#fffaf8',
+    shelf: { board: '#f3eae1', edge: '#e9d9c8', back: '#f8f4ee' }, // 棚の色 #e9d9c8
+    sign: { bg: '#ffffff', ink: '#2e2729', sub: '#87787a', style: 'board' },
+    rug: '#f7d8e4',
+    rugOpacity: 1,
+    light: 'day',
+    entrance: { top: '#f3dadd', bottom: '#fbf2ed', glow: 'rgba(255, 255, 255, .55)' },
+  },
+
+  lavender: {
+    name: 'Lavender Dream',
+    title: 'ラベンダードリーム',
+    wall: { color: '#faf7fc', pattern: 'gingham', patternColor: '#e9dff2', lower: '#fdfbff', trim: '#d3c9da' },
+    floor: { style: 'tile', colors: ['#fdfbff', '#e9e1ef'] },
+    ceiling: '#fdfbff',
+    shelf: { board: '#efe9f4', edge: '#e2d7eb', back: '#f6f3f9' }, // 棚の色 #e2d7eb
+    sign: { bg: '#ffffff', ink: '#2e2729', sub: '#827a83', style: 'board' },
+    rug: '#eaddf6',
+    rugOpacity: 1,
+    light: 'day',
+    entrance: { top: '#e9dff2', bottom: '#faf7fc', glow: 'rgba(255, 255, 255, .55)' },
+  },
+
+  sage: {
+    name: 'Sage Mint',
+    title: 'セージミント',
+    wall: { color: '#f7f9f5', pattern: 'gingham', patternColor: '#dfeae0', lower: '#fbfdf9', trim: '#cad3ca' },
+    floor: { style: 'tile', colors: ['#fbfdf9', '#e1e9df'] },
+    ceiling: '#fbfdf9',
+    shelf: { board: '#e7ede6', edge: '#d4dfd2', back: '#f2f5f2' }, // 棚の色 #d4dfd2
+    sign: { bg: '#ffffff', ink: '#2e2729', sub: '#7e7f7b', style: 'board' },
+    rug: '#dcece1',
+    rugOpacity: 1,
+    light: 'day',
+    entrance: { top: '#dfeae0', bottom: '#f7f9f5', glow: 'rgba(255, 255, 255, .55)' },
+  },
+
+  powderblue: {
+    name: 'Powder Blue',
+    title: 'パウダーブルー',
+    wall: { color: '#f7fafc', pattern: 'gingham', patternColor: '#deeaf3', lower: '#fcfdff', trim: '#c9d3db' },
+    floor: { style: 'tile', colors: ['#fcfdff', '#e1e9f0'] },
+    ceiling: '#fcfdff',
+    shelf: { board: '#e8f0f6', edge: '#d6e4ef', back: '#f3f7fa' }, // 棚の色 #d6e4ef
+    sign: { bg: '#ffffff', ink: '#2e2729', sub: '#7d7f84', style: 'board' },
+    rug: '#e0ecf8',
+    rugOpacity: 1,
+    light: 'day',
+    entrance: { top: '#deeaf3', bottom: '#f7fafc', glow: 'rgba(255, 255, 255, .55)' },
+  },
+
   // POP BASE の基本テーマ（ロゴのラベンダー・ピンク・クリーム）
   base: {
     name: 'Lavender Base',
