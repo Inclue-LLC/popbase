@@ -315,10 +315,16 @@ async function main() {
     );
     camPos.x = Math.max(-6.85, Math.min(6.85, camPos.x));
     camPos.z = Math.max(-6.85, Math.min(6.85, camPos.z));
-    camPos.y = Math.min(3.95, camPos.y);
+    // 壁ぎわ（入口に立ったときなど）でカメラが十分に下がれないときは、少し上から見下ろして、
+    // アバターの足元（イラストの下の部分）まで画面に入るようにする
+    const back = Math.hypot(camPos.x - p.x, camPos.z - p.z);
+    const want = controls.distance * cp;
+    const near = Math.max(0, Math.min(1, (want - back) / Math.max(want, 0.01)));
+    camPos.y = Math.min(3.95, camPos.y + near * 1.1);
     if (first) { camera.position.copy(camPos); first = false; } else camera.position.lerp(camPos, 1 - Math.exp(-dt * 8));
-    // アバターの少し先を見る（店内が広く見えるように）
-    lookAt.set(p.x + fwd.x * 1.6, 1.05, p.z + fwd.z * 1.6);
+    // アバターの少し先を見る（店内が広く見えるように）。壁ぎわでは手前・下寄りを見る
+    const ahead = 1.6 * (1 - near * 0.7);
+    lookAt.set(p.x + fwd.x * ahead, 1.05 - near * 0.55, p.z + fwd.z * ahead);
     camera.lookAt(lookAt);
 
     // 近くの商品など

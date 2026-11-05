@@ -370,16 +370,60 @@ export async function productTexture(p) {
   return [toTexture(c), aspect];
 }
 
-/** キャラクター（アバター・壁の絵） */
+/**
+ * 画像の透明な余白を切り落とす（イラストごとの余白の違いで、表示の大きさが変わらないように）
+ * 透明な部分がない画像（JPEG など）はそのまま
+ */
+const trimCache = new Map();
+function trimTransparent(img, key) {
+  if (key && trimCache.has(key)) return trimCache.get(key);
+  const max = 512;
+  const k = Math.min(1, max / Math.max(img.width, img.height));
+  const W = Math.max(1, Math.round(img.width * k));
+  const H = Math.max(1, Math.round(img.height * k));
+  const c = makeCanvas(W, H);
+  const ctx = c.getContext('2d');
+  ctx.drawImage(img, 0, 0, W, H);
+  let out = c;
+  try {
+    const d = ctx.getImageData(0, 0, W, H).data;
+    let x0 = W, y0 = H, x1 = -1, y1 = -1;
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        if (d[(y * W + x) * 4 + 3] > 12) {
+          if (x < x0) x0 = x; if (x > x1) x1 = x;
+          if (y < y0) y0 = y; if (y > y1) y1 = y;
+        }
+      }
+    }
+    if (x1 >= x0 && y1 >= y0 && (x1 - x0 + 1 < W || y1 - y0 + 1 < H)) {
+      out = makeCanvas(x1 - x0 + 1, y1 - y0 + 1);
+      out.getContext('2d').drawImage(c, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
+    }
+  } catch { /* 読み取れない画像（別サイトの画像など）はそのまま */ }
+  if (key) trimCache.set(key, out);
+  return out;
+}
+
+/**
+ * キャラクター（アバター・壁の絵）
+ * アップロードした画像の大きさや余白に関係なく、同じ大きさで表示する：
+ * 透明な余白を切り落としてから、決まった枠（高さ 94%）に下揃えで収める。
+ * イラストの下の部分（アバター用の足元など）も含めて収め、足元が床・名前の札のすぐ上に来るようにする。
+ */
 export async function characterTexture(character, size = 256) {
-  const img = character.image ? await loadImage(character.image) : await svgImage(window.Art.characterSVG(character), size, size);
+  const src = character.image ? await loadImage(character.image) : await svgImage(window.Art.characterSVG(character), size, size);
   const c = makeCanvas(size, size);
-  if (img) {
-    // 縦横比を保って、下揃えで収める
-    const k = Math.min(size / img.width, size / img.height);
+  if (src) {
+    const img = trimTransparent(src, character.image || null);
+    const boxH = size * 0.94;
+    const boxW = size;
+    const pad = Math.max(2, size * 0.01); // 下端に少し余白（端の画素が欠けないように）
+    // 高さをそろえる。横に長い絵は、幅に合わせて縮める
+    const k = Math.min(boxH / img.height, boxW / img.width);
     const w = img.width * k;
     const h = img.height * k;
-    c.getContext('2d').drawImage(img, (size - w) / 2, size - h, w, h);
+    c.getContext('2d').drawImage(img, (size - w) / 2, size - pad - h, w, h);
   }
   return toTexture(c);
 }

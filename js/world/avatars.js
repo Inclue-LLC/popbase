@@ -39,7 +39,12 @@ export class Avatar {
     }
 
     this.sprite = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, alphaTest: 0.05 }));
+    // 絵の下端が床と同じ高さだと、床・影・輪に隠れて足元（イラストの下の部分）が欠けることがあるので、
+    // 少しだけ浮かせ、影と輪より後に描く
     this.sprite.center.set(0.5, 0);
+    this.sprite.renderOrder = 2;
+    this.baseY = 0.03;
+    this.sprite.position.y = this.baseY;
     this.sprite.scale.set(this.size, this.size, 1);
     this.group.add(this.sprite);
 
@@ -90,10 +95,10 @@ export class Avatar {
     this.t += dt;
     if (this.moving) {
       const b = Math.abs(Math.sin(this.t * 9));
-      this.sprite.position.y = b * 0.08;
+      this.sprite.position.y = this.baseY + b * 0.08;
       this.sprite.scale.set(this.size * (1 + (1 - b) * 0.05), this.size * (1 - (1 - b) * 0.05), 1);
     } else {
-      this.sprite.position.y += (0 - this.sprite.position.y) * Math.min(1, dt * 10);
+      this.sprite.position.y += (this.baseY - this.sprite.position.y) * Math.min(1, dt * 10);
       const breathe = 1 + Math.sin(this.t * 2) * 0.012;
       this.sprite.scale.set(this.size, this.size * breathe, 1);
     }
