@@ -284,6 +284,7 @@ window.AppReady = (async function () {
       window.HaneulEvent.applyEvent(e.data.event || {});
       renderEntrance();
       renderCast();
+      applyCharacterSizes();
     });
     window.parent?.postMessage({ type: 'haneul:entrance-ready' }, location.origin);
   }
@@ -544,6 +545,18 @@ window.AppReady = (async function () {
     </div>`).join('');
   }
   renderCast();
+
+  // キャラクターどうしの大きさの比率（いちばん大きいキャラクターを 100%）を入口・キャラクター紹介・アバター選びにも反映
+  // 画像の読み込みが終わったら描き直す
+  function applyCharacterSizes() {
+    window.Art.prepareSizes(window.CAST || []).then((ok) => {
+      if (!ok) return;
+      renderEntrance();
+      renderCast();
+      if (!$('#entPick').hidden) renderEntrancePick();
+    });
+  }
+  applyCharacterSizes();
 
   /* ---------- トースト ---------- */
   let toastTimer;
