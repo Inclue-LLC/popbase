@@ -135,7 +135,7 @@
     { group: 'フォント', key: 'font', label: 'ショップの基本フォント', hint: '入口・メニュー・商品詳細・店内の看板や値札の文字に使います', type: 'select', options: () => FONTS.map((x) => ({ value: x.value, label: x.label })) },
     { group: 'アバター・キャラクター紹介', key: 'avatar_ring_color', label: 'アバターの下の円の色', hint: '店内で、自分のアバターの足元に出る円の色', type: 'color', themePath: 'avatarRing' },
     { group: 'アバター・キャラクター紹介', key: 'char_note_color', label: 'キャラクター紹介文の背景色', hint: '店内の壁のキャラクターをタップしたときに出る紹介文の背景の色（文字の色は自動で読みやすい色に）', type: 'color', themePath: 'charNote.bg' },
-    { group: 'アバター・キャラクター紹介', key: 'cast_card_color', label: 'キャラクター紹介（ページ下）の背景色', hint: 'ページ下の「キャラクター紹介」の枠の色。指定すると全員同じ色になります（文字の色は自動で読みやすい色に）', type: 'color', themePath: 'castCard', defaultLabel: 'キャラクターごとの色', defaultSwatch: '#f3ece6',
+    { tab: 'characters', group: 'キャラクター紹介の背景色', key: 'cast_card_color', label: 'キャラクター紹介（ページ下）の背景色', hint: 'ページ下の「キャラクター紹介」の枠の色。指定すると全員同じ色になります（文字の色は自動で読みやすい色に）', type: 'color', themePath: 'castCard', defaultLabel: 'キャラクターごとの色', defaultSwatch: '#f3ece6',
       // すぐ選べる淡い色（いまのキャラクター紹介と同じくらいの薄さ）
       presets: [['#e3eff8', 'ミズイロ'], ['#fbf2da', 'クリーム'], ['#ece6f7', 'ラベンダー'], ['#f9e5ec', 'ピンク'],
         ['#e2f1e7', 'ミント'], ['#fbe8dd', 'ピーチ'], ['#f2ebe2', 'ミルクティー'], ['#eeeef1', 'グレー']] },

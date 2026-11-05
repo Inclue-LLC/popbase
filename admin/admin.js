@@ -749,15 +749,16 @@ function themeDefault(path) {
   return path.split('.').reduce((o, k) => o?.[k], base);
 }
 
-const FORMS = { event: '#eventForm', entrance: '#entranceForm' };
+const FORMS = { event: '#eventForm', entrance: '#entranceForm', characters: '#characterForm' };
 function renderForm() {
   const ev = state.draft.event;
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
   const placeholders = { title: base.name, period: E.original.period, novelty_threshold: E.NOVELTY_THRESHOLD, novelty_name: 'オリジナルステッカー' };
   for (const [tab, sel] of Object.entries(FORMS)) {
-    const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab && (!f.showIf || f.showIf(ev)));
+    // キャラクターの一覧そのもの（type: cast）は、キャラクタータブの専用の編集欄で扱う
+    const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab && f.type !== 'cast' && (!f.showIf || f.showIf(ev)));
     const groups = [...new Set(fields.map((f) => f.group))];
-    $(sel).innerHTML = NEED_LEGEND + groups.map((g) => `
+    $(sel).innerHTML = (tab === 'characters' ? '' : NEED_LEGEND) + groups.map((g) => `
       <fieldset class="fgroup"><legend>${esc(g)}</legend>
         ${fields.filter((f) => f.group === g).map((f) => fieldHtml(f, f.value ? f.value(ev) : ev[f.key], placeholders)).join('')}
         ${g === '会期・営業時間' ? '<p class="schedule-status" id="scheduleStatus"></p>' : ''}
