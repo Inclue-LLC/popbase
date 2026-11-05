@@ -424,6 +424,17 @@ async function main() {
       setFs(false);
     }
   });
+  // 退店・時間切れ・閉店などで、ほかの場所（js/app.js）から全画面が外されたときも、
+  // ボタンの文字・店内の大きさ・ブラウザの全画面をそろえる
+  new MutationObserver(() => {
+    const on = document.body.classList.contains('world-fs');
+    if (!on && fsBtn.textContent !== '全画面') {
+      fsBtn.textContent = '全画面';
+      fitFs();
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    }
+  }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
   // Esc キーなどでブラウザの全画面が解除されたら、表示も戻す
   document.addEventListener('fullscreenchange', () => {
     if (!document.fullscreenElement && document.body.classList.contains('world-fs')) setFs(false);
