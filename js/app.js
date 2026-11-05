@@ -577,6 +577,13 @@ window.AppReady = (async function () {
     isLayerOpen: () => !!document.querySelector('.modal.is-open, .drawer.is-open'),
     confirmExit,
     clearCart() { state.cart = {}; saveCart(); },
+    // キャラクター紹介文を閉じる（店内で一定の距離を歩いたとき）
+    hideNote() {
+      const el = $('#toast');
+      if (!el.classList.contains('toast-note')) return;
+      clearTimeout(toastTimer);
+      el.classList.remove('show');
+    },
     // 壁のキャラクターに話しかけたとき
     showCharacter(id) {
       const c = (window.CAST || []).find((x) => x.id === id);
