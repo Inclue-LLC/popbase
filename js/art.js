@@ -69,10 +69,69 @@
       <text x="50" y="66" text-anchor="middle" font-size="34" font-weight="700" fill="#fff" font-family="sans-serif">${esc(initial)}</text>`;
   }
 
+  /*
+   * キャラクターどうしの大きさの比率（店内の壁・アバターと同じ考え方）
+   * 透明な余白を切り落とした絵の高さ ÷ 元の画像の高さ ＝ 絵の大きさ。いちばん大きいキャラクターを 100% として、
+   * ほかはその比率で小さく、正方形の枠に下揃えで描いた画像（data URL）を用意しておく。
+   * 用意できるまで（または読み取れない画像）は、アップロードした画像をそのまま表示する。
+   */
+  const sized = new Map(); // 画像 URL → 大きさをそろえた画像
+  function loadImg(url) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      if (!url.startsWith('data:')) img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+  }
+  function trim(img) {
+    const k = Math.min(1, 512 / Math.max(img.width, img.height));
+    const W = Math.max(1, Math.round(img.width * k));
+    const H = Math.max(1, Math.round(img.height * k));
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, W, H);
+    const d = ctx.getImageData(0, 0, W, H).data; // 読み取れない画像はここで失敗 → そのまま表示
+    let x0 = W, y0 = H, x1 = -1, y1 = -1;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (d[(y * W + x) * 4 + 3] > 12) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    }
+    if (x1 < x0) return { canvas: c, frac: 1 };
+    const out = document.createElement('canvas');
+    out.width = x1 - x0 + 1; out.height = y1 - y0 + 1;
+    out.getContext('2d').drawImage(c, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
+    return { canvas: out, frac: out.height / H };
+  }
+  async function prepareSizes(chars = []) {
+    const list = chars.filter((c) => c && c.image);
+    const done = await Promise.all(list.map(async (c) => {
+      try {
+        const img = await loadImg(String(c.image));
+        return img ? { url: String(c.image), ...trim(img) } : null;
+      } catch { return null; }
+    }));
+    const ok = done.filter(Boolean);
+    const max = Math.max(0.01, ...ok.map((x) => x.frac));
+    const S = 320;
+    for (const x of ok) {
+      const c = document.createElement('canvas');
+      c.width = S; c.height = S;
+      const box = S * 0.94;
+      const k = Math.min(box / x.canvas.height, S / x.canvas.width) * Math.max(0.2, Math.min(1, x.frac / max));
+      const w = x.canvas.width * k;
+      const h = x.canvas.height * k;
+      c.getContext('2d').drawImage(x.canvas, (S - w) / 2, S - 3 - h, w, h);
+      try { sized.set(x.url, c.toDataURL('image/png')); } catch { /* noop */ }
+    }
+    return ok.length > 0;
+  }
+
   function characterSVG(c, cls = '') {
     if (!c.image && !bodies[c.kind]) return `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true">${placeholderSVG(c)}</svg>`;
     if (c.image) {
-      const src = String(c.image).replace(/["<>]/g, '');
+      const src = String(sized.get(String(c.image)) || c.image).replace(/["<>]/g, '');
       return `<img class="char-img ${cls}" src="${src}" alt="" aria-hidden="true" loading="lazy">`;
     }
     return `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true">${character(c)}</svg>`;
@@ -135,5 +194,5 @@
     return `<svg viewBox="0 0 200 200" aria-hidden="true">${c ? shape(c) : NO_IMAGE}</svg>`;
   }
 
-  window.Art = { character, characterSVG, productSVG, tint, starPoints };
+  window.Art = { prepareSizes, character, characterSVG, productSVG, tint, starPoints };
 })();
