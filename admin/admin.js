@@ -641,7 +641,7 @@ function renderPalette() {
     const at = places[0];
     const limit = E.placeLimit(p);
     const sel = state.selected?.id === p.id;
-    return `<li class="pcard ${at ? 'is-placed' : ''} ${sel ? 'is-selected' : ''}" draggable="true" data-id="${esc(p.id)}" tabindex="0"
+    return `<li class="pcard ${at ? 'is-placed' : ''} ${places.length >= limit ? 'is-full' : ''} ${sel ? 'is-selected' : ''}" draggable="true" data-id="${esc(p.id)}" tabindex="0"
       aria-label="${esc(p.name)}${at ? `（${placeText(at)}）` : '（未配置）'}">
       ${thumb(p)}
       <span><span class="pname">${esc(p.name)}</span><br>
