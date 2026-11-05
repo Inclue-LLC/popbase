@@ -422,8 +422,9 @@ export async function characterTexture(character, size = 256, { scale = 1 } = {}
     const boxH = size * 0.94;
     const boxW = size;
     const pad = Math.max(2, size * 0.01); // 下端に少し余白（端の画素が欠けないように）
-    // 高さをそろえる。横に長い絵は、幅に合わせて縮める。scale（1 以下）で、ほかのキャラクターとの大きさの比率を反映
-    const k = Math.min(boxH / img.height, boxW / img.width) * Math.max(0.2, Math.min(1, scale));
+    // 高さを基準にそろえ、scale（1 以下）で、ほかのキャラクターとの高さの比率を反映（はみ出すほど横に長い絵だけ幅に合わせて縮める）
+    let k = (boxH / img.height) * Math.max(0.2, Math.min(1, scale));
+    if (img.width * k > boxW) k = boxW / img.width;
     const w = img.width * k;
     const h = img.height * k;
     c.getContext('2d').drawImage(img, (size - w) / 2, size - pad - h, w, h);
@@ -432,13 +433,16 @@ export async function characterTexture(character, size = 256, { scale = 1 } = {}
 }
 
 /**
- * キャラクターの絵の「大きさ」：元の画像の高さに対する、絵の部分（透明でないところ）の高さの割合
- * 同じ大きさの画像（キャンバス）に描いたキャラクターどうしなら、この割合の比がそのまま大きさの比になる
+ * キャラクターの絵の「大きさ」：アップロードした画像の、絵の部分（透明な余白を除く）の高さ（元の画像のピクセル数）
+ * キャラクターどうしの大きさの比率は、この高さの比（いちばん高いキャラクターを 100%）。
+ * 画像のないキャラクター（自社の4体の元のイラストなど）は 0 を返す（＝比率を付けず、いちばん大きいものと同じ扱い）
  */
-export async function characterFrac(character, size = 256) {
-  const src = character.image ? await loadImage(character.image) : await svgImage(window.Art.characterSVG(character), size, size);
-  if (!src) return 1;
-  return trimTransparent(src, character.image || null).frac || 1;
+export async function characterFrac(character) {
+  if (!character.image) return 0;
+  const src = await loadImage(character.image);
+  if (!src) return 0;
+  const t = trimTransparent(src, character.image);
+  return (t.frac || 1) * src.height;
 }
 
 /** 任意の SVG */

@@ -99,11 +99,11 @@ export async function buildRoom(theme) {
   const size = Math.min(gap * 0.86, signBottom - 0.07 - artBottom);
   // キャラクターどうしの大きさの比率：いちばん大きいキャラクターを枠いっぱいにして、ほかはその比率で小さく
   const fracs = await Promise.all(chars.map((c) => T.characterFrac(c)));
-  const maxFrac = Math.max(...fracs, 0.01);
+  const maxFrac = Math.max(...fracs, 0);
   for (let i = 0; i < chars.length; i++) {
     const c = chars[i];
     const x = (i - (chars.length - 1) / 2) * gap;
-    const m = plane(size, size, basic(await T.characterTexture(c, 256, { scale: fracs[i] / maxFrac }), { transparent: true, alphaTest: 0.05 }));
+    const m = plane(size, size, basic(await T.characterTexture(c, 256, { scale: fracs[i] && maxFrac ? fracs[i] / maxFrac : 1 }), { transparent: true, alphaTest: 0.05 }));
     m.position.set(x, artBottom + size / 2, -HALF_D + 0.05);
     group.add(m);
     const tagW = Math.min(0.7, gap * 0.9);
