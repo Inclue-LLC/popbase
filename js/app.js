@@ -416,6 +416,9 @@ window.AppReady = (async function () {
     return { lines, count, subtotal, shipping, total: subtotal + shipping };
   }
 
+  // カートが空のときのイラスト：アバターの1番目（イベントのキャラクターがいればその1体目）
+  const emptyCartArt = () => { const a = window.AVATARS?.[0]; return a ? (a.character || a) : CHARACTERS[0]; };
+
   function renderCart() {
     const t = totals();
     for (const id of ['#cartCount', '#hudCartCount']) {
@@ -448,7 +451,7 @@ window.AppReady = (async function () {
         <button class="ci-remove" data-remove="${p.id}" aria-label="${p.name} を削除">削除</button>
       </li>`).join('') : `
       <li class="cart-empty">
-        ${Art.characterSVG(CHARACTERS[0], 'empty-char')}
+        ${Art.characterSVG(emptyCartArt(), 'empty-char')}
         <p>バッグはまだ空っぽです</p>
       </li>`;
 
