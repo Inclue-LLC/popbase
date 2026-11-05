@@ -1020,9 +1020,9 @@ function renderCharacters() {
         ${img ? `<button type="button" class="btn btn-small btn-ghost" data-cast-reset="image">${own ? '元の絵に戻す' : '画像を外す'}</button>` : ''}
       </div>
       <div class="char-fields">
-        <div class="field"><label>名前 <span class="need need-required">必須</span></label><input type="text" data-cast-key="name" maxlength="20" value="${esc(x.name || '')}" placeholder="例：ハル" class="${x.name ? '' : 'is-missing'}"></div>
-        <div class="field"><label>英語名</label><input type="text" data-cast-key="en" maxlength="30" value="${esc(x.en || '')}" placeholder="例：HARU（空欄なら表示しません）"></div>
-        <div class="field"><label>プロフィール</label><textarea data-cast-key="profile" maxlength="200" rows="2" placeholder="キャラクター紹介に出す短い説明（空欄なら表示しません）">${esc(x.profile || '')}</textarea></div>
+        <div class="field"><label>名前 <span class="need need-required">必須</span><span class="hint">壁の名前の札・キャラクター紹介・アバター選びに出ます</span></label><input type="text" data-cast-key="name" maxlength="20" value="${esc(x.name || '')}" placeholder="例：ハル" class="${x.name ? '' : 'is-missing'}"></div>
+        <div class="field"><label>英語名 <span class="need need-hide">任意・空欄なら非表示</span></label><input type="text" data-cast-key="en" maxlength="30" value="${esc(x.en || '')}" placeholder="例：HARU（空欄なら表示しません）"></div>
+        <div class="field"><label>プロフィール <span class="need need-hide">任意・空欄なら非表示</span><span class="hint">ご案内のキャラクター紹介と、店内でキャラクターをタップしたときの紹介文</span></label><textarea data-cast-key="profile" maxlength="200" rows="2" placeholder="キャラクター紹介に出す短い説明（空欄なら表示しません）">${esc(x.profile || '')}</textarea></div>
         <div class="char-tools">
           <button type="button" class="btn btn-small" data-cast-move="-1" ${i === 0 ? 'disabled' : ''} aria-label="上へ">↑</button>
           <button type="button" class="btn btn-small" data-cast-move="1" ${i === v.list.length - 1 ? 'disabled' : ''} aria-label="下へ">↓</button>

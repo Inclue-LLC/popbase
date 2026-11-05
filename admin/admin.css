@@ -192,7 +192,8 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .char-art .art { width: 110px; height: 110px; border-radius: 14px; display: grid; place-items: center; padding: 6px; }
 .char-art .art svg, .char-art .art img { width: 100%; height: 100%; object-fit: contain; }
 .char-fields { display: grid; gap: 10px; }
-.char-fields .field { grid-template-columns: 110px minmax(0, 1fr); }
+.char-fields .field { grid-template-columns: 150px minmax(0, 1fr); }
+.char-fields .field .need { display: inline-block; margin: 2px 0; }
 
 /* アバター */
 .av-section { display: grid; gap: 10px; margin-bottom: 22px; }
