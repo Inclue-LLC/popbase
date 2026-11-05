@@ -786,6 +786,60 @@ function unitLabel(v, max) {
   return `残り 全角${Math.floor((max - n) / 2)}文字（半角${max - n}）`;
 }
 
+/* ---------- 色のカラーコード（HEX）入力 ----------
+ * 色の見本の横に、カラーコードを直接入れる欄を置く。「#」はなくてもよく、3桁（#fff）・全角でも受け付ける。
+ * 正しいコードになった時点で、見本（input[type=color]）に入れて、いつもの処理（保存・プレビュー）に回す。 */
+function hexInput(color, label) {
+  return `<input type="text" class="hex-input" value="${esc(String(color || '').toUpperCase())}" maxlength="9" spellcheck="false"
+    autocomplete="off" inputmode="text" placeholder="#RRGGBB" aria-label="${esc(label)}（カラーコード）">`;
+}
+function normalizeHex(text) {
+  const s = String(text || '')
+    .replace(/[！-～]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0)) // 全角 → 半角
+    .trim().replace(/^#/, '').toLowerCase();
+  if (/^[0-9a-f]{6}$/.test(s)) return `#${s}`;
+  if (/^[0-9a-f]{3}$/.test(s)) return `#${s.split('').map((c) => c + c).join('')}`;
+  return null;
+}
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  // カラーコードを打ったら、色の見本に反映
+  if (t.classList?.contains('hex-input')) {
+    const hex = normalizeHex(t.value);
+    t.classList.toggle('is-invalid', !hex && t.value.trim() !== '');
+    const swatch = t.parentElement.querySelector('input[type="color"]');
+    if (hex && swatch && swatch.value !== hex) {
+      swatch.value = hex;
+      swatch.dataset.fromHex = '1';
+      swatch.dispatchEvent(new Event('input', { bubbles: true }));
+      delete swatch.dataset.fromHex;
+    }
+    return;
+  }
+  // 見本で色を選んだら、カラーコードの欄にも出す
+  if (t.type === 'color' && !t.dataset.fromHex) {
+    const box = t.parentElement.querySelector('.hex-input');
+    if (box) { box.value = t.value.toUpperCase(); box.classList.remove('is-invalid'); }
+  }
+});
+document.addEventListener('change', (e) => {
+  const t = e.target;
+  if (!t.classList?.contains('hex-input')) return;
+  const swatch = t.parentElement.querySelector('input[type="color"]');
+  const hex = normalizeHex(t.value);
+  if (!hex) {
+    if (t.value.trim()) toast('カラーコードは「#FFAACC」「FFAACC」「#FAC」のように、6桁か3桁の英数字で入れてください', { error: true });
+    t.value = (swatch?.value || '').toUpperCase();
+    t.classList.remove('is-invalid');
+    return;
+  }
+  t.value = hex.toUpperCase();
+  swatch?.dispatchEvent(new Event('change', { bubbles: true })); // 入力を終えたら（Enter・欄の外）いつもどおり描き直す
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.classList?.contains('hex-input')) { e.preventDefault(); e.target.blur(); }
+});
+
 function fieldHtml(f, value, placeholders) {
   const id = `f_${f.key}`;
   const label = `<label for="${id}">${esc(f.label)}${needBadge(f)}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`;
@@ -818,8 +872,9 @@ function fieldHtml(f, value, placeholders) {
   } else if (f.type === 'color') {
     const def = themeDefault(f.themePath) || '#ffffff';
     const v = value || def;
-    input = `<span class="color-row"><input id="${id}" data-key="${f.key}" type="color" value="${esc(v)}">
-      <span class="color-note">${value ? esc(value) : defaultColorLabel}</span>
+    input = `<span class="color-row"><input id="${id}" data-key="${f.key}" type="color" value="${esc(v)}" aria-label="${esc(f.label)}（色を選ぶ）">
+      ${hexInput(v, f.label)}
+      <span class="color-note">${value ? '' : defaultColorLabel}</span>
       ${value ? `<button type="button" class="btn btn-small btn-ghost" data-reset="${f.key}">${defaultColorLabel}に戻す</button>` : ''}</span>`;
   } else if (f.type === 'image') {
     const url = E.imageUrl(value);
@@ -853,7 +908,7 @@ for (const sel of Object.values(FORMS)) {
     if (f.type === 'datetime' || f.type === 'time') renderScheduleStatus();
     if (f.type === 'color') {
       const note = e.target.parentElement.querySelector('.color-note');
-      if (note) note.textContent = v;
+      if (note) note.textContent = '';
     }
     changed();
   });
@@ -913,8 +968,9 @@ function renderCharacters() {
         <div class="field"><label>名前</label><input type="text" data-char-key="name" maxlength="20" value="${esc(v.name || '')}" placeholder="${esc(o.name)}"></div>
         <div class="field"><label>英語名</label><input type="text" data-char-key="en" maxlength="30" value="${esc(v.en || '')}" placeholder="${esc(o.en)}"></div>
         <div class="field"><label>プロフィール</label><textarea data-char-key="profile" maxlength="200" rows="2" placeholder="${esc(o.profile)}">${esc(v.profile || '')}</textarea></div>
-        <div class="field"><label>色</label><span class="color-row"><input type="color" data-char-key="color" value="${esc(v.color || o.color)}">
-          <span class="color-note">${v.color ? esc(v.color) : '元の色'}</span>
+        <div class="field"><label>色</label><span class="color-row"><input type="color" data-char-key="color" value="${esc(v.color || o.color)}" aria-label="色を選ぶ">
+          ${hexInput(v.color || o.color, '色')}
+          <span class="color-note">${v.color ? '' : '元の色'}</span>
           ${v.color ? '<button type="button" class="btn btn-small btn-ghost" data-char-reset="color">元の色に戻す</button>' : ''}</span></div>
         <div class="field"><label>表示</label><label class="check"><input type="checkbox" data-char-key="hidden" ${v.hidden ? 'checked' : ''}> 表示しない</label></div>
       </div>
@@ -936,7 +992,7 @@ $('#charEditor').addEventListener('input', (e) => {
   edits[id][key] = key === 'hidden' ? e.target.checked : e.target.value;
   if (key === 'color') {
     const note = e.target.parentElement.querySelector('.color-note');
-    if (note) note.textContent = e.target.value;
+    if (note) note.textContent = '';
   }
   E.applyCharacters(edits);
   charChanged();
