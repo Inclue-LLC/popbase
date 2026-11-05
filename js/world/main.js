@@ -404,7 +404,12 @@ async function main() {
 
   function setFs(on) {
     document.body.classList.toggle('world-fs', on);
+    // ページを一番上に戻してから合わせる（スクロールした位置によって、ツールバーの出方が変わり、はみ出すことがあるため）。
+    // ツールバーが出たり引っ込んだりするのを待って、少しあとにももう一度合わせる
+    if (on) window.scrollTo(0, 0);
     fitFs();
+    setTimeout(fitFs, 350);
+    setTimeout(fitFs, 900);
     fsBtn.textContent = on ? '全画面をやめる' : '全画面';
     if (on) root.focus({ preventScroll: true });
     else root.scrollIntoView({ block: 'center' });
