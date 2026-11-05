@@ -113,7 +113,7 @@
     { group: '会期・営業時間', key: 'daily_close', label: '毎日の閉店時刻', hint: '閉店5分前から店内にタイマーを表示し、時間になると自動で退店', type: 'time' },
     { group: '会期・営業時間', key: 'period', label: '会期の表示文', hint: '看板の下の行・入口・ご案内に出す文。空欄なら上の日時から自動で作ります', type: 'text', placeholderPath: 'schedule.period' },
     { group: '送料・発送', key: 'shipping_text', label: '送料', hint: 'ご案内の「送料」に出す文（例：全国一律550円（税込））。改行できます（300文字まで）', type: 'textarea' },
-    { group: '送料・発送', key: 'free_shipping_threshold', label: '送料無料になる金額（円）', hint: 'この金額（税込）以上で、カートの送料を「無料」と表示し、届かないときは「あと○円で送料無料」と表示します（Shopify の配送の設定と同じにしてください）。空欄なら表示しません', type: 'number' },
+    { group: '送料・発送', key: 'free_shipping_threshold', label: '送料無料になる金額（円）', hint: 'この金額（税込）以上で、カートの送料を「無料」と表示し、届かないときは「あと○円で送料無料」と表示します。空欄なら表示しません', type: 'number' },
     { group: '送料・発送', key: 'shipping_note', label: '発送について', hint: 'ご案内の「発送について」に出す文（例：会期終了後、12月下旬より順次発送します）。改行できます（300文字まで）', type: 'textarea' },
     { group: 'イベント', key: 'theme_preset', label: 'ベースのテーマ', hint: '下の項目で空欄のものは、このテーマの値になります', type: 'select', options: () => Object.entries(window.THEMES).filter(([k]) => k !== 'event').map(([k, t]) => ({ value: k, label: t.name })) },
     { group: '壁', key: 'wall_image', label: '壁紙の画像', hint: '横長の画像（例: 2048×540px）。指定すると柄より優先', type: 'image' },
