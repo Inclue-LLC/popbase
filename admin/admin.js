@@ -515,8 +515,8 @@ function refreshPreview() {
   E.applyEvent(state.draft.event);
   E.applyLayout(currentLayout());
   preview.update('event');
-  $('#leftTitle').textContent = window.STORE_LAYOUT.left.title;
-  $('#rightTitle').textContent = window.STORE_LAYOUT.right.title;
+  $('#leftTitle').textContent = window.STORE_LAYOUT.left.label || window.STORE_LAYOUT.left.title;
+  $('#rightTitle').textContent = window.STORE_LAYOUT.right.label || window.STORE_LAYOUT.right.title;
 }
 $('#previewViews').addEventListener('click', (e) => {
   const b = e.target.closest('[data-view]');
