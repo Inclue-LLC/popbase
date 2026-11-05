@@ -786,6 +786,25 @@ function unitLabel(v, max) {
   return `残り 全角${Math.floor((max - n) / 2)}文字（半角${max - n}）`;
 }
 
+/* ---------- テーマを変えたとき ----------
+ * テーマは配色のセット。個別に色を指定していると、その項目はテーマを変えても変わらないので、
+ * 指定がある場合は確認して、テーマの色にそろえる（画像はそのまま） */
+const THEME_KEYS = ['wall_color', 'wall_pattern', 'wall_pattern_color', 'lower_color', 'trim_color', 'floor_style', 'floor_color_1', 'floor_color_2',
+  'rug_color', 'sign_color', 'sign_text_color', 'sign_sub_color', 'product_bg_color', 'light'];
+function applyThemeColors() {
+  const ev = state.draft.event;
+  const set = THEME_KEYS.filter((k) => ev[k] != null && ev[k] !== '');
+  if (set.length) {
+    const names = set.map((k) => E.FIELDS.find((f) => f.key === k)?.label || k);
+    const ok = confirm(`テーマの配色にそろえますか？\n\n次の ${set.length} 項目は個別に色などを指定しているため、このままではテーマを変えても変わりません。\n「OK」でテーマの色に戻します（「キャンセル」なら指定した色のまま）。\n\n・${names.join('\n・')}`);
+    if (ok) {
+      for (const k of set) ev[k] = '';
+      changed();
+    }
+  }
+  renderForm();
+}
+
 /* ---------- 色のカラーコード（HEX）入力 ----------
  * 色の見本の横に、カラーコードを直接入れる欄を置く。「#」はなくてもよく、3桁（#fff）・全角でも受け付ける。
  * 正しいコードになった時点で、見本（input[type=color]）に入れて、いつもの処理（保存・プレビュー）に回す。 */
@@ -919,7 +938,8 @@ for (const sel of Object.values(FORMS)) {
     // テーマや色の変更で「テーマの色」の表示が変わるので描き直す
     // 購入特典の「なし／あり」で、条件金額と名前の欄を出し入れする
     if (key === 'collection') { changeCollection(e.target.value); markMissing(); return; }
-    if (key === 'theme_preset' || key === 'novelty' || e.target.type === 'color') { renderForm(); return; }
+    if (key === 'theme_preset') { applyThemeColors(); return; }
+    if (key === 'novelty' || e.target.type === 'color') { renderForm(); return; }
     const input = e.target.closest('[data-upload]');
     if (!input || !input.files[0]) return;
     const file = input.files[0];
