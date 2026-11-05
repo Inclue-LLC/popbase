@@ -241,17 +241,17 @@
     const over = parseJson(legacyChars) || {};
     const list = original.characters.filter((o) => !over[o.id]?.hidden).map((o) => {
       const x = over[o.id] || {};
-      return { id: o.id, name: x.name || o.name, en: x.en || o.en, profile: x.profile || o.profile, color: x.color || o.color, image: x.image || '' };
+      return { id: o.id, name: x.name || o.name, en: x.en || o.en, profile: x.profile || o.profile, color: '', image: x.image || '' };
     });
     return { use: true, list };
   }
-  /** 表示用の一覧 window.CAST（自社の4体は元のイラスト（kind）を使える） */
+  /** 表示用の一覧 window.CAST（自社の4体は元のイラスト（kind）を使える）。色は変えられない（自社の4体は元の色、追加したキャラクターは淡いラベンダー） */
   function applyCast(value, legacyChars) {
     const c = castOf(value, legacyChars);
     window.CAST_ENABLED = c.use;
     window.CAST = c.use ? c.list.filter((x) => x && x.name).map((x) => {
       const o = original.characters.find((y) => y.id === x.id);
-      return { ...(o || {}), id: x.id, name: x.name, en: x.en || '', profile: x.profile || '', color: x.color || o?.color || '#e6dcf3', accent: o?.accent || x.color || '#b9a3ec', image: imageUrl(x.image) || '', kind: o?.kind || '' };
+      return { ...(o || {}), id: x.id, name: x.name, en: x.en || '', profile: x.profile || '', color: o?.color || '#e6dcf3', accent: o?.accent || '#b9a3ec', image: imageUrl(x.image) || '', kind: o?.kind || '' };
     }) : [];
   }
 

@@ -1015,7 +1015,7 @@ function renderCharacters() {
     const img = E.imageUrl(x.image);
     return `<div class="char-card" data-i="${i}">
       <div class="char-art">
-        <span class="art" style="background:color-mix(in srgb, ${esc(x.color || own?.color || '#e6dcf3')} 25%, transparent)">${window.Art.characterSVG({ ...shown, name: x.name, color: x.color || own?.color || '#e6dcf3' })}</span>
+        <span class="art" style="background:color-mix(in srgb, ${esc(own?.color || '#e6dcf3')} 25%, transparent)">${window.Art.characterSVG({ ...shown, name: x.name, color: own?.color || '#e6dcf3' })}</span>
         <label class="btn btn-small">画像を選ぶ<input type="file" accept="image/png,image/jpeg,image/webp" data-cast-upload hidden></label>
         ${img ? `<button type="button" class="btn btn-small btn-ghost" data-cast-reset="image">${own ? '元の絵に戻す' : '画像を外す'}</button>` : ''}
       </div>
@@ -1023,8 +1023,6 @@ function renderCharacters() {
         <div class="field"><label>名前 <span class="need need-required">必須</span></label><input type="text" data-cast-key="name" maxlength="20" value="${esc(x.name || '')}" placeholder="例：ハル" class="${x.name ? '' : 'is-missing'}"></div>
         <div class="field"><label>英語名</label><input type="text" data-cast-key="en" maxlength="30" value="${esc(x.en || '')}" placeholder="例：HARU（空欄なら表示しません）"></div>
         <div class="field"><label>プロフィール</label><textarea data-cast-key="profile" maxlength="200" rows="2" placeholder="キャラクター紹介に出す短い説明（空欄なら表示しません）">${esc(x.profile || '')}</textarea></div>
-        <div class="field"><label>色</label><span class="color-row"><input type="color" data-cast-key="color" value="${esc(x.color || own?.color || '#e6dcf3')}" aria-label="色を選ぶ">
-          ${hexInput(x.color || own?.color || '#e6dcf3', '色')}<span class="color-note">紹介カードの背景・画像がないときの丸</span></span></div>
         <div class="char-tools">
           <button type="button" class="btn btn-small" data-cast-move="-1" ${i === 0 ? 'disabled' : ''} aria-label="上へ">↑</button>
           <button type="button" class="btn btn-small" data-cast-move="1" ${i === v.list.length - 1 ? 'disabled' : ''} aria-label="下へ">↓</button>
@@ -1056,7 +1054,7 @@ $('#charEditor').addEventListener('input', (e) => {
   const v = castEdits();
   v.list[i][key] = e.target.value;
   if (key === 'name') e.target.classList.toggle('is-missing', !e.target.value.trim());
-  if (key === 'name' || key === 'color') updateCastArt(i); // 絵だけその場で描き直す（入力欄は作り直さない）
+  if (key === 'name') updateCastArt(i); // 絵だけその場で描き直す（入力欄は作り直さない）
   castChanged();
 });
 function updateCastArt(i) {
@@ -1064,7 +1062,7 @@ function updateCastArt(i) {
   const card = $(`#charEditor [data-i="${i}"]`);
   if (!x || !card) return;
   const own = E.original.characters.find((o) => o.id === x.id);
-  const color = x.color || own?.color || '#e6dcf3';
+  const color = own?.color || '#e6dcf3';
   const art = card.querySelector('.art');
   art.style.background = `color-mix(in srgb, ${color} 25%, transparent)`;
   art.innerHTML = window.Art.characterSVG({ ...(own || {}), ...x, color, image: E.imageUrl(x.image), kind: own?.kind || '' });
@@ -1087,7 +1085,7 @@ $('#charEditor').addEventListener('click', (e) => {
   const v = castEdits();
   if (e.target.closest('#castAdd')) {
     if (v.list.length >= E.MAX_CAST) return;
-    v.list.push({ id: newCastId(), name: '', en: '', profile: '', color: '#e6dcf3', image: '' });
+    v.list.push({ id: newCastId(), name: '', en: '', profile: '', color: '', image: '' });
     castChanged({ rerender: true });
     $('#charEditor .char-card:last-of-type [data-cast-key="name"]')?.focus();
     return;
