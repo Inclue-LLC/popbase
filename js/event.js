@@ -151,8 +151,8 @@
     { tab: 'avatars', group: 'アバター', key: 'avatars', label: 'アバター', type: 'avatars' },
 
     /* 入口の画面（管理画面の「入口の画面」タブ） */
-    { tab: 'entrance', group: '文字', key: 'entrance_heading', label: '大きい見出し', hint: 'ロゴ画像を設定した場合は、画像の代替テキストになります', type: 'text', placeholderPath: 'shop.brand' },
-    { tab: 'entrance', group: '文字', key: 'entrance_message', label: 'イベント名', hint: '空欄ならイベント名', type: 'text', placeholderPath: 'shop.themeLabel' },
+    { tab: 'entrance', group: '文字', key: 'entrance_heading', label: '大きい見出し', hint: 'ロゴ画像を設定した場合は、画像の代替テキストになります', type: 'text', placeholderPath: 'const.空欄ならブランド名' },
+    { tab: 'entrance', group: '文字', key: 'entrance_message', label: 'イベント名', hint: '空欄ならイベント名', type: 'text', placeholderPath: 'const.空欄ならイベント名' },
     { tab: 'entrance', group: '文字', key: 'entrance_button', label: 'ボタンの文字', type: 'text', placeholderPath: 'const.お店に入る' },
     { tab: 'entrance', group: '画像', key: 'entrance_logo', label: 'ロゴ画像', hint: '大きい見出しの代わりに表示。背景が透明な PNG がおすすめ', type: 'image' },
     { tab: 'entrance', group: '画像', key: 'entrance_image', label: '背景の画像', hint: '画面いっぱいに表示（例: 1920×1080px）。設定すると背景の色と雲の飾りは表示しません', type: 'image' },
