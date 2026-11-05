@@ -222,8 +222,13 @@ async function main() {
     if (it.type === 'product') window.App.openProduct(it.id);
     else if (it.type === 'cart') window.App.openCart();
     else if (it.type === 'exit') window.App.confirmExit();
-    else if (it.type === 'character') window.App.showCharacter(it.id);
+    else if (it.type === 'character') {
+      window.App.showCharacter(it.id);
+      noteFrom = self.group.position.clone(); // ここから一定の距離を歩いたら、紹介文を自動で閉じる
+    }
   }
+  let noteFrom = null;
+  const NOTE_WALK_AWAY = 1.5; // m
   promptBtn.addEventListener('click', () => interact(nearest));
 
   const controls = new Controls(root, renderer.domElement, {
@@ -326,6 +331,12 @@ async function main() {
     const ahead = 1.6 * (1 - near * 0.7);
     lookAt.set(p.x + fwd.x * ahead, 1.05 - near * 0.55, p.z + fwd.z * ahead);
     camera.lookAt(lookAt);
+
+    // キャラクター紹介文：表示したときの位置から一定の距離を歩いたら自動で閉じる
+    if (noteFrom && Math.hypot(p.x - noteFrom.x, p.z - noteFrom.z) > NOTE_WALK_AWAY) {
+      window.App.hideNote();
+      noteFrom = null;
+    }
 
     // 近くの商品など
     let best = null;
