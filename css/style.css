@@ -219,7 +219,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .cast { margin-top: 48px; }
 .cast > h3 { font-size: 1.2rem; margin-bottom: 16px; }
 .cast-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 16px; }
-.cast-card { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: var(--radius); background: color-mix(in srgb, var(--c) 22%, var(--surface)); }
+.cast-card { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: var(--radius); background: var(--card-bg, color-mix(in srgb, var(--c) 22%, var(--surface))); }
 .cast-card svg, .cast-card .char-img { width: 76px; flex: none; }
 .cast-card h4 small { margin-left: .5em; font-size: .7rem; letter-spacing: .15em; color: var(--ink-soft); }
 .cast-card p { margin: 2px 0 0; font-size: .86rem; white-space: pre-line; }

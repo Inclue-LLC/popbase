@@ -532,12 +532,23 @@ window.AppReady = (async function () {
     showEntrance({ ended: 'exit' });
   });
 
+  const inkFor = (hex) => {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return '';
+    const n = parseInt(m[1], 16);
+    const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+    return lum > 0.6 ? '#2e2729' : '#ffffff';
+  };
+
   /* ---------- キャラクター紹介 ---------- */
   function renderCast() {
     // キャラクターを使わないイベント（または0体）では、見出しごと出さない
     document.querySelector('.cast').hidden = !visibleChars().length;
+    // 背景色は管理画面で指定したとき全員同じ色（なければキャラクターごとの淡い色）
+    const bg = window.THEMES?.[SHOP.theme]?.castCard || '';
+    const fixed = bg ? `;--card-bg:${bg};color:${inkFor(bg)}` : '';
     $('#castGrid').innerHTML = visibleChars().map((c) => `
-    <div class="cast-card" style="--c:${c.color}">
+    <div class="cast-card" style="--c:${c.color || '#e6dcf3'}${fixed}">
       ${Art.characterSVG(c)}
       <div><h4>${esc(c.name)}<small>${esc(c.en)}</small></h4><p>${esc(c.profile)}</p></div>
     </div>`).join('');
@@ -547,13 +558,6 @@ window.AppReady = (async function () {
   /* ---------- トースト ---------- */
   let toastTimer;
   // 明るい色なら濃い文字、暗い色なら白い文字（キャラクター紹介文の背景色に合わせる）
-  const inkFor = (hex) => {
-    const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
-    if (!m) return '';
-    const n = parseInt(m[1], 16);
-    const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
-    return lum > 0.6 ? '#2e2729' : '#ffffff';
-  };
   function toast(msg, { bg = '', ink = '' } = {}) {
     const el = $('#toast');
     if (bg) {
