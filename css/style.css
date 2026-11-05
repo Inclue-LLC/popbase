@@ -226,6 +226,9 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 
 .site-footer { text-align: center; padding: 32px 16px 48px; color: var(--ink-soft); font-size: .85rem; border-top: 1px solid var(--line); }
 .site-footer p { margin: 4px 0; }
+.footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin: 0 auto 14px; max-width: 760px; }
+.footer-links a { color: var(--ink-soft); text-decoration: none; font-size: .8rem; }
+.footer-links a:hover { color: var(--ink); text-decoration: underline; }
 .demo-note { font-size: .78rem; color: var(--ink-soft); }
 
 /* ---------- モーダル・ドロワー ---------- */

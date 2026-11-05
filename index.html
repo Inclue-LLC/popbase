@@ -152,8 +152,17 @@
   </main>
 
   <footer class="site-footer">
+    <!-- 規約・ポリシー（Shopify 管理画面「設定 → ポリシー」で作ったページへ。js/app.js でリンク先を入れる） -->
+    <nav class="footer-links" id="footerLinks" aria-label="規約・ポリシー">
+      <a data-policy="legal-notice">特定商取引法に基づく表記</a>
+      <a data-policy="privacy-policy">プライバシーポリシー</a>
+      <a data-policy="refund-policy">返金ポリシー</a>
+      <a data-policy="shipping-policy">配送ポリシー</a>
+      <a data-policy="terms-of-service">利用規約</a>
+      <a data-policy="contact-information">お問い合わせ</a>
+    </nav>
     <p>&copy; <span data-bind="title"></span></p>
-    <p class="demo-note">※ このサイトはデモです。決済は接続されていません。</p>
+    <p class="demo-note" id="demoNote">※ このサイトはデモです。決済は接続されていません。</p>
   </footer>
 
   <!-- 商品詳細 -->
