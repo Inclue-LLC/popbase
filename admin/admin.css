@@ -72,7 +72,10 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .user { font-size: .8rem; color: var(--ink-soft); margin-left: 6px; }
 
-.tabs { display: flex; gap: 4px; padding: 10px 20px 0; }
+/* タブは下にスクロールしても、上の帯のすぐ下に固定（--topbar-h は admin.js で上の帯の高さに合わせる） */
+.tabs { display: flex; gap: 4px; padding: 10px 20px 0; position: sticky; top: var(--topbar-h, 52px); z-index: 9; background: var(--bg); border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; white-space: nowrap; }
 .tab { border: 0; background: transparent; padding: .55em 1.2em; border-radius: 10px 10px 0 0; font-weight: 700; color: var(--ink-soft); }
 .tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 -1px 0 var(--line) inset; }
 
@@ -84,7 +87,7 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 /* 配置 */
 .layout-grid { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; }
 @media (max-width: 760px) { .layout-grid { grid-template-columns: 1fr; } }
-.palette { background: var(--surface-2); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 220px); position: sticky; top: 120px; }
+.palette { background: var(--surface-2); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - var(--topbar-h, 52px) - 90px); position: sticky; top: calc(var(--topbar-h, 52px) + 60px); }
 .palette.drop-target { outline: 2px dashed var(--danger); }
 .palette-head { display: grid; gap: 6px; }
 .palette-head input[type="search"] { padding: .45em .7em; border-radius: 8px; border: 1.5px solid var(--line); background: var(--surface); }
@@ -163,7 +166,7 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .danger .btn { justify-self: start; }
 
 /* プレビュー */
-.preview { position: sticky; top: 120px; display: grid; gap: 8px; }
+.preview { position: sticky; top: calc(var(--topbar-h, 52px) + 60px); display: grid; gap: 8px; }
 .preview-box { position: relative; aspect-ratio: 4 / 3; border-radius: var(--radius); overflow: hidden; background: #1d2033; }
 .preview-box canvas { display: block; width: 100%; height: 100%; cursor: grab; }
 .preview-loading { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: .85rem; background: rgba(20, 22, 40, .5); pointer-events: none; }
