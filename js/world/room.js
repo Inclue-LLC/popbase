@@ -102,11 +102,12 @@ export async function buildRoom(theme) {
   // このイベントのキャラクター（管理画面の「キャラクター」タブ）。人数が多いときは間隔と大きさを詰めて壁に収める
   const chars = window.CAST || [];
   const gap = Math.min(1.35, 10.5 / Math.max(chars.length, 1));
-  // 名前の札（中心 1.3m・高さ 0.2m）の上に少しすき間をあけて絵を置き、看板の下端までのすき間に収める
-  const tagY = 1.3;
+  // 名前の札（中心 1.4m・高さ 0.2m）は腰壁の見切り（上端 1.22m）から少し離す。
+  // 札の上に少しすき間をあけて絵を置き、看板の下端までのすき間に収める
+  const tagY = 1.4;
   const artBottom = tagY + 0.1 + 0.08;
   const signBottom = 3.15 - signH / 2;
-  const size = Math.min(gap * 0.86, signBottom - 0.1 - artBottom);
+  const size = Math.min(gap * 0.86, signBottom - 0.07 - artBottom);
   // キャラクターどうしの大きさの比率：いちばん大きいキャラクターを枠いっぱいにして、ほかはその比率で小さく
   const fracs = await Promise.all(chars.map((c) => T.characterFrac(c)));
   const maxFrac = Math.max(...fracs, 0.01);
