@@ -49,6 +49,7 @@ function missingRequired(event = {}) {
   const miss = Object.entries(REQUIRED).filter(([k]) => blank(event[k])).map(([, label]) => label);
   // 購入特典を「あり」にしたときは、特典の名前も必須
   if (event.novelty === 'on' && blank(event.novelty_name)) miss.push('特典の名前');
+  if (event.novelty === 'on' && blank(event.novelty_threshold)) miss.push('特典の条件金額');
   return miss;
 }
 

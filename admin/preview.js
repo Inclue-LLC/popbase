@@ -69,9 +69,9 @@ export class Preview {
     el.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY }; el.setPointerCapture(e.pointerId); });
     el.addEventListener('pointermove', (e) => {
       if (!drag) return;
-      // 店内のサイトと同じく「つかんで動かす」向き
-      this.sph.theta -= (e.clientX - drag.x) * 0.006;
-      this.sph.phi -= (e.clientY - drag.y) * 0.005;
+      // お店（js/world/controls.js）と同じ向き：右にドラッグすると左を向く／下にドラッグすると見上げる
+      this.sph.theta += (e.clientX - drag.x) * 0.006;
+      this.sph.phi += (e.clientY - drag.y) * 0.005;
       drag = { x: e.clientX, y: e.clientY };
       this.applyCamera();
     });
