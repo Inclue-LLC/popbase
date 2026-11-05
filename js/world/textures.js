@@ -108,8 +108,9 @@ export async function wallTexture(theme, widthM, heightM, { door = false } = {})
     for (let x = s; x < W; x += s * 2) ctx.fillRect(x, 0, s, H);
   } else if (wall.pattern === 'dots') {
     ctx.fillStyle = wall.patternColor;
-    const s = 0.34 * PPM;
-    for (let y = s / 2; y < H; y += s) for (let x = s / 2; x < W; x += s) { ctx.beginPath(); ctx.arc(x, y, s * 0.2, 0, 7); ctx.fill(); }
+    // 水玉は小さめ（直径 約6cm・間隔 20cm）
+    const s = 0.2 * PPM;
+    for (let y = s / 2; y < H; y += s) for (let x = s / 2; x < W; x += s) { ctx.beginPath(); ctx.arc(x, y, s * 0.15, 0, 7); ctx.fill(); }
   } else if (wall.pattern === 'gingham') {
     ctx.fillStyle = `${wall.patternColor}88`;
     const s = 0.24 * PPM;

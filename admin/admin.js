@@ -562,16 +562,16 @@ function currentLayout() {
 function editableLayout() {
   return E.normalize(state.draft.layout || E.autoLayout(state.products.map((p) => ({ ...p, display: null }))), state.products);
 }
-function where(layout, id) {
+/** 商品が置かれている枠の一覧（同じ商品を在庫数まで複数の枠に置ける） */
+function placesOf(layout, id) {
+  const out = [];
   for (const zone of ['left', 'right']) {
-    for (let r = 0; r < layout[zone].length; r++) {
-      const i = layout[zone][r].indexOf(id);
-      if (i >= 0) return { zone, row: r, i };
-    }
+    layout[zone].forEach((row, r) => row.forEach((x, i) => { if (x === id) out.push({ zone, row: r, i }); }));
   }
-  const i = layout.island.indexOf(id);
-  return i >= 0 ? { zone: 'island', row: 0, i } : null;
+  layout.island.forEach((x, i) => { if (x === id) out.push({ zone: 'island', row: 0, i }); });
+  return out;
 }
+const where = (layout, id) => placesOf(layout, id)[0] || null;
 const getSlot = (L, s) => (s.zone === 'island' ? L.island[s.i] : L[s.zone][s.row][s.i]);
 const setSlot = (L, s, v) => { if (s.zone === 'island') L.island[s.i] = v; else L[s.zone][s.row][s.i] = v; };
 const ZONE_NAME = { left: '左の棚', right: '右の棚', island: '限定テーブル' };
@@ -583,12 +583,17 @@ function thumb(p) {
   return `<span class="thumb">${window.Art.productSVG(p)}</span>`;
 }
 
-/** 商品 id を枠へ。移動元（枠）があれば入れ替え、なければ置き換え */
+/** 一覧の商品を枠へ置く（在庫数までなら何か所にでも置ける。枠に別の商品があれば置き換え） */
 function place(id, to) {
   const L = editableLayout();
-  const from = where(L, id);
+  const p = state.products.find((x) => x.id === id);
   const occupant = getSlot(L, to);
-  if (from) setSlot(L, from, occupant || null);
+  if (occupant === id) return;
+  const limit = E.placeLimit(p);
+  if (placesOf(L, id).length >= limit) {
+    toast(`「${p?.name || '商品'}」は在庫数（${limit}個）までしか置けません。ほかの枠から外してから置いてください`, { error: true });
+    return;
+  }
   setSlot(L, to, id);
   state.draft.layout = L;
   afterLayoutChange();
@@ -632,14 +637,16 @@ function renderPalette() {
   const only = $('#onlyUnplaced').checked;
   const items = state.products.filter((p) => (!q || p.name.toLowerCase().includes(q)) && (!only || !where(L, p.id)));
   $('#productList').innerHTML = items.map((p) => {
-    const at = where(L, p.id);
+    const places = placesOf(L, p.id);
+    const at = places[0];
+    const limit = E.placeLimit(p);
     const sel = state.selected?.id === p.id;
     return `<li class="pcard ${at ? 'is-placed' : ''} ${sel ? 'is-selected' : ''}" draggable="true" data-id="${esc(p.id)}" tabindex="0"
       aria-label="${esc(p.name)}${at ? `（${placeText(at)}）` : '（未配置）'}">
       ${thumb(p)}
       <span><span class="pname">${esc(p.name)}</span><br>
       <span class="pmeta">${yen(p.price)}${p.limited ? ' ・<span class="tag-limited">会場限定</span>' : ''}${p.stock === 0 ? ' ・<span class="tag-sold">在庫なし</span>' : ''}<br>
-      ${at ? esc(placeText(at)) : '未配置'}</span></span></li>`;
+      ${at ? `${esc(placeText(at))}${places.length > 1 ? ` ほか${places.length - 1}か所` : ''}` : '未配置'}${limit < 99 ? `（${places.length}/${limit}個）` : places.length > 1 ? `（${places.length}個）` : ''}</span></span></li>`;
   }).join('') || '<li class="pmeta">該当する商品がありません</li>';
 }
 $('#search').addEventListener('input', renderPalette);
@@ -753,7 +760,7 @@ const FORMS = { event: '#eventForm', entrance: '#entranceForm' };
 function renderForm() {
   const ev = state.draft.event;
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
-  const placeholders = { title: base.name, period: E.original.period, novelty_threshold: E.NOVELTY_THRESHOLD, novelty_name: 'オリジナルステッカー' };
+  const placeholders = { title: base.name, period: E.original.period, novelty_threshold: `例：${E.NOVELTY_THRESHOLD}`, novelty_name: 'オリジナルステッカー' };
   for (const [tab, sel] of Object.entries(FORMS)) {
     const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab && (!f.showIf || f.showIf(ev)));
     const groups = [...new Set(fields.map((f) => f.group))];
@@ -817,7 +824,7 @@ function unitLabel(v, max) {
  * テーマは配色のセット。個別に色を指定していると、その項目はテーマを変えても変わらないので、
  * 指定がある場合は確認して、テーマの色にそろえる（画像はそのまま） */
 const THEME_KEYS = ['wall_color', 'wall_pattern', 'wall_pattern_color', 'lower_color', 'trim_color', 'floor_style', 'floor_color_1', 'floor_color_2',
-  'rug_color', 'sign_color', 'sign_text_color', 'sign_sub_color', 'product_bg_color', 'avatar_ring_color', 'char_note_color', 'light'];
+  'rug_color', 'sign_color', 'sign_text_color', 'sign_sub_color', 'product_bg_color', 'avatar_ring_color', 'char_note_color'];
 function applyThemeColors() {
   const ev = state.draft.event;
   const set = THEME_KEYS.filter((k) => ev[k] != null && ev[k] !== '');

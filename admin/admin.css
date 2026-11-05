@@ -100,7 +100,10 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .pcard.is-selected { border-color: var(--primary); }
 .pcard.is-placed { opacity: .55; }
 .pcard .thumb { width: 44px; height: 44px; border-radius: 8px; background: var(--surface-2); display: grid; place-items: center; overflow: hidden; }
-.thumb svg, .thumb img { width: 100%; height: 100%; object-fit: contain; }
+.thumb { flex: none; }
+/* 枠いっぱいに、切れずに収める（グリッドの中では height: 100% が効かないことがあるので、枠の大きさを直接指定） */
+.thumb svg, .thumb img { display: block; width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; }
+.pcard .thumb, .slot .thumb { display: flex; align-items: center; justify-content: center; padding: 3px; }
 .pcard .pname { font-size: .78rem; font-weight: 700; line-height: 1.3; }
 .pcard .pmeta { font-size: .7rem; color: var(--ink-soft); }
 .tag-limited { color: var(--accent); font-weight: 700; }
@@ -189,8 +192,8 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .char-card.is-hidden { opacity: .6; }
 @media (max-width: 640px) { .char-card { grid-template-columns: 1fr; } }
 .char-art { display: grid; gap: 6px; justify-items: center; align-content: start; }
-.char-art .art { width: 110px; height: 110px; border-radius: 14px; display: grid; place-items: center; padding: 6px; }
-.char-art .art svg, .char-art .art img { width: 100%; height: 100%; object-fit: contain; }
+.char-art .art { width: 110px; height: 110px; border-radius: 14px; display: flex; align-items: center; justify-content: center; padding: 8px; overflow: hidden; box-sizing: border-box; }
+.char-art .art svg, .char-art .art img { display: block; width: 94px; height: 94px; max-width: 100%; max-height: 100%; object-fit: contain; aspect-ratio: auto; }
 .char-fields { display: grid; gap: 10px; }
 .char-fields .field { grid-template-columns: 150px minmax(0, 1fr); }
 .char-fields .field .need { display: inline-block; margin: 2px 0; }
@@ -204,7 +207,8 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .av-chip { display: grid; justify-items: center; gap: 4px; padding: 10px; border: 1.5px solid var(--line); border-radius: 12px; text-align: center; }
 .av-chip.is-off { opacity: .5; }
 .av-chip .art { width: 72px; height: 72px; }
-.av-chip .art svg, .av-chip .art img { width: 100%; height: 100%; object-fit: contain; }
+.av-chip .art { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.av-chip .art svg, .av-chip .art img { display: block; width: 100%; height: 100%; max-height: 100%; object-fit: contain; }
 .av-chip small { color: var(--ink-soft); font-size: .72rem; }
 .av-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .av-item { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 12px; }

@@ -127,7 +127,6 @@
     { group: '看板・照明', key: 'sign_color', label: '看板の色', type: 'color', themePath: 'sign.bg' },
     { group: '看板・照明', key: 'sign_text_color', label: 'イベント名の色', hint: '正面の看板のイベント名と会期の文字の色', type: 'color', themePath: 'sign.ink' },
     { group: '看板・照明', key: 'sign_sub_color', label: 'ブランド名の色', hint: '正面の看板の、イベント名の上のブランド名の文字の色', type: 'color', themePath: 'sign.sub' },
-    { group: '看板・照明', key: 'light', label: '照明', type: 'select', options: () => opt([['', 'テーマのまま'], ['day', '明るい'], ['night', '夜（暗め＋スポットライト）']]) },
     { group: '棚の看板', key: 'left_label', label: '左の棚（日本語）', hint: '例：ぬいぐるみ・キーホルダー', type: 'text', placeholderPath: 'const.（空欄なら表示しません）' },
     { group: '棚の看板', key: 'left_title', label: '左の棚（英字）', hint: '例：PLUSH & CHARM', type: 'text', placeholderPath: 'const.（空欄なら表示しません）' },
     { group: '棚の看板', key: 'right_label', label: '右の棚（日本語）', hint: '例：文具・雑貨・バッグ', type: 'text', placeholderPath: 'const.（空欄なら表示しません）' },
@@ -149,10 +148,8 @@
     { tab: 'avatars', group: 'アバター', key: 'avatars', label: 'アバター', type: 'avatars' },
 
     /* 入口の画面（管理画面の「入口の画面」タブ） */
-    { tab: 'entrance', group: '文字', key: 'entrance_kicker', label: '上の小さい文字', type: 'text', placeholderPath: 'shop.title' },
     { tab: 'entrance', group: '文字', key: 'entrance_heading', label: '大きい見出し', hint: 'ロゴ画像を設定した場合は、画像の代替テキストになります', type: 'text', placeholderPath: 'shop.brand' },
-    { tab: 'entrance', group: '文字', key: 'entrance_message', label: '見出しの下の文字', hint: '空欄ならイベント名', type: 'text', placeholderPath: 'shop.themeLabel' },
-    { tab: 'entrance', group: '文字', key: 'entrance_notice', label: 'お知らせ', hint: '会期の下に表示（例: 12/1 新作入荷！）。空欄なら表示しません', type: 'textarea' },
+    { tab: 'entrance', group: '文字', key: 'entrance_message', label: 'イベント名', hint: '空欄ならイベント名', type: 'text', placeholderPath: 'shop.themeLabel' },
     { tab: 'entrance', group: '文字', key: 'entrance_button', label: 'ボタンの文字', type: 'text', placeholderPath: 'const.お店に入る' },
     { tab: 'entrance', group: '画像', key: 'entrance_logo', label: 'ロゴ画像', hint: '大きい見出しの代わりに表示。背景が透明な PNG がおすすめ', type: 'image' },
     { tab: 'entrance', group: '画像', key: 'entrance_image', label: '背景の画像', hint: '画面いっぱいに表示（例: 1920×1080px）。設定すると背景の色と雲の飾りは表示しません', type: 'image' },
@@ -171,16 +168,15 @@
    */
   const NEED = {
     brand: ['required'], title: ['required'], open_at: ['required'], close_at: ['required'], collection: ['required'],
-    entrance_notice: ['hide'],
-    novelty: ['default', 'なし'], novelty_name: ['required'],
+    novelty: ['default', 'なし'], novelty_name: ['required'], novelty_threshold: ['required'],
     product_bg_color: ['default', 'テーマの色'],
     daily_open: ['default', '24時間営業'], daily_close: ['default', '24時間営業'], period: ['default', '日時から自動で作成'],
     theme_preset: ['default', 'Milk Tea'], font: ['default', '初期設定のフォント'],
     wall_image: ['default', '壁の色と柄'], wall_pattern: ['default', 'テーマの柄'], floor_image: ['default', '床の種類と色'],
-    floor_style: ['default', 'テーマの床'], light: ['default', 'テーマの照明'],
+    floor_style: ['default', 'テーマの床'],
     left_title: ['hide'], left_label: ['hide'], right_title: ['hide'], right_label: ['hide'],
-    novelty_threshold: ['default', '3,000円'],
-    entrance_kicker: ['default', 'POP BASE'], entrance_heading: ['default', 'ブランド名'],
+
+    entrance_heading: ['default', 'ブランド名'],
     entrance_message: ['default', 'イベント名'], entrance_button: ['default', '「お店に入る」'],
     entrance_logo: ['default', '大きい見出しの文字'], entrance_image: ['default', '背景の色'],
     entrance_characters: ['default', '表示する'],
@@ -283,7 +279,7 @@
     if (has(f, 'char_note_color')) theme.charNote = { ...(theme.charNote || {}), bg: f.char_note_color, ink: '' };
     set(theme.sign, 'eventInk', 'sign_text_color');
     set(theme.sign, 'brandInk', 'sign_sub_color');
-    set(theme, 'light', 'light');
+    theme.light = 'day'; // 照明はいつも明るい（以前の「夜」の設定は使わない）
     set(theme.entrance, 'top', 'entrance_color_top');
     set(theme.entrance, 'bottom', 'entrance_color_bottom');
     window.THEMES.event = theme;
@@ -306,10 +302,10 @@
     applyAvatars(f.avatars);
     // 入口の画面（空欄は初期表示のまま）
     S.entrance = {
-      kicker: f.entrance_kicker || '',
+      kicker: '', // 上の小さい文字は、いつもお店のロゴ（POP BASE）
       heading: f.entrance_heading || '',
       message: f.entrance_message || '',
-      notice: f.entrance_notice || '',
+      notice: '', // お知らせは使わない（入口には会期をいつも表示）
       button: f.entrance_button || '',
       logo: imageUrl(f.entrance_logo),
       image: imageUrl(f.entrance_image),
@@ -347,12 +343,14 @@
   }
 
   /** 形を整える（足りない枠は null で埋め、存在しない商品は外す） */
+  /** 同じ商品を置ける数（在庫数まで。在庫なしでも「SOLD OUT」として1つは置ける） */
+  const placeLimit = (p) => Math.max(1, Math.floor(Number(p?.stock ?? 1)) || 1);
   function normalize(layout, products = window.PRODUCTS) {
-    const ids = new Set(products.map((p) => p.id));
-    const used = new Set();
+    const limit = new Map(products.map((p) => [p.id, placeLimit(p)]));
+    const used = new Map();
     const clean = (v) => {
-      if (!v || !ids.has(v) || used.has(v)) return null;
-      used.add(v);
+      if (!v || !limit.has(v) || (used.get(v) || 0) >= limit.get(v)) return null;
+      used.set(v, (used.get(v) || 0) + 1);
       return v;
     };
     const rows = (src) => Array.from({ length: ROWS }, (_, r) => Array.from({ length: SLOTS }, (_, i) => clean(src?.[r]?.[i])));
@@ -463,5 +461,5 @@
   }
 
   applyCast(''); // 最初は自社の4体
-  window.HaneulEvent = { CARD_PRESETS, avatarCharacters, castOf, applyCast, MAX_CAST, noveltyOn, NOVELTY_THRESHOLD, missingRequired, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
+  window.HaneulEvent = { placeLimit, CARD_PRESETS, avatarCharacters, castOf, applyCast, MAX_CAST, noveltyOn, NOVELTY_THRESHOLD, missingRequired, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
 })();
