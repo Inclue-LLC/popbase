@@ -189,7 +189,12 @@ MAX_PER_IP=100 VISIT_MINUTES=2 WARN_MINUTES=1 npm start
 
 | キー | テーマ | 壁 | 床 |
 | --- | --- | --- | --- |
-| `base` | Lavender Base（POP BASE の基本・初期設定） | ラベンダーの水玉 | クリームのタイル |
+| `milktea` | Milk Tea（初期設定） | ベージュのギンガムチェック | クリームのタイル |
+| `softpink` | Soft Pink | ピンクのギンガムチェック | 淡いピンクのタイル |
+| `lavender` | Lavender Dream | ラベンダーのギンガムチェック | 淡いラベンダーのタイル |
+| `sage` | Sage Mint | ミントのギンガムチェック | 淡いグリーンのタイル |
+| `powderblue` | Powder Blue | 水色のギンガムチェック | 淡いブルーのタイル |
+| `base` | Lavender Base | ラベンダーの水玉 | クリームのタイル |
 | `sky` | Sky Walk 空のおさんぽ | 雲柄 | 木目 |
 | `night` | Starry Night 星降る夜のおさんぽ | 星柄（夜の照明・ネオン看板） | カーペット |
 | `holiday` | Holiday Party ハヌルのホリデーパーティー | ストライプ＋緑の腰壁 | 赤白チェック |
@@ -246,4 +251,4 @@ docs/shopify-setup.md Shopify の初期設定（技術担当向け）
   - サイトで使うマーク: `images/popbase-mark.svg`
 - カラー: ラベンダー `#DCCEF5`・ピンク `#F7C9D8`・クリーム `#FFF4F1`・濃色 `#2E2729`（`css/style.css` の `--brand-*`）
 - 文字: 英字は Poppins、日本語は Zen Kaku Gothic New（ショップのフォントは管理画面で変更可）
-- 店内の初期テーマ: `base`（Lavender Base）
+- 店内の初期テーマ: `milktea`（Milk Tea）
