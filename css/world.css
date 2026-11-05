@@ -192,3 +192,8 @@ body.world-fs .world {
 .prompt-btn { cursor: pointer; transition: transform .15s, box-shadow .15s; }
 .prompt-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0, 0, 0, .28); }
 .prompt-go { font-style: normal; font-weight: 800; font-size: 1.2rem; line-height: 1; color: var(--theme-btn, #8a6bd6); margin-left: 2px; }
+
+/* 全画面：iPhone の画面の丸い角・ホームバーに、ボタンやスティックがかからないように */
+body.world-fs .hud-top { top: max(12px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); }
+body.world-fs .hud-emotes { bottom: max(22px, calc(env(safe-area-inset-bottom) + 10px)); }
+body.world-fs .joystick { bottom: max(22px, calc(env(safe-area-inset-bottom) + 10px)); }
