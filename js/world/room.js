@@ -81,7 +81,7 @@ export async function buildRoom(theme) {
     // ブランド名・イベント名の色は管理画面で指定できる（なければテーマの看板の色）
     { text: window.SHOP.brand, size: period ? 0.18 : 0.22, color: theme.sign.brandInk || theme.sign.sub, spacing: 14 },
     { text: theme.name, size: period ? 0.48 : 0.56, color: theme.sign.eventInk || theme.sign.ink },
-    ...(period ? [{ text: period, size: 0.2, weight: 700, color: theme.sign.eventInk || theme.sign.ink }] : []),
+    ...(period ? [{ text: period, size: 0.16, weight: 700, color: theme.sign.eventInk || theme.sign.ink }] : []),
   ];
   const signW = Math.min(8.8, Math.max(5.2, T.signTextWidth(signLines, signH) + 0.9));
   const sign = plane(signW, signH, basic(T.signTexture(signLines, theme.sign, signW, signH), { transparent: true }));
