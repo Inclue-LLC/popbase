@@ -46,7 +46,7 @@ window.AppReady = (async function () {
    * 文字・画像・色は店内管理画面の「入口の画面」で設定（SHOP.entrance。js/event.js の applyEvent で反映）。
    * 管理画面のプレビュー（?entrance-preview=1）では、管理画面から届いた下書きをその場で表示する。 */
   const entrancePreview = new URLSearchParams(location.search).has('entrance-preview');
-  const visibleChars = () => CHARACTERS.filter((c) => !c.hidden);
+  const visibleChars = () => window.CAST || []; // このイベントのキャラクター（管理画面の「キャラクター」タブ）
 
   function renderEntrance() {
     $('#entranceCast').innerHTML = visibleChars().map((c, i) =>
@@ -68,7 +68,7 @@ window.AppReady = (async function () {
     $('#entNotice').textContent = en.notice || '';
     $('#entNotice').hidden = !en.notice;
     $('#enterBtn').textContent = en.button || 'お店に入る';
-    $('#entranceCast').hidden = en.characters === 'hide';
+    $('#entranceCast').hidden = en.characters === 'hide' || !visibleChars().length;
     const bg = $('#entBg');
     bg.style.backgroundImage = en.image ? `url("${String(en.image).replace(/["\\\n]/g, '')}")` : '';
     el.classList.toggle('has-image', !!en.image);
@@ -527,6 +527,8 @@ window.AppReady = (async function () {
 
   /* ---------- キャラクター紹介 ---------- */
   function renderCast() {
+    // キャラクターを使わないイベント（または0体）では、見出しごと出さない
+    document.querySelector('.cast').hidden = !visibleChars().length;
     $('#castGrid').innerHTML = visibleChars().map((c) => `
     <div class="cast-card" style="--c:${c.color}">
       ${Art.characterSVG(c)}
@@ -556,7 +558,7 @@ window.AppReady = (async function () {
     clearCart() { state.cart = {}; saveCart(); },
     // 壁のキャラクターに話しかけたとき
     showCharacter(id) {
-      const c = charById[id];
+      const c = (window.CAST || []).find((x) => x.id === id);
       if (c) toast(`${c.name}：${c.profile}`);
     },
   };

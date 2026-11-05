@@ -335,3 +335,10 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 /* 保存ボタン：未保存の変更があるときは目立たせる */
 #saveBtn { min-width: 6.5em; }
 #saveBtn.is-dirty { border-color: var(--accent); color: var(--accent); }
+
+/* キャラクター（イベントごと） */
+.cast-use { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 4px; }
+.cast-list.is-off .char-card { opacity: .45; }
+.cast-list > .btn { margin-top: 10px; }
+.cast-empty { color: var(--ink-soft); padding: 12px 0; }
+.char-tools { display: flex; gap: 6px; justify-content: flex-end; }

@@ -164,7 +164,9 @@ function renderEventBar() {
 let openTab = null; // イベントを開いたときに選ぶタブ
 async function route() {
   const m = /^#\/event\/([\w-]+)$/.exec(location.hash);
-  const target = m && state.events.find((x) => x.id === m[1]);
+  let target = m && state.events.find((x) => x.id === m[1]);
+  // ほかのスタッフが作ったばかりのイベントなど、一覧にまだないときは読み込み直す
+  if (m && !target) { await loadEvents().catch(() => {}); target = state.events.find((x) => x.id === m[1]); }
   await flushSave();
   if (!target) { showList(); return; }
   try {
@@ -316,6 +318,7 @@ function normEvent(ev = {}) {
   for (const f of E.FIELDS) {
     const v = ev[f.key];
     if (f.type === 'characters') { out[f.key] = canonicalChars(v); continue; }
+    if (f.type === 'cast') { out[f.key] = canonicalCast(v); continue; }
     if (f.type === 'avatars') { out[f.key] = canonicalAvatars(v); continue; }
     out[f.key] = v && typeof v === 'object' ? v.url : (v ?? '');
     if (out[f.key] !== '' && f.type === 'number') out[f.key] = Number(out[f.key]);
@@ -337,6 +340,12 @@ function canonicalChars(v) {
     if (Object.keys(item).length) out[id] = item;
   }
   return JSON.stringify(out);
+}
+function canonicalCast(v) {
+  let obj = v;
+  if (typeof obj === 'string') { try { obj = JSON.parse(obj); } catch { obj = null; } }
+  if (!obj || !Array.isArray(obj.list)) return '';
+  return JSON.stringify({ use: obj.use !== false, list: obj.list.map((c) => ({ id: c.id, name: c.name || '', en: c.en || '', profile: c.profile || '', color: c.color || '', image: E.imageUrl(c.image) })) });
 }
 function canonicalAvatars(v) {
   let obj = v;
@@ -377,11 +386,12 @@ function changed({ previewNow = true } = {}) {
 
 async function save() {
   if (state.saving) { state.saveTimer = setTimeout(save, 300); return; }
-  // 名前が空のアバターがあるうちは保存しない（サーバーで受け付けないため）
-  if ((state.draft.event.avatars?.custom || []).some((a) => !String(a.name || '').trim())) {
+  // 名前が空のアバター・キャラクターがあるうちは保存しない（サーバーで受け付けないため）
+  const blankName = (list) => (list || []).some((a) => !String(a.name || '').trim());
+  if (blankName(state.draft.event.avatars?.custom) || blankName(state.draft.event.cast?.list)) {
     state.dirtyLocal = true;
     renderStatus();
-    toast('名前が空のアバターがあります。名前を入れると保存されます', { error: true });
+    toast(blankName(state.draft.event.cast?.list) ? '名前が空のキャラクターがあります。名前を入れると保存されます' : '名前が空のアバターがあります。名前を入れると保存されます', { error: true });
     return;
   }
   state.saving = true;
@@ -984,82 +994,118 @@ for (const sel of Object.values(FORMS)) {
 /* ==========================================================
    キャラクター
    ========================================================== */
-const charEdits = () => {
-  const v = state.draft.event.characters;
-  if (!v || typeof v !== 'object') state.draft.event.characters = {};
-  return state.draft.event.characters;
-};
+// このイベントのキャラクター（{ use, list }）。まだ設定していないイベントは、自社の4体から始める
+function castEdits() {
+  let v = state.draft.event.cast;
+  if (typeof v === 'string') { try { v = JSON.parse(v); } catch { v = null; } }
+  if (!v || typeof v !== 'object' || !Array.isArray(v.list)) {
+    v = JSON.parse(JSON.stringify(E.castOf('', state.draft.event.characters)));
+  }
+  state.draft.event.cast = v;
+  return v;
+}
+const newCastId = () => `k_${Math.random().toString(36).slice(2, 10).padEnd(8, '0')}`;
 
 function renderCharacters() {
-  const edits = charEdits();
-  E.applyCharacters(edits); // window.CHARACTERS に反映した結果で表示する
-  $('#charEditor').innerHTML = E.original.characters.map((o) => {
-    const v = edits[o.id] || {};
-    const c = window.CHARACTERS.find((x) => x.id === o.id);
-    const img = E.imageUrl(v.image);
-    return `<div class="char-card ${v.hidden ? 'is-hidden' : ''}" data-char="${esc(o.id)}">
+  const v = castEdits();
+  E.applyCast(v);
+  const cards = v.list.map((x, i) => {
+    const shown = (window.CAST || []).find((c) => c.id === x.id) || { ...x, image: E.imageUrl(x.image) };
+    const own = E.original.characters.find((o) => o.id === x.id);
+    const img = E.imageUrl(x.image);
+    return `<div class="char-card" data-i="${i}">
       <div class="char-art">
-        <span class="art" style="background:color-mix(in srgb, ${esc(c.color)} 25%, transparent)">${window.Art.characterSVG(c)}</span>
-        <label class="btn btn-small">画像を選ぶ<input type="file" accept="image/png,image/jpeg,image/webp" data-char-upload hidden></label>
-        ${img ? '<button type="button" class="btn btn-small btn-ghost" data-char-reset="image">元の絵に戻す</button>' : ''}
+        <span class="art" style="background:color-mix(in srgb, ${esc(x.color || own?.color || '#e6dcf3')} 25%, transparent)">${window.Art.characterSVG({ ...shown, name: x.name, color: x.color || own?.color || '#e6dcf3' })}</span>
+        <label class="btn btn-small">画像を選ぶ<input type="file" accept="image/png,image/jpeg,image/webp" data-cast-upload hidden></label>
+        ${img ? `<button type="button" class="btn btn-small btn-ghost" data-cast-reset="image">${own ? '元の絵に戻す' : '画像を外す'}</button>` : ''}
       </div>
       <div class="char-fields">
-        <div class="field"><label>名前</label><input type="text" data-char-key="name" maxlength="20" value="${esc(v.name || '')}" placeholder="${esc(o.name)}"></div>
-        <div class="field"><label>英語名</label><input type="text" data-char-key="en" maxlength="30" value="${esc(v.en || '')}" placeholder="${esc(o.en)}"></div>
-        <div class="field"><label>プロフィール</label><textarea data-char-key="profile" maxlength="200" rows="2" placeholder="${esc(o.profile)}">${esc(v.profile || '')}</textarea></div>
-        <div class="field"><label>色</label><span class="color-row"><input type="color" data-char-key="color" value="${esc(v.color || o.color)}" aria-label="色を選ぶ">
-          ${hexInput(v.color || o.color, '色')}
-          <span class="color-note">${v.color ? '' : '元の色'}</span>
-          ${v.color ? '<button type="button" class="btn btn-small btn-ghost" data-char-reset="color">元の色に戻す</button>' : ''}</span></div>
-        <div class="field"><label>表示</label><label class="check"><input type="checkbox" data-char-key="hidden" ${v.hidden ? 'checked' : ''}> 表示しない</label></div>
+        <div class="field"><label>名前 <span class="need need-required">必須</span></label><input type="text" data-cast-key="name" maxlength="20" value="${esc(x.name || '')}" placeholder="例：ハル" class="${x.name ? '' : 'is-missing'}"></div>
+        <div class="field"><label>英語名</label><input type="text" data-cast-key="en" maxlength="30" value="${esc(x.en || '')}" placeholder="例：HARU（空欄なら表示しません）"></div>
+        <div class="field"><label>プロフィール</label><textarea data-cast-key="profile" maxlength="200" rows="2" placeholder="キャラクター紹介に出す短い説明（空欄なら表示しません）">${esc(x.profile || '')}</textarea></div>
+        <div class="field"><label>色</label><span class="color-row"><input type="color" data-cast-key="color" value="${esc(x.color || own?.color || '#e6dcf3')}" aria-label="色を選ぶ">
+          ${hexInput(x.color || own?.color || '#e6dcf3', '色')}<span class="color-note">紹介カードの背景・画像がないときの丸</span></span></div>
+        <div class="char-tools">
+          <button type="button" class="btn btn-small" data-cast-move="-1" ${i === 0 ? 'disabled' : ''} aria-label="上へ">↑</button>
+          <button type="button" class="btn btn-small" data-cast-move="1" ${i === v.list.length - 1 ? 'disabled' : ''} aria-label="下へ">↓</button>
+          <button type="button" class="btn btn-small btn-ghost btn-danger" data-cast-delete>削除</button>
+        </div>
       </div>
     </div>`;
   }).join('');
+  $('#charEditor').innerHTML = `
+    <label class="check cast-use"><input type="checkbox" id="castUse" ${v.use ? 'checked' : ''}> このイベントでキャラクターを使う</label>
+    <p class="hint">${v.use ? '入口・店内の正面の壁・ご案内の「キャラクター紹介」に、下のキャラクターが並びます（上から順に）。'
+      : 'キャラクターを使わない設定です。入口・店内の正面の壁・ご案内の「キャラクター紹介」には何も出しません（登録したキャラクターは残ります）。'}</p>
+    <div class="cast-list ${v.use ? '' : 'is-off'}">
+      ${cards || '<p class="cast-empty">キャラクターはまだいません。「＋ キャラクターを追加」で登録します。</p>'}
+      <button type="button" class="btn" id="castAdd" ${v.list.length >= E.MAX_CAST ? 'disabled' : ''}>＋ キャラクターを追加（${v.list.length}/${E.MAX_CAST}）</button>
+    </div>`;
 }
 
-function charChanged({ rerender = false } = {}) {
+function castChanged({ rerender = false } = {}) {
+  E.applyCast(castEdits());
   if (rerender) renderCharacters();
   changed();
 }
 
 $('#charEditor').addEventListener('input', (e) => {
-  const key = e.target.dataset.charKey;
+  const key = e.target.dataset.castKey;
   if (!key) return;
-  const id = e.target.closest('[data-char]').dataset.char;
-  const edits = charEdits();
-  edits[id] ||= {};
-  edits[id][key] = key === 'hidden' ? e.target.checked : e.target.value;
-  if (key === 'color') {
-    const note = e.target.parentElement.querySelector('.color-note');
-    if (note) note.textContent = '';
-  }
-  E.applyCharacters(edits);
-  charChanged();
+  const i = Number(e.target.closest('[data-i]').dataset.i);
+  const v = castEdits();
+  v.list[i][key] = e.target.value;
+  if (key === 'name') e.target.classList.toggle('is-missing', !e.target.value.trim());
+  if (key === 'name' || key === 'color') updateCastArt(i); // 絵だけその場で描き直す（入力欄は作り直さない）
+  castChanged();
 });
+function updateCastArt(i) {
+  const x = castEdits().list[i];
+  const card = $(`#charEditor [data-i="${i}"]`);
+  if (!x || !card) return;
+  const own = E.original.characters.find((o) => o.id === x.id);
+  const color = x.color || own?.color || '#e6dcf3';
+  const art = card.querySelector('.art');
+  art.style.background = `color-mix(in srgb, ${color} 25%, transparent)`;
+  art.innerHTML = window.Art.characterSVG({ ...(own || {}), ...x, color, image: E.imageUrl(x.image), kind: own?.kind || '' });
+}
 $('#charEditor').addEventListener('change', async (e) => {
-  const card = e.target.closest('[data-char]');
-  if (!card) return;
-  if (e.target.dataset.charKey === 'hidden' || e.target.dataset.charKey === 'color') { renderCharacters(); return; }
-  if (!e.target.matches('[data-char-upload]') || !e.target.files[0]) return;
+  if (e.target.id === 'castUse') { castEdits().use = e.target.checked; castChanged({ rerender: true }); return; }
+  if (!e.target.matches('[data-cast-upload]') || !e.target.files[0]) return;
+  const i = Number(e.target.closest('[data-i]').dataset.i);
   const file = e.target.files[0];
   if (file.size > 8 * 1024 * 1024) { toast('8MB 以下の画像を選んでください', { error: true }); return; }
   toast('画像をアップロードしています…');
   try {
     const img = await api('upload', { method: 'POST', raw: file, type: file.type });
-    const edits = charEdits();
-    edits[card.dataset.char] ||= {};
-    edits[card.dataset.char].image = img;
-    charChanged({ rerender: true });
+    castEdits().list[i].image = img;
+    castChanged({ rerender: true });
     toast('画像を設定しました');
   } catch (err) { toast(err.message, { error: true }); }
 });
 $('#charEditor').addEventListener('click', (e) => {
-  const reset = e.target.closest('[data-char-reset]');
-  if (!reset) return;
-  const id = reset.closest('[data-char]').dataset.char;
-  const edits = charEdits();
-  if (edits[id]) edits[id][reset.dataset.charReset] = '';
-  charChanged({ rerender: true });
+  const v = castEdits();
+  if (e.target.closest('#castAdd')) {
+    if (v.list.length >= E.MAX_CAST) return;
+    v.list.push({ id: newCastId(), name: '', en: '', profile: '', color: '#e6dcf3', image: '' });
+    castChanged({ rerender: true });
+    $('#charEditor .char-card:last-of-type [data-cast-key="name"]')?.focus();
+    return;
+  }
+  const card = e.target.closest('[data-i]');
+  if (!card) return;
+  const i = Number(card.dataset.i);
+  if (e.target.closest('[data-cast-reset]')) {
+    v.list[i].image = '';
+  } else if (e.target.closest('[data-cast-move]')) {
+    const j = i + Number(e.target.closest('[data-cast-move]').dataset.castMove);
+    if (j < 0 || j >= v.list.length) return;
+    [v.list[i], v.list[j]] = [v.list[j], v.list[i]];
+  } else if (e.target.closest('[data-cast-delete]')) {
+    if (!confirm(`「${v.list[i].name || '名前なし'}」をこのイベントのキャラクターから削除します。よろしいですか？\n（アバターや、ほかのイベントには影響しません）`)) return;
+    v.list.splice(i, 1);
+  } else return;
+  castChanged({ rerender: true });
 });
 
 /* ==========================================================

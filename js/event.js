@@ -141,7 +141,9 @@
     { group: '購入特典', key: 'novelty_name', label: '特典の名前', type: 'text', showIf: (ev) => noveltyOn(ev) },
 
     /* キャラクター（管理画面の「キャラクター」タブ）。値は { haru: { name, en, profile, color, image, hidden }, ... } */
-    { tab: 'characters', group: 'キャラクター', key: 'characters', label: 'キャラクター', type: 'characters' },
+    /* キャラクター（「キャラクター」タブ）。イベントごとに自由に登録。値は { use: true/false, list: [{ id, name, en, profile, color, image }] }
+     * 入口・店内の正面の壁・ご案内のキャラクター紹介に並ぶ。空なら自社の4体（アバターとは別） */
+    { tab: 'characters', group: 'キャラクター', key: 'cast', label: 'キャラクター', type: 'cast' },
     /* アバター（管理画面の「アバター」タブ）。値は { hide: [キャラクターID], custom: [{ id, name, image }] } */
     { tab: 'avatars', group: 'アバター', key: 'avatars', label: 'アバター', type: 'avatars' },
 
@@ -181,7 +183,7 @@
     entrance_message: ['default', 'イベント名（＋サブタイトル）'], entrance_button: ['default', '「お店に入る」'],
     entrance_logo: ['default', '大きい見出しの文字'], entrance_image: ['default', '背景の色'],
     entrance_characters: ['default', '表示する'],
-    characters: ['default', '元のキャラクター'], avatars: ['default', '4体のキャラクター'],
+    cast: ['default', '自社の4体のキャラクター'], avatars: ['default', '4体のキャラクター'],
   };
   for (const f of FIELDS) {
     const [need, fallback] = NEED[f.key] || ['default', f.type === 'color' ? 'テーマの色' : '初期設定'];
@@ -226,6 +228,33 @@
   const imageUrl = (v) => (v && typeof v === 'object' ? v.url : v) || '';
   const has = (f, k) => f[k] != null && f[k] !== '';
 
+  /* ---------- イベントのキャラクター（cast） ---------- */
+  const MAX_CAST = 12;
+  const parseJson = (v) => { if (typeof v !== 'string') return v; try { return JSON.parse(v); } catch { return null; } };
+  /**
+   * イベントのキャラクターの設定（{ use, list }）。まだ設定していないイベントは、自社の4体
+   * （以前の「キャラクター」タブの名前・画像の変更と「表示しない」を引き継ぐ）
+   */
+  function castOf(value, legacyChars) {
+    const v = parseJson(value);
+    if (v && typeof v === 'object' && Array.isArray(v.list)) return { use: v.use !== false, list: v.list.slice(0, MAX_CAST) };
+    const over = parseJson(legacyChars) || {};
+    const list = original.characters.filter((o) => !over[o.id]?.hidden).map((o) => {
+      const x = over[o.id] || {};
+      return { id: o.id, name: x.name || o.name, en: x.en || o.en, profile: x.profile || o.profile, color: x.color || o.color, image: x.image || '' };
+    });
+    return { use: true, list };
+  }
+  /** 表示用の一覧 window.CAST（自社の4体は元のイラスト（kind）を使える） */
+  function applyCast(value, legacyChars) {
+    const c = castOf(value, legacyChars);
+    window.CAST_ENABLED = c.use;
+    window.CAST = c.use ? c.list.filter((x) => x && x.name).map((x) => {
+      const o = original.characters.find((y) => y.id === x.id);
+      return { ...(o || {}), id: x.id, name: x.name, en: x.en || '', profile: x.profile || '', color: x.color || o?.color || '#e6dcf3', accent: o?.accent || x.color || '#b9a3ec', image: imageUrl(x.image) || '', kind: o?.kind || '' };
+    }) : [];
+  }
+
   /** イベント設定をテーマ・会期・看板に反映する（何度呼んでもよい） */
   function applyEvent(f = {}) {
     const baseKey = has(f, 'theme_preset') && window.THEMES[f.theme_preset] ? f.theme_preset : original.theme;
@@ -267,7 +296,8 @@
       ? { threshold: has(f, 'novelty_threshold') ? Number(f.novelty_threshold) : NOVELTY_THRESHOLD, name: f.novelty_name }
       : null;
     applyFont(f.font);
-    applyCharacters(f.characters);
+    applyCharacters(f.characters); // 自社の4体（アバター用）
+    applyCast(f.cast, f.characters); // このイベントのキャラクター
     applyAvatars(f.avatars);
     // 入口の画面（空欄は初期表示のまま）
     S.entrance = {
@@ -420,5 +450,6 @@
     return out;
   }
 
-  window.HaneulEvent = { noveltyOn, NOVELTY_THRESHOLD, missingRequired, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
+  applyCast(''); // 最初は自社の4体
+  window.HaneulEvent = { castOf, applyCast, MAX_CAST, noveltyOn, NOVELTY_THRESHOLD, missingRequired, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
 })();
