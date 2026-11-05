@@ -159,7 +159,7 @@ body.world-fs .world {
 .pick-char {
   display: grid; justify-items: center; gap: 2px;
   padding: 8px 4px 6px; border-radius: 16px; border: 2px solid transparent;
-  background: color-mix(in srgb, var(--c) 22%, var(--surface));
+  background: var(--card-bg, color-mix(in srgb, var(--c) 22%, var(--surface)));
   font-weight: 700; font-size: .85rem;
 }
 .pick-char svg, .pick-char .char-img { width: 100%; max-width: 76px; height: auto; }

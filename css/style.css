@@ -372,7 +372,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .ep-grid .pick-char {
   display: grid; justify-items: center; gap: 2px; padding: 8px 4px 6px;
   border-radius: 16px; border: 2px solid transparent;
-  background: color-mix(in srgb, var(--c) 22%, #fff); font-weight: 700; font-size: .85rem; color: #3a3346;
+  background: var(--card-bg, color-mix(in srgb, var(--c) 22%, #fff)); font-weight: 700; font-size: .85rem; color: #3a3346;
 }
 .ep-grid .pick-char svg, .ep-grid .pick-char .char-img { width: 100%; max-width: 72px; height: auto; aspect-ratio: 1; }
 .ep-grid .pick-char[aria-checked="true"] { border-color: var(--theme-accent, #9b80e0); box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent, #9b80e0) 35%, transparent); }
