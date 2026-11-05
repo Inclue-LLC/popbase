@@ -399,9 +399,11 @@ async function main() {
   function fitFs() {
     const s = root.style;
     const fs = document.body.classList.contains('world-fs');
-    // ふだんは CSS（上下左右の端に合わせる）に任せる。キーボードや拡大などで、見えている範囲が
-    // 画面より狭くなっているときだけ、見えている範囲に合わせる
-    if (!fs || !vv || vv.height >= window.innerHeight - 2) {
+    // ふだんは CSS（上下左右の端に合わせる）に任せる。見えている範囲が画面とずれているとき
+    // （ページの位置がずれたまま・キーボード・拡大など）だけ、見えている範囲に合わせる
+    if (fs && vv && (vv.offsetTop > 0.5 || window.scrollY > 0)) window.scrollTo(0, 0);
+    const shifted = vv && (Math.abs(vv.offsetTop) > 0.5 || Math.abs(vv.offsetLeft) > 0.5 || vv.height < window.innerHeight - 2);
+    if (!fs || !vv || !shifted) {
       s.top = s.left = s.width = s.height = s.right = s.bottom = '';
       return;
     }
@@ -416,6 +418,8 @@ async function main() {
   window.addEventListener('orientationchange', () => setTimeout(fitFs, 300));
 
   function setFs(on) {
+    // ページを一番上に戻してから固定する（スクロールしたまま固定すると、その分だけ上にずれるため）
+    if (on) window.scrollTo(0, 0);
     document.body.classList.toggle('world-fs', on);
     document.documentElement.classList.toggle('fs-lock', on); // ページごと固定（スクロール・ツールバーの出入りを止める）
     fitFs();
