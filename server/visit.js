@@ -16,7 +16,10 @@
  */
 const crypto = require('crypto');
 
-const CAP = Math.max(1, Number(process.env.MAX_VISITORS) || 50);
+// 同時に入れる人数：管理画面の「店内の上限人数」（10〜50人）。未設定なら MAX_VISITORS（既定 50）
+const DEFAULT_CAP = Math.max(1, Number(process.env.MAX_VISITORS) || 50);
+const CAPACITIES = [10, 20, 30, 40, 50];
+let CAP = DEFAULT_CAP;
 const VISIT_MS = (Number(process.env.VISIT_MINUTES) || 30) * 60e3;
 const WARN_MS = (Number(process.env.WARN_MINUTES) || 5) * 60e3;
 const GRACE_MS = (Number(process.env.RECONNECT_SECONDS) || 30) * 1000;
@@ -34,6 +37,9 @@ let sched = {};
 /** 公開中のイベント設定から、会期・営業時間を受け取る（server/index.js・管理画面の公開時に呼ばれる） */
 function setSchedule(f = {}) {
   sched = { open_at: f.open_at || '', close_at: f.close_at || '', daily_open: f.daily_open || '', daily_close: f.daily_close || '' };
+  // 上限人数を変えても、いま店内にいる人は退店させない（減らした場合は、空くまで次の人を入れない。増やした場合は次の見回りで待機列から入店）
+  const c = Number(f.capacity);
+  CAP = CAPACITIES.includes(c) ? c : DEFAULT_CAP;
 }
 const storeStatus = (at = Date.now()) => schedule.status(sched, at);
 const closedInfo = (st) => ({ state: st.state, opensAt: st.opensAt || null });
@@ -257,4 +263,4 @@ function stats() {
   };
 }
 
-module.exports = { onConnection, stats, setSchedule, CAP, VISIT_MS, WARN_MS };
+module.exports = { onConnection, stats, setSchedule, get CAP() { return CAP; }, VISIT_MS, WARN_MS };
