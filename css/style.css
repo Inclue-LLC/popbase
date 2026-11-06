@@ -185,7 +185,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
   border: 0; background: var(--primary); color: var(--primary-ink);
   display: grid; place-items: center;
 }
-.cart-btn svg { width: 24px; height: 24px; }
+.cart-btn svg { width: 24px; height: 24px; transform: translate(-1px, 1px); } /* 真ん中から少しだけ左下へ（見た目の釣り合い） */
 .cart-btn.bump { animation: bump .4s; }
 @keyframes bump { 50% { transform: scale(1.18); } }
 .cart-count {
