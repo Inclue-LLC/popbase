@@ -423,6 +423,13 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .ep-note { margin: 0 0 12px; font-size: .78rem; color: #6f6880; }
 .entrance-pick .link-btn { margin-top: 8px; }
 
+/* 入口の「ご利用案内を見る」とそのポップ（入口の画面より手前に出す） */
+.ent-info-link { margin-top: 14px; color: var(--ent-ink, var(--theme-ink, var(--ink-soft))); font-weight: 700; }
+.entrance.is-picking .ent-info-link, .entrance.is-waiting .ent-info-link { display: none; }
+.info-modal { z-index: 200; }
+.info-modal .info-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.info-modal .info-card { grid-column: auto !important; box-shadow: none; border: 1px solid var(--line); }
+
 /* ---------- 退店の確認 ---------- */
 .exit-card { width: min(420px, 100%); padding: 28px 24px 22px; text-align: center; }
 .exit-card h3 { font-size: 1.25rem; margin-bottom: 10px; }

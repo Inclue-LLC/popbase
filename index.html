@@ -49,6 +49,8 @@
         <p id="entEndedText">ご来店ありがとうございました。カートの中身は空になりました。</p>
       </div>
       <button class="btn btn-primary btn-lg" id="enterBtn">お店に入る</button>
+      <!-- 入る前に、お支払い方法・混雑時の入店などを確かめられるように（ご案内の内容をポップで表示） -->
+      <button class="link-btn ent-info-link" id="entInfoBtn" type="button">ご利用案内を見る</button>
 
       <!-- 入店するときのアバター選び（js/app.js） -->
       <div class="entrance-pick" id="entPick" hidden>
@@ -212,6 +214,16 @@
   </div>
 
   <!-- 規約・ポリシー（Shopify の「設定 → ポリシー」の文章を、POP BASE の中で表示） -->
+  <!-- 入口の「ご利用案内を見る」：ご案内（INFORMATION）と同じ内容 -->
+  <div class="modal info-modal" id="infoModal" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card policy-card">
+      <button class="icon-btn modal-close" data-close aria-label="閉じる">&times;</button>
+      <h3 id="infoModalTitle">ご利用案内</h3>
+      <div id="infoModalBody"></div>
+    </div>
+  </div>
+
   <div class="modal" id="policyModal" role="dialog" aria-modal="true" aria-labelledby="policyTitle" hidden>
     <div class="modal-backdrop" data-close></div>
     <div class="modal-card policy-card">
