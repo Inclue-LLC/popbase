@@ -360,7 +360,11 @@ async function main() {
       nearest = best;
       promptEl.hidden = !best;
       const escHtml = (v) => String(v).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-      if (best) promptBtn.innerHTML = `<b>${best.type === 'product' ? 'この商品を見る' : escHtml(best.label)}</b>` +
+      // 売り切れの商品は「SOLD OUT」（グレー）。押すと商品の画面は開ける
+      const soldOut = best?.type === 'product' && (window.PRODUCTS || []).find((x) => x.id === best.id)?.stock === 0;
+      promptBtn.classList.toggle('is-soldout', !!soldOut);
+      // 商品は名前と値段だけ（「この商品を見る」の文字は出さない）
+      if (best) promptBtn.innerHTML = (best.type === 'product' ? (soldOut ? '<b>SOLD OUT</b>' : '') : `<b>${escHtml(best.label)}</b>`) +
         (best.type === 'product' ? `<span>${escHtml(best.label)}　¥${best.price.toLocaleString('ja-JP')}</span>` : '') +
         '<i class="prompt-go" aria-hidden="true">›</i>'; // 案内そのものをクリック（タップ）すると、その動作をする
     }

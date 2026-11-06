@@ -98,7 +98,13 @@ body.world-fs .world {
 }
 .prompt-btn b { color: var(--theme-btn, #8a6bd6); } /* 「この商品を見る」などはテーマの色 */
 .prompt-btn { border: 2px solid color-mix(in srgb, var(--theme-accent, #b9a3ec) 55%, transparent); }
-.prompt-btn span { overflow: hidden; text-overflow: ellipsis; color: color-mix(in srgb, var(--theme-ink, #6f6880) 70%, #fff); }
+.prompt-btn span { overflow: hidden; text-overflow: ellipsis; min-width: 0; color: color-mix(in srgb, var(--theme-ink, #6f6880) 70%, #fff); }
+/* 商品の前では名前と値段だけ（文字は濃いめに） */
+.prompt-btn > span:first-child { color: var(--theme-ink, #2e2729); font-weight: 700; }
+/* 売り切れの商品の前：「SOLD OUT」をグレーで */
+.prompt-btn.is-soldout { border-color: #cfc8cc; }
+.prompt-btn.is-soldout b { color: #8c8388; letter-spacing: .08em; }
+.prompt-btn.is-soldout span { color: #a39aa0; }
 .prompt-btn kbd { font: inherit; font-size: .72rem; padding: .1em .5em; border-radius: 6px; background: color-mix(in srgb, var(--theme-accent, #b9a3ec) 22%, #fff); color: #6f6880; }
 @keyframes promptIn { from { opacity: 0; transform: translateY(8px); } }
 
@@ -137,6 +143,8 @@ body.world-fs .world {
   .hud-emotes { right: auto; left: 12px; }
   .hud-help { display: none; }
   .hud-prompt { bottom: 150px; }
+  /* 左のスタンプ（幅 約48px）と重ならないよう、左右に 64px ずつ空けて真ん中に */
+  .prompt-btn { max-width: calc(100vw - 128px); }
   .hud-emotes { flex-direction: column; bottom: 22px; }
   .emote-btn { width: 36px; height: 36px; font-size: 17px; }
 }
