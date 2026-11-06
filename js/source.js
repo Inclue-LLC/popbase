@@ -43,6 +43,7 @@
     }
     // サーバーには届いたが、お客さんに出すイベントが1つもない（予定もない）
     window.NO_EVENT = !!data && !previewId && !data.id;
+    if (data?.visit) window.VISIT_RULES = data.visit; // 混雑中のお買い物時間（サーバーの設定）
     const event = data?.event || {};
     const hasEvent = Object.values(event).some((v) => v !== '' && v != null);
 

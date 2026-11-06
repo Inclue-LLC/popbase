@@ -78,7 +78,11 @@ function missingFor(event) {
 async function handle(req, res, urlPath) {
   /* ---------- 公開用 ---------- */
   if (urlPath === '/api/published' && req.method === 'GET') {
-    try { return json(res, 200, await store.getPublished()); } catch (e) {
+    try {
+      // 混雑中のお買い物時間（ご案内の「混雑時の入店」に出す）
+      const v = require('../visit');
+      return json(res, 200, { ...(await store.getPublished()), visit: { minutes: v.VISIT_MS / 60e3, warnMinutes: v.WARN_MS / 60e3 } });
+    } catch (e) {
       console.error(e);
       return json(res, 502, { error: 'unavailable' });
     }

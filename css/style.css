@@ -219,6 +219,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 
 /* ---------- ご案内 ---------- */
 .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 16px; }
+.info-card.info-wide { grid-column: 1 / -1; } /* 文の長い項目は横いっぱいに */
 .info-card { background: var(--surface); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
 .info-card h3 { font-size: 1rem; color: var(--ink); margin-bottom: 6px; }
 .info-card h3::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 3px; background: var(--brand-grad); vertical-align: 1px; }
