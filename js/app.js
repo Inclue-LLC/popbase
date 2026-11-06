@@ -111,6 +111,8 @@ window.AppReady = (async function () {
     $('#shippingNote').closest('.info-card').hidden = !SHOP.shippingNote;
     $('#paymentInfo').textContent = SHOP.paymentText || '';
     $('#paymentInfo').closest('.info-card').hidden = !SHOP.paymentText;
+    $('#returnInfo').textContent = SHOP.returnText || '';
+    $('#returnInfo').closest('.info-card').hidden = !SHOP.returnText;
     // 混雑時の入店（店内の上限人数・混雑中のお買い物時間）
     const rules = window.VISIT_RULES || { minutes: 30, warnMinutes: 5 };
     $('#crowdInfo').textContent = `店内に同時に入れるのは ${SHOP.capacity || 50} 人までです。満員のときは、入口で順番にお待ちいただきます。`

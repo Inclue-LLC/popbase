@@ -912,7 +912,9 @@ function fieldHtml(f, value, placeholders) {
     input = `<span class="dt-row"><input id="${id}" data-key="${f.key}" type="${f.type === 'datetime' ? 'datetime-local' : 'time'}" step="60" value="${esc(value ?? '')}">
       ${value ? `<button type="button" class="btn btn-small btn-ghost" data-reset="${f.key}">消す</button>` : ''}</span>`;
   } else if (f.type === 'textarea') {
-    input = `<textarea id="${id}" data-key="${f.key}" maxlength="300" rows="2">${esc(value ?? '')}</textarea>`;
+    // 初期の文がある欄（返品・交換など）は、空欄のときその文を入れた状態で出す
+    const text = (value ?? '') === '' && f.defaultValue ? f.defaultValue : (value ?? '');
+    input = `<textarea id="${id}" data-key="${f.key}" maxlength="300" rows="${f.defaultValue ? 4 : 2}">${esc(text)}</textarea>`;
   } else if (f.type === 'collection') {
     // Shopify のコレクションから選ぶ
     const list = state.collections.slice();
