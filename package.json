@@ -9,7 +9,8 @@
     "vendor": "node scripts/vendor.js",
     "admin:user": "node server/admin/user-cli.js",
     "shopify:setup": "node server/admin/shopify-setup.js",
-    "crowd": "node scripts/crowd.js"
+    "crowd": "node scripts/crowd.js",
+    "theme:zip": "cd shopify-theme && zip -r -X ../shopify-theme.zip layout templates config locales"
   },
   "engines": {
     "node": ">=18"

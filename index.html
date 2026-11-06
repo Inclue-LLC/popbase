@@ -203,6 +203,16 @@
     </div>
   </div>
 
+  <!-- 規約・ポリシー（Shopify の「設定 → ポリシー」の文章を、POP BASE の中で表示） -->
+  <div class="modal" id="policyModal" role="dialog" aria-modal="true" aria-labelledby="policyTitle" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card policy-card">
+      <button class="icon-btn modal-close" data-close aria-label="閉じる">&times;</button>
+      <h3 id="policyTitle"></h3>
+      <div class="policy-body" id="policyBody"></div>
+    </div>
+  </div>
+
   <!-- カート -->
   <aside class="drawer" id="cartDrawer" aria-labelledby="cartTitle" hidden>
     <div class="modal-backdrop" data-close></div>

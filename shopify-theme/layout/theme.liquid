@@ -1,0 +1,44 @@
+{%- comment -%}
+  POP BASE 用の Shopify テーマ（移動専用）
+  お客さんが Shopify のお店のページ（商品一覧・商品ページなど）を開いたら、POP BASE（popbase.jp）へ移動する。
+  お会計（チェックアウト）と注文状況のページはテーマを使わないので、そのまま Shopify で表示される。
+  規約・ポリシーのページ（/policies/…）とギフトカードのページだけは、移動せずにそのまま表示する。
+{%- endcomment -%}
+{%- assign target = settings.redirect_url | default: 'https://popbase.jp' -%}
+{%- assign stay = false -%}
+{%- if request.path contains '/policies/' or template.name == 'gift_card' -%}{%- assign stay = true -%}{%- endif -%}
+<!doctype html>
+<html lang="{{ request.locale.iso_code | default: 'ja' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>POP BASE</title>
+  {%- unless stay -%}
+    <meta http-equiv="refresh" content="0; url={{ target | escape }}">
+    <link rel="canonical" href="{{ target | escape }}">
+    <script>location.replace({{ target | json }});</script>
+  {%- endunless -%}
+  {{ content_for_header }}
+  <style>
+    body { margin: 0; font-family: "Zen Kaku Gothic New", "Hiragino Sans", sans-serif; color: #2e2729; background: #fff4f1; line-height: 1.8; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 60px; }
+    .brand { font-weight: 700; letter-spacing: .12em; text-decoration: none; color: inherit; }
+    .moving { min-height: 100vh; display: grid; place-items: center; text-align: center; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ece2e8; padding: .5em .7em; text-align: left; vertical-align: top; }
+  </style>
+</head>
+<body>
+  {%- if stay -%}
+    <div class="wrap">
+      <p><a class="brand" href="{{ target | escape }}">POP BASE</a></p>
+      {{ content_for_layout }}
+    </div>
+  {%- else -%}
+    <div class="moving">
+      <p><a class="brand" href="{{ target | escape }}">POP BASE</a><br>ページを移動しています…</p>
+    </div>
+    <div hidden>{{ content_for_layout }}</div>
+  {%- endif -%}
+</body>
+</html>

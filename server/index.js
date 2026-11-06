@@ -76,7 +76,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
     return res.end(JSON.stringify({ ip: clientIp(req) }));
   }
-  if (urlPath.startsWith('/admin/api/') || urlPath === '/api/published' || urlPath.startsWith('/uploads/')) {
+  if (urlPath.startsWith('/admin/api/') || urlPath === '/api/published' || urlPath === '/api/policies' || urlPath.startsWith('/uploads/')) {
     try {
       if ((await adminApi.handle(req, res, urlPath)) !== false) return;
     } catch (e) {

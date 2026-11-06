@@ -129,6 +129,9 @@ module.exports = {
   },
 
   /** お客さんのサイトに出すイベント（会期で自動） */
+  /** 規約・ポリシー：ローカル保存のときはなし（サイトは Shopify のページへのリンクのまま） */
+  async policies() { return []; },
+
   async getPublished() {
     const active = ev.pickActive(list(read()));
     if (!active) return { id: null, event: {}, layout: null };

@@ -1,0 +1,4 @@
+{%- comment -%} ギフトカード：移動せずにそのまま表示する {%- endcomment -%}
+<h1>ギフトカード</h1>
+<p>残高：{{ gift_card.balance | money }}</p>
+<p>コード：<strong>{{ gift_card.code | format_code }}</strong></p>

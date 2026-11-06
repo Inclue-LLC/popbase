@@ -83,6 +83,12 @@ async function handle(req, res, urlPath) {
       return json(res, 502, { error: 'unavailable' });
     }
   }
+  if (urlPath === '/api/policies' && req.method === 'GET') {
+    try { return json(res, 200, { policies: await store.policies() }); } catch (e) {
+      console.error('[policies]', e.message);
+      return json(res, 200, { policies: [] }); // 権限がないときなど：サイトは Shopify のページへのリンクにする
+    }
+  }
   if (urlPath.startsWith('/uploads/') && req.method === 'GET') {
     const name = path.basename(urlPath);
     const file = path.join(local.uploadsDir, name);
