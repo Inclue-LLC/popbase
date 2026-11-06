@@ -14,6 +14,7 @@ const SELECT = {
   floor_style: ['', 'wood', 'check', 'tile', 'carpet'],
   light: ['', 'day', 'night'],
   entrance_characters: ['', 'hide'],
+  capacity: ['', '10', '20', '30', '40', '50'], // 店内の上限人数（'' は 50 人）
   novelty: ['', 'on', 'off'], // 購入特典のあり・なし（'' は名前が入っていればあり）
   // js/event.js の FONTS と同じ値
   font: ['', 'mplus-maru', 'zen-maru', 'kosugi-maru', 'kiwi-maru', 'noto-sans', 'zen-kaku', 'noto-serif', 'yusei', 'hachi-maru', 'dotgothic'],

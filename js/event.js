@@ -112,6 +112,7 @@
     { group: '会期・営業時間', key: 'daily_open', label: '毎日の開店時刻', hint: '閉店時刻とセットで設定。空欄なら会期中は24時間営業', type: 'time' },
     { group: '会期・営業時間', key: 'daily_close', label: '毎日の閉店時刻', hint: '閉店5分前から店内にタイマーを表示し、時間になると自動で退店', type: 'time' },
     { group: '会期・営業時間', key: 'period', label: '会期の表示文', hint: '看板の下の行・入口・ご案内に出す文。空欄なら上の日時から自動で作ります', type: 'text', placeholderPath: 'schedule.period' },
+    { group: '会期・営業時間', key: 'capacity', label: '店内の上限人数', hint: '同時に店内に入れる人数。いっぱいのときは、入口で順番待ちになります', type: 'select', options: () => opt([['10', '10人'], ['20', '20人'], ['30', '30人'], ['40', '40人'], ['', '50人']]) },
     { group: '送料・発送', key: 'shipping_text', label: '送料', hint: 'ご案内の「送料」に出す文（例：全国一律550円（税込））。改行できます（300文字まで）', type: 'textarea' },
     { group: '送料・発送', key: 'free_shipping_threshold', label: '送料無料になる金額（円）', hint: 'この金額（税込）以上で、カートの送料を「無料」と表示し、届かないときは「あと○円で送料無料」と表示します。空欄なら表示しません', type: 'number' },
     { group: '送料・発送', key: 'shipping_note', label: '発送について', hint: 'ご案内の「発送について」に出す文（例：会期終了後、12月下旬より順次発送します）。改行できます（300文字まで）', type: 'textarea' },
@@ -172,7 +173,7 @@
   const NEED = {
     brand: ['required'], title: ['required'], open_at: ['required'], close_at: ['required'], collection: ['required'],
     novelty: ['default', 'なし'], novelty_name: ['required'], novelty_threshold: ['required'], shipping_note: ['required'], shipping_text: ['required'],
-    free_shipping_threshold: ['hide'],
+    free_shipping_threshold: ['hide'], capacity: ['default', '50人'],
     product_bg_color: ['default', 'テーマの色'],
     daily_open: ['default', '24時間営業'], daily_close: ['default', '24時間営業'], period: ['default', '日時から自動で作成'],
     theme_preset: ['default', 'Milk Tea'], font: ['default', '初期設定のフォント'],
