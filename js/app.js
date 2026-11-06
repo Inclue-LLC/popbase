@@ -76,6 +76,16 @@ window.AppReady = (async function () {
       }).catch(() => { /* そのままリンクで開く */ });
     }
   }
+  /* 入口の「ご利用案内を見る」：ご案内（INFORMATION）の枠をそのまま写して表示 */
+  $('#entInfoBtn')?.addEventListener('click', () => {
+    const grid = document.querySelector('#info .info-grid').cloneNode(true);
+    grid.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+    grid.querySelectorAll('.info-card[hidden]').forEach((el) => el.remove());
+    $('#infoModalBody').replaceChildren(grid);
+    openLayer($('#infoModal'));
+    $('#infoModal .modal-card').scrollTop = 0;
+  });
+
   /** Shopify のポリシーの文章（HTML）から、スクリプトなど表示に不要なものを取り除く */
   function safePolicyHtml(html) {
     const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
