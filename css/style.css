@@ -220,6 +220,14 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 /* ---------- ご案内 ---------- */
 .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 16px; }
 .info-card.info-wide { grid-column: 1 / -1; } /* 文の長い項目は横いっぱいに */
+/* PC：上段に「開催期間・送料・発送について」（購入特典があればそれも）、下段に「お支払い方法・混雑時の入店について」 */
+@media (min-width: 900px) {
+  .info-grid { grid-template-columns: repeat(12, 1fr); }
+  .info-grid > .info-card { grid-column: span 4; }
+  .info-grid:has(.is-novelty:not([hidden])) > .info-card:not(.is-pay):not(.info-wide) { grid-column: span 3; }
+  .info-grid > .info-card.is-pay { grid-column: span 4; }
+  .info-grid > .info-card.info-wide { grid-column: span 8; }
+}
 .info-card { background: var(--surface); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
 .info-card h3 { font-size: 1rem; color: var(--ink); margin-bottom: 6px; }
 .info-card h3::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 3px; background: var(--brand-grad); vertical-align: 1px; }
