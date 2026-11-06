@@ -251,6 +251,15 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 }
 .is-open .modal-card { transform: none; opacity: 1; }
 .modal-close { position: absolute; top: 12px; right: 12px; z-index: 2; }
+/* 規約・ポリシー */
+.policy-card { width: min(720px, 100%); padding: 28px clamp(20px, 4vw, 40px) 36px; }
+.policy-card h3 { font-size: 1.2rem; padding-right: 40px; margin-bottom: 16px; }
+.policy-body { font-size: .9rem; line-height: 1.9; color: var(--ink); overflow-wrap: anywhere; }
+.policy-body h1, .policy-body h2, .policy-body h3, .policy-body h4 { font-size: 1rem; margin: 1.4em 0 .4em; }
+.policy-body p { margin: 0 0 .9em; }
+.policy-body table { border-collapse: collapse; width: 100%; margin: .6em 0 1em; }
+.policy-body th, .policy-body td { border: 1px solid var(--line); padding: .5em .7em; text-align: left; vertical-align: top; }
+.policy-body a { color: var(--accent); }
 .product-detail { display: grid; grid-template-columns: 1fr 1fr; }
 @media (max-width: 680px) { .product-detail { grid-template-columns: 1fr; } }
 .pd-image { background: color-mix(in srgb, var(--c) 30%, var(--surface)); aspect-ratio: 1; }

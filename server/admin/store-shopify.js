@@ -185,12 +185,27 @@ const imageOk = (v) => v && typeof v === 'object' &&
   /^gid:\/\/shopify\/MediaImage\/\d+$/.test(v.id) && /^https:\/\/cdn\.shopify\.com\//.test(v.url);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let policyCache = null; // 規約・ポリシー（10分ごとに読み直す）
 
 module.exports = {
   mode: 'shopify',
   label: `Shopify（${DOMAIN}）`,
   enabled: auth.configured,
   defaultCollection: COLLECTION,
+
+  /**
+   * 規約・ポリシー（Shopify 管理画面「設定 → ポリシー」）。お客さんのサイトのページ下から、POP BASE の中で開く
+   * Admin API の権限 read_legal_policies が必要（なければ空で返し、サイトは Shopify のページへのリンクにする）
+   */
+  async policies() {
+    const now = Date.now();
+    if (policyCache && now - policyCache.at < 10 * 60e3) return policyCache.list;
+    const data = await gql(`{ shop { shopPolicies { type title body url } } }`);
+    const list = (data.shop?.shopPolicies || []).filter((p) => p.body && p.body.trim())
+      .map((p) => ({ type: String(p.type).toLowerCase().replace(/_/g, '-'), title: p.title, body: p.body, url: p.url }));
+    policyCache = { at: now, list };
+    return list;
+  },
 
   async listEvents() {
     const all = await readAll();

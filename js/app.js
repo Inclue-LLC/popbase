@@ -57,6 +57,39 @@ window.AppReady = (async function () {
     } else if (links) links.hidden = true;
     const demo = $('#demoNote');
     if (demo) demo.hidden = !!shopify;
+
+    // サーバーが Shopify からポリシーの文章を読めたら、リンクを押したときに POP BASE の中で開く
+    // （読めないとき＝権限がない・未入力などは、上の Shopify のページへのリンクのまま）
+    if (shopify && links && /^https?:$/.test(location.protocol)) {
+      fetch('/api/policies').then((r) => r.json()).then(({ policies = [] }) => {
+        const byType = Object.fromEntries(policies.map((p) => [p.type, p]));
+        links.addEventListener('click', (e) => {
+          const a = e.target.closest('[data-policy]');
+          const p = a && byType[a.dataset.policy];
+          if (!p) return;
+          e.preventDefault();
+          $('#policyTitle').textContent = a.textContent.trim() || p.title;
+          $('#policyBody').replaceChildren(safePolicyHtml(p.body));
+          openLayer($('#policyModal'));
+          $('#policyModal .modal-card').scrollTop = 0;
+        });
+      }).catch(() => { /* そのままリンクで開く */ });
+    }
+  }
+  /** Shopify のポリシーの文章（HTML）から、スクリプトなど表示に不要なものを取り除く */
+  function safePolicyHtml(html) {
+    const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+    doc.querySelectorAll('script, style, iframe, object, embed, form, link, meta').forEach((n) => n.remove());
+    doc.body.querySelectorAll('*').forEach((el) => {
+      for (const at of [...el.attributes]) {
+        const v = at.value.trim().toLowerCase();
+        if (at.name.startsWith('on') || ((at.name === 'href' || at.name === 'src') && v.startsWith('javascript:'))) el.removeAttribute(at.name);
+      }
+      if (el.tagName === 'A') { el.target = '_blank'; el.rel = 'noopener'; }
+    });
+    const frag = document.createDocumentFragment();
+    frag.append(...doc.body.childNodes);
+    return frag;
   }
   function renderShippingInfo() {
     // 送料・発送（店内管理画面の「送料・発送」で設定。送料無料になる金額が 0 なら送料無料なし）

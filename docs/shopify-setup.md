@@ -48,6 +48,7 @@ window.SHOPIFY_CONFIG = {
    - `read_products`, `write_products`
    - `read_metaobjects`, `write_metaobjects`, `write_metaobject_definitions`
    - `read_files`, `write_files`
+   - `read_legal_policies`（規約・ポリシーを POP BASE の中で表示するため。なくても動きますが、その場合は Shopify のページへのリンクになります）
 3. アプリを **このストア（popbase.myshopify.com）にインストール** する
 4. アプリの **設定** 画面にある **クライアント ID** と **シークレット** を、サーバーの環境変数に設定する（ファイル・チャットには書かない）
 
@@ -119,6 +120,10 @@ npm run shopify:setup
 | お問い合わせ | 連絡先情報（contact-information） |
 
 6つとも「設定 → ポリシー」で入力・保存してください。入力していないものはリンク先が「ページが見つかりません」になります。
+
+Admin API のアプリに `read_legal_policies` の権限が付いていれば、リンクを押すと **POP BASE の中のウィンドウ** に、Shopify で書いた文章がそのまま表示されます（書く場所は Shopify の1か所だけ。変更は10分以内に反映）。権限がないときや、その項目が未入力のときは、Shopify のページへのリンクになります。
+
+お会計を POP BASE だけで完結させる設定（お会計画面のデザイン・ドメイン・移動専用テーマなど）は [shopify-checkout.md](shopify-checkout.md) を見てください。
 
 ## 注意
 

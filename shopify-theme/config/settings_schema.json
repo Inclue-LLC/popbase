@@ -1,0 +1,21 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "POP BASE（移動専用）",
+    "theme_version": "1.0.0",
+    "theme_author": "POP BASE",
+    "theme_documentation_url": "https://popbase.jp",
+    "theme_support_url": "https://popbase.jp"
+  },
+  {
+    "name": "移動先",
+    "settings": [
+      {
+        "type": "url",
+        "id": "redirect_url",
+        "label": "お客さんを移動させるページ",
+        "info": "Shopify のお店のページを開いたお客さんを、このページへ移動します（初期値：https://popbase.jp）"
+      }
+    ]
+  }
+]
