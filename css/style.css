@@ -273,6 +273,9 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .pd-spec, .pd-stock { font-size: .85rem; color: var(--ink-soft); }
 .pd-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 14px; }
 .pd-actions .btn { flex: 1; min-width: 160px; }
+/* 「カートに入れる」は、入口の「お店に入る」と同じテーマの色 */
+#pmAdd { background: var(--theme-btn, var(--primary)); color: var(--theme-btn-ink, var(--primary-ink));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-btn, #6b5a8e) 28%, transparent); }
 .pd-note { font-size: .82rem; color: var(--pink); font-weight: 700; min-height: 1.4em; }
 .qty { display: inline-flex; align-items: center; gap: 10px; }
 .qty output { min-width: 1.6em; text-align: center; font-weight: 800; }
