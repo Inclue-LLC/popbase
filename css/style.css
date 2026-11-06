@@ -331,10 +331,13 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .toast.show { transform: translate(-50%, 0); opacity: 1; }
 
 @media (max-width: 640px) {
-  .site-header { flex-wrap: wrap; gap: 8px; }
+  /* スマホ：ヘッダーの縦幅を詰める（1行目：ロゴとカート、2行目：店内・ご案内） */
+  .site-header { flex-wrap: wrap; gap: 0 8px; padding-top: 6px; padding-bottom: 2px; }
   .nav { order: 3; width: 100%; margin: 0 -4px; }
-  .cart-btn { margin-left: auto; }
-  html { scroll-padding-top: 110px; }
+  .nav a { font-size: .85rem; padding: .3em .9em; }
+  .cart-btn { margin-left: auto; width: 40px; height: 40px; }
+  .cart-btn svg { width: 22px; height: 22px; }
+  html { scroll-padding-top: 90px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
