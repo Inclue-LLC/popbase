@@ -185,7 +185,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
   border: 0; background: var(--primary); color: var(--primary-ink);
   display: grid; place-items: center;
 }
-.cart-btn svg { width: 24px; height: 24px; transform: translate(-1px, 2px); } /* カートの絵は重心が上・右寄りなので、円の中で少し下（と左）へ */
+.cart-btn svg { width: 24px; height: 24px; }
 .cart-btn.bump { animation: bump .4s; }
 @keyframes bump { 50% { transform: scale(1.18); } }
 .cart-count {
@@ -336,7 +336,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
   .logo { grid-column: 1 / -1; justify-self: start; }
   .nav { grid-column: 1; grid-row: 2; margin: 0 0 0 -4px; }
   .nav a { font-size: .85rem; padding: .3em .9em; }
-  .cart-btn { grid-column: 2; grid-row: 2; margin: 0; width: 38px; height: 38px; }
+  .cart-btn { grid-column: 2; grid-row: 2; margin: 0; width: 38px; height: 38px; top: -4px; }
   .cart-btn svg { width: 22px; height: 22px; }
   html { scroll-padding-top: 110px; }
 }
