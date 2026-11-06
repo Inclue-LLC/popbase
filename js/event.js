@@ -173,7 +173,7 @@
   const NEED = {
     brand: ['required'], title: ['required'], open_at: ['required'], close_at: ['required'], collection: ['required'],
     novelty: ['default', 'なし'], novelty_name: ['required'], novelty_threshold: ['required'], shipping_note: ['required'], shipping_text: ['required'],
-    free_shipping_threshold: ['hide'], capacity: ['default', '50人'],
+    free_shipping_threshold: ['hide'], capacity: ['none'], // 選ぶだけの欄なのでバッジなし
     product_bg_color: ['default', 'テーマの色'],
     daily_open: ['default', '24時間営業'], daily_close: ['default', '24時間営業'], period: ['default', '日時から自動で作成'],
     theme_preset: ['default', 'Milk Tea'], font: ['default', '初期設定のフォント'],

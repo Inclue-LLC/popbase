@@ -799,6 +799,7 @@ setInterval(() => { if (state.draft) renderScheduleStatus(); }, 30000);
 
 /** 必須・任意の表示 */
 function needBadge(f) {
+  if (f.need === 'none') return '';
   if (f.need === 'required') return '<span class="need need-required">必須</span>';
   if (f.need === 'hide') return '<span class="need need-hide">任意・空欄なら非表示</span>';
   return `<span class="need need-default">任意・空欄なら${esc(f.fallback)}</span>`;
