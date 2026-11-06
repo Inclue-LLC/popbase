@@ -2,6 +2,8 @@
    3D 店内（アバター）
    ========================================================== */
 .section-store { max-width: 1280px; }
+/* PC：ヘッダーの下の線から「IN STORE」までを詰める（スマホはそのまま） */
+@media (min-width: 641px) { .section-store { padding-top: 36px; } }
 
 .world {
   position: relative;
