@@ -149,12 +149,22 @@ async function main() {
   document.addEventListener('haneul:look', (e) => {
     look = { avatar: e.detail.avatar };
     self.setLook(look.avatar);
+    resetView(); // 入店するたびに、最初と同じ位置・向き（奥の壁の方）から
     tryJoin();
   });
+  /** 入口の位置に戻し、向き・カメラも最初と同じにする（退店・時間切れ・再入店のとき） */
+  function resetView() {
+    self.group.position.copy(SPAWN);
+    walkTarget = null;
+    controls.yaw = 0;
+    controls.pitch = 0.22;
+    controls.distance = 3.6;
+    first = true; // カメラを動かさずに、すぐ最初の位置へ
+  }
   Visit.on('admitted', (info) => { if (info.offline) setStatus('offline'); tryJoin(); });
   Visit.on('resumed', tryJoin);
-  Visit.on('timeout', () => { clearPeers(); setStatus('offline'); self.group.position.copy(SPAWN); });
-  Visit.on('left', () => { clearPeers(); setStatus('offline'); self.group.position.copy(SPAWN); });
+  Visit.on('timeout', () => { clearPeers(); setStatus('offline'); resetView(); });
+  Visit.on('left', () => { clearPeers(); setStatus('offline'); resetView(); });
   if (Visit.state === 'inside') tryJoin();
   else if (Visit.state === 'offline') setStatus('offline');
 
