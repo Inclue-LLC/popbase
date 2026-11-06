@@ -332,13 +332,13 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 
 @media (max-width: 640px) {
   /* スマホ：1行目はロゴ、2行目に「店内・ご案内」とカート（カートは店内・ご案内と同じ高さの右端） */
-  .site-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px 8px; padding-top: 25px; padding-bottom: 5px; } /* 上の端からロゴまで 25px */
+  .site-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px 8px; padding-top: 30px; padding-bottom: 5px; } /* 上の端からロゴまで 30px */
   .logo { grid-column: 1 / -1; justify-self: start; }
   .nav { grid-column: 1; grid-row: 2; margin: 0 0 0 -4px; }
   .nav a { font-size: .85rem; padding: .3em .9em; }
   .cart-btn { grid-column: 2; grid-row: 2; margin: 0; width: 38px; height: 38px; top: -4px; }
   .cart-btn svg { width: 22px; height: 22px; }
-  html { scroll-padding-top: 123px; }
+  html { scroll-padding-top: 128px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
