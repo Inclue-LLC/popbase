@@ -14,6 +14,7 @@
  *   WARN_MINUTES      終了何分前からタイマーを出すか（既定 5）
  *   RECONNECT_SECONDS 再読み込み・通信の切れ目で、席や順番を預かる秒数（既定 30）
  *   MAX_PER_IP        同じIPからの同時接続数の上限（既定 6）
+ *   TEST_BOTS         混雑テスト用：このサーバーの中から、自動で歩き回るお客さん（ボット）をこの人数入れる（試すときだけ。終わったら消す）
  *   ALLOWED_ORIGINS   接続を許可するサイトのURL（カンマ区切り。空なら制限なし）
  *   CLIENT_IP_HEADER / TRUST_PROXY_HOPS  接続元 IP の読み方（server/client-ip.js）
  */
@@ -27,6 +28,7 @@ const { clientIp } = require('./client-ip');
 
 const PORT = Number(process.env.PORT) || 8080;
 const MAX_PER_IP = Number(process.env.MAX_PER_IP) || 6;
+const TEST_BOTS = Math.max(0, Math.min(200, Number(process.env.TEST_BOTS) || 0));
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
 const ROOT = path.resolve(__dirname, '..');
 
@@ -103,7 +105,9 @@ const wss = new WebSocketServer({
 
 wss.on('connection', (ws, req) => {
   const ip = clientIp(req);
-  if ((ipCount.get(ip) || 0) >= MAX_PER_IP) return ws.close(1008, 'too many');
+  // 混雑テストのボット（このサーバー自身からの接続）は、接続数の制限から外す
+  const isTestBot = TEST_BOTS > 0 && !req.headers['x-forwarded-for'] && /^(::1|127\.0\.0\.1|::ffff:127\.0\.0\.1)$/.test(req.socket.remoteAddress || '');
+  if (!isTestBot && (ipCount.get(ip) || 0) >= MAX_PER_IP) return ws.close(1008, 'too many');
   ipCount.set(ip, (ipCount.get(ip) || 0) + 1);
   ws.on('close', () => ipCount.set(ip, Math.max(0, (ipCount.get(ip) || 1) - 1)));
 
@@ -131,6 +135,15 @@ server.listen(PORT, () => {
   console.log(`POP BASE: http://localhost:${PORT}  （同時接続: ws://localhost:${PORT}/ws）`);
   console.log(`入場制限: ${visit.CAP} 人まで。混雑中のお買い物時間 ${visit.VISIT_MS / 60e3} 分（終了 ${visit.WARN_MS / 60e3} 分前からタイマー表示）`);
   console.log(`店内管理画面: http://localhost:${PORT}/admin  （保存先: ${adminApi.store.label}）`);
+  // 混雑テスト：TEST_BOTS 人のボットを入れる（scripts/crowd.js を、このサーバーに向けて起動）
+  if (TEST_BOTS) {
+    console.log(`[混雑テスト] ボット ${TEST_BOTS} 人を入れます。終わったら環境変数 TEST_BOTS を消してください`);
+    const { spawn } = require('child_process');
+    setTimeout(() => {
+      const bots = spawn(process.execPath, [require('path').join(__dirname, '..', 'scripts', 'crowd.js'), String(TEST_BOTS), '--url', `http://127.0.0.1:${PORT}`], { stdio: 'inherit' });
+      process.on('exit', () => bots.kill());
+    }, 3000);
+  }
   const auth = require('./admin/auth');
   // 最初のアカウント：アカウントが1つもなく、ADMIN_INITIAL_USER / ADMIN_INITIAL_PASSWORD があれば作る
   // （コマンドを打てない公開サービス向け。作ったあとは、この2つの環境変数を消してください）
