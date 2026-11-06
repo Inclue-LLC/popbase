@@ -179,7 +179,6 @@ window.AppReady = (async function () {
 
   /* ---------- 入店するときのアバター選び ---------- */
   const LOOK_KEY = 'haneul:look';
-  const savedLook = () => { try { return JSON.parse(localStorage.getItem(LOOK_KEY) || 'null'); } catch { return null; } };
   let pickSel = null;
   function renderEntrancePick() {
     const escAttr = (v) => String(v).replace(/[&<>"']/g, '');
@@ -189,8 +188,8 @@ window.AppReady = (async function () {
         ${Art.characterSVG(a.character || { image: a.image })}<span>${esc(a.name)}</span></button>`).join('');
   }
   function openEntrancePick() {
-    const last = savedLook()?.avatar;
-    pickSel = window.AVATARS.some((a) => a.id === last) ? last : window.AVATARS[0].id;
+    // 入店のたびに、いちばん左のアバターを選んだ状態から（前回選んだものは引き継がない）
+    pickSel = window.AVATARS[0].id;
     renderEntrancePick();
     entrance.classList.add('is-picking');
     $('#entPick').hidden = false;
