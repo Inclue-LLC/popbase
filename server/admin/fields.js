@@ -4,7 +4,7 @@
  */
 const TEXT = ['brand', 'title', 'period', 'left_title', 'left_label', 'right_title', 'right_label', 'novelty_name',
   'entrance_kicker', 'entrance_heading', 'entrance_message', 'entrance_button'];
-const MULTILINE = ['entrance_notice', 'shipping_note', 'shipping_text']; // 改行を許す（300文字まで）
+const MULTILINE = ['entrance_notice', 'shipping_note', 'shipping_text', 'payment_text']; // 改行を許す（300文字まで）
 const COLOR = ['wall_color', 'wall_pattern_color', 'lower_color', 'trim_color', 'floor_color_1', 'floor_color_2', 'rug_color', 'sign_color', 'sign_text_color', 'sign_sub_color',
   'entrance_color_top', 'entrance_color_bottom', 'entrance_heading_color', 'entrance_text_color', 'product_bg_color', 'avatar_ring_color', 'char_note_color'];
 const IMAGE = ['wall_image', 'floor_image', 'entrance_logo', 'entrance_image'];
@@ -53,6 +53,7 @@ function missingRequired(event = {}) {
   if (event.novelty === 'on' && blank(event.novelty_threshold)) miss.push('特典の条件金額');
   if (blank(event.shipping_text)) miss.push('送料');
   if (blank(event.shipping_note)) miss.push('発送について');
+  if (blank(event.payment_text)) miss.push('お支払い方法');
   return miss;
 }
 

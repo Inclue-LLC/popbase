@@ -99,6 +99,12 @@ window.AppReady = (async function () {
       : `全国一律 ${yen(SHOP.shippingFee)}。${free ? `${yen(SHOP.freeShippingThreshold)} 以上で送料無料。` : ''}`);
     $('#shippingNote').textContent = SHOP.shippingNote || '';
     $('#shippingNote').closest('.info-card').hidden = !SHOP.shippingNote;
+    $('#paymentInfo').textContent = SHOP.paymentText || '';
+    $('#paymentInfo').closest('.info-card').hidden = !SHOP.paymentText;
+    // 混雑時の入店（店内の上限人数・混雑中のお買い物時間）
+    const rules = window.VISIT_RULES || { minutes: 30, warnMinutes: 5 };
+    $('#crowdInfo').textContent = `店内に同時に入れるのは ${SHOP.capacity || 50} 人までです。満員のときは、入口で順番にお待ちいただきます。`
+      + `順番を待っている方がいる間は、お一人様のお買い物時間は ${rules.minutes} 分までとなります（終了 ${rules.warnMinutes} 分前からお知らせします）。時間になると自動で退店となり、カートの中身は空になりますので、お会計はお早めにお済ませください。`;
   }
 
   /* ---------- 入口 ----------
