@@ -177,7 +177,12 @@ body.world-fs .world {
   font-weight: 700; font-size: .85rem; color: #3a3346; /* 名前の色は入口のアバター選びと同じ */
 }
 .pick-char svg, .pick-char .char-img { width: 100%; max-width: 76px; height: auto; }
-.pick-char[aria-pressed="true"] { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent); }
+.pick-char[aria-pressed="true"] { border-color: var(--theme-accent, #9b80e0); box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent, #9b80e0) 35%, transparent); }
+/* ボタンなどの色は、入口のアバター選びと同じ（設定されたテーマの色） */
+.picker-card { color: #2e2729; }
+.picker-card .pick-note { color: #6f6880; }
+#pickGo { background: var(--theme-btn, var(--primary)); color: var(--theme-btn-ink, var(--primary-ink));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-btn, #6b5a8e) 28%, transparent); }
 .pick-name { display: grid; gap: 6px; font-size: .85rem; color: var(--ink-soft); text-align: left; }
 .pick-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pick-name select { font: inherit; color: var(--ink); padding: .35em .6em; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); }
