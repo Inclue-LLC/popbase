@@ -75,7 +75,7 @@ function validate(body) {
     email: oneLine(b.email, LIMITS.email),
     order: oneLine(b.order, LIMITS.order),
     company: oneLine(b.company, LIMITS.company),
-    links: oneLine(b.links, LIMITS.links), // 出品のご案内（partners.html）の「ブランド・商品が見られるURL」
+    links: oneLine(b.links, LIMITS.links), // 出品のご案内（about.html）の「ブランド・商品が見られるURL」
     message: multiLine(b.message, LIMITS.message),
     agree: b.agree === true,
   };

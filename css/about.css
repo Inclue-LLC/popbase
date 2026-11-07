@@ -1,8 +1,8 @@
-/* 出品のご案内（partners.html）。色・ボタン・フォームの部品は css/style.css を使う */
-.partners a.btn { display: inline-block; text-decoration: none; text-align: center; }
+/* 出品のご案内（about.html）。色・ボタン・フォームの部品は css/style.css を使う */
+.about-page a.btn { display: inline-block; text-decoration: none; text-align: center; }
 .cr-header-cta { margin-left: auto; padding: .55em 1.3em; font-size: .9rem; box-shadow: none; }
 /* スマホ：ヘッダーのボタンは出さない（ロゴが2行に落ちないように。すぐ下に大きなボタンがある） */
-@media (max-width: 520px) { .partners a.cr-header-cta { display: none; } }
+@media (max-width: 520px) { .about-page a.cr-header-cta { display: none; } }
 
 /* ---------- はじめ ---------- */
 .cr-hero {
@@ -64,4 +64,4 @@
 .cr-sub { margin: 10px 0 0; color: var(--ink-soft); line-height: 1.8; }
 .cr-form { display: grid; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(20px, 4vw, 32px); box-shadow: var(--shadow); }
 .cr-done { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 32px 20px; box-shadow: var(--shadow); }
-.partners .site-footer a { color: var(--ink-soft); }
+.about-page .site-footer a { color: var(--ink-soft); }
