@@ -22,6 +22,7 @@
   const PRODUCT_FIELDS = (withInventory) => `
     id handle title description descriptionHtml productType tags
     featuredImage { url(transform: { maxWidth: 600, maxHeight: 600 }) }
+    images(first: 8) { nodes { url(transform: { maxWidth: 1000, maxHeight: 1000 }) } }
     variants(first: 1) { nodes { id availableForSale ${withInventory ? 'quantityAvailable' : ''} price { amount } } }
     metafields(identifiers: [
       { namespace: "popup", key: "zone" }, { namespace: "popup", key: "order" },
@@ -89,7 +90,8 @@
       character: '',
       category: slug(node.productType),
       categoryName: node.productType || 'その他',
-      image: node.featuredImage?.url || null,
+      image: node.featuredImage?.url || null, // 店内の棚・カートに使う（Shopify の1枚目）
+      images: (node.images?.nodes || []).map((n) => n.url).filter(Boolean), // 商品の詳細で切り替えて見せる（8枚まで）
       shape: SIZES[mf(node, 'size')] || 'mug',
       display: zone,
       order: toInt(mf(node, 'order')) ?? 1000 + i,
