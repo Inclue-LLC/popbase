@@ -342,7 +342,8 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
   transform: translate(-50%, 30px); opacity: 0; pointer-events: none;
   background: var(--ink); color: var(--bg);
   padding: .7em 1.4em; border-radius: 999px; font-size: .88rem; font-weight: 700;
-  max-width: calc(100% - 32px); text-align: center;
+  /* left: 50% のままだと画面の半分の幅で折り返すので、文の長さに合わせた幅にする（長い文だけ画面幅で折り返す） */
+  width: max-content; max-width: calc(100vw - 32px); text-align: center;
   transition: transform .3s, opacity .3s;
 }
 .toast.show { transform: translate(-50%, 0); opacity: 1; }
