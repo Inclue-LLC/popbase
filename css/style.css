@@ -128,6 +128,16 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
   white-space: pre-line;
 }
 .entrance-notice + .btn { display: table; margin: 0 auto; }
+/* 閉店30分前からの案内（入口・アバター選び） */
+.entrance-closing {
+  display: block; width: fit-content; max-width: min(30em, 100%); margin: -.4rem auto 1.2rem;
+  padding: .6em 1.4em; border-radius: 16px;
+  background: rgba(255, 255, 255, .85); color: #3a3346; line-height: 1.6;
+}
+.entrance-closing b { display: block; font-size: 1rem; }
+.entrance-closing small { display: block; font-size: .78rem; color: #6b6478; }
+.entrance-closing small span { display: inline-block; } /* 改行は「、」のところで */
+.entrance.is-waiting #entClosing, .entrance.is-closed #entClosing { display: none; }
 .entrance-theme { font-weight: 700; font-size: clamp(1.15rem, 3.6vw, 1.45rem); margin: .2rem 0 1rem; }
 .entrance-cast { display: flex; justify-content: center; gap: clamp(4px, 2vw, 18px); margin: 0 auto 1rem; }
 .entrance-cast svg, .entrance-cast .char-img { width: clamp(60px, 16vw, 110px); height: auto; }
@@ -406,6 +416,9 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .ew-small { white-space: nowrap; }
 .ew-small .ew-br { display: none; }
 @media (max-width: 480px) { .ew-small { white-space: normal; } .ew-small .ew-br { display: inline; } }
+/* スマホ：「このままお待ちください。」のあとで改行 */
+.ew-note .ew-br { display: none; }
+@media (max-width: 680px) { .ew-note .ew-br { display: inline; } }
 .entrance-ended { margin-bottom: 18px; }
 .entrance.is-waiting #enterBtn, .entrance.is-waiting #entNotice { display: none; }
 /* 順番待ちの画面は、キャラクターを出さずに詰める（小さいスマホでも画面に収まるように） */

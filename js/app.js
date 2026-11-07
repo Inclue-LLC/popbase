@@ -301,6 +301,7 @@ window.AppReady = (async function () {
   let lastOpen = null;
   let serverClosedAt = 0; // サーバーから「営業時間外」と言われた時刻（1分間はそれに従う）
   let countdownTo = null; // 次のイベントのオープン時刻（カウントダウン中だけ）
+  let closesAtNow = null; // 営業中の閉店時刻（閉店30分前の案内に使う）
   function renderStoreStatus() {
     if (entrancePreview) return;
     const serverSaysClosed = Visit.state === 'closed' && Date.now() - serverClosedAt < 60e3;
@@ -315,6 +316,8 @@ window.AppReady = (async function () {
     entrance.classList.toggle('is-closed', !open);
     $('#entStatus').hidden = open || idle;
     countdownTo = null;
+    closesAtNow = open && !idle ? st.closesAt || null : null;
+    tickClosing();
     if (!open && !idle) {
       const s2 = serverSaysClosed && st.state === 'open' ? { state: 'closed' } : st;
       const when = s2.opensAt ? HS.whenText(s2.opensAt) : '';
@@ -358,10 +361,19 @@ window.AppReady = (async function () {
     $('#cdM').textContent = String(Math.floor(s / 60) % 60).padStart(2, '0');
     $('#cdS').textContent = String(s % 60).padStart(2, '0');
   }
+  /* 閉店30分前から、入口（入店前）に「閉店まで あと○分です」を出す。入店は止めない */
+  const CLOSING_NOTICE_MS = 30 * 60e3;
+  function tickClosing() {
+    const box = $('#entClosing');
+    const ms = closesAtNow ? closesAtNow - Date.now() : 0;
+    if (!(ms > 0 && ms <= CLOSING_NOTICE_MS)) { box.hidden = true; return; }
+    box.hidden = false;
+    $('#entClosingMin').textContent = Math.max(1, Math.ceil(ms / 60e3));
+  }
   renderStoreStatus();
   tickCountdown();
   setInterval(renderStoreStatus, 15000);
-  setInterval(tickCountdown, 1000);
+  setInterval(() => { tickCountdown(); tickClosing(); }, 1000);
 
   /* ---------- お買い物時間の残り（終了5分前から表示） ---------- */
   let warned = { five: false, one: false };
