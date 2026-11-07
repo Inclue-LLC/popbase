@@ -586,7 +586,9 @@ window.AppReady = (async function () {
       btn.disabled = true;
       btn.textContent = '購入手続きを準備しています…';
       try {
-        const url = await shopify.checkout(t.lines.map(({ p, q }) => ({ variantId: p.variantId, quantity: q })));
+        const { url, cartId } = await shopify.checkout(t.lines.map(({ p, q }) => ({ variantId: p.variantId, quantity: q })));
+        // お会計から戻ってきたときに、注文が完了したかを確かめるため、Shopify のカートを覚えておく
+        try { localStorage.setItem(PENDING_KEY, JSON.stringify({ cartId, at: Date.now() })); } catch { /* noop */ }
         window.location.href = url;
       } catch (err) {
         console.error(err);
@@ -607,6 +609,34 @@ window.AppReady = (async function () {
     closeLayer($('#cartDrawer'));
     setTimeout(() => openLayer($('#doneModal')), 260);
   });
+
+  /*
+   * お会計（Shopify）で注文が完了したら、POP BASE のカートを空にする
+   * 「購入手続きへ」で作った Shopify のカートは、注文が完了すると Shopify から消える。
+   * このページを開いたとき・ほかのタブから戻ってきたときに確かめ、消えていればカートを空にする。
+   * （3日以上前のものは確かめずに忘れる：Shopify のカートの期限切れと区別できないため）
+   */
+  const PENDING_KEY = 'haneul:pendingCheckout';
+  let checkingOrder = false;
+  async function checkFinishedOrder() {
+    if (!shopify?.cartState || checkingOrder) return;
+    let pending = null;
+    try { pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch { /* noop */ }
+    if (!pending?.cartId) return;
+    if (Date.now() - (pending.at || 0) > 3 * 86400e3) { try { localStorage.removeItem(PENDING_KEY); } catch { /* noop */ } return; }
+    checkingOrder = true;
+    const st = await shopify.cartState(pending.cartId);
+    checkingOrder = false;
+    if (st !== 'gone') return; // まだ注文していない（または通信できなかった）ときは、カートはそのまま
+    try { localStorage.removeItem(PENDING_KEY); } catch { /* noop */ }
+    if (!Object.keys(state.cart).length) return;
+    state.cart = {};
+    saveCart();
+    toast('ご注文ありがとうございました。カートを空にしました');
+  }
+  checkFinishedOrder();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkFinishedOrder(); });
+  window.addEventListener('pageshow', (e) => { if (e.persisted) checkFinishedOrder(); }); // ブラウザの「戻る」で戻ってきたとき
 
   /* ---------- 退店（店内の EXIT から） ---------- */
   function confirmExit() {

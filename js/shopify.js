@@ -124,7 +124,7 @@
   async function checkout(lines) {
     const json = await gql(`
       mutation CreateCart($input: CartInput!) {
-        cartCreate(input: $input) { cart { checkoutUrl } userErrors { field message } }
+        cartCreate(input: $input) { cart { id checkoutUrl } userErrors { field message } }
       }`, {
       input: {
         lines: lines.map((l) => ({ merchandiseId: l.variantId, quantity: l.quantity })),
@@ -132,8 +132,20 @@
     });
     const r = json.data?.cartCreate;
     if (!r?.cart?.checkoutUrl) throw new Error(r?.userErrors?.map((e) => e.message).join(' / ') || 'cartCreate failed');
-    return r.cart.checkoutUrl;
+    return { url: r.cart.checkoutUrl, cartId: r.cart.id };
   }
 
-  window.ShopifyData = { enabled, load, checkout };
+  /**
+   * お会計（Shopify のカート）がまだ残っているか。注文が完了したカートは Shopify から消えるので null が返る
+   * → 'open'（まだ注文していない）／'gone'（注文が完了した、または期限切れ）／'unknown'（通信できなかった）
+   */
+  async function cartState(cartId) {
+    try {
+      const json = await gql(`query CartState($id: ID!) { cart(id: $id) { id } }`, { id: cartId });
+      if (json.errors?.length) return 'unknown';
+      return json.data?.cart ? 'open' : 'gone';
+    } catch { return 'unknown'; }
+  }
+
+  window.ShopifyData = { enabled, load, checkout, cartState };
 })();
