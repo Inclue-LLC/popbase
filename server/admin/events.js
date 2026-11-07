@@ -43,6 +43,26 @@ function pickActive(list, now = Date.now()) {
   return items.sort((a, b) => b.at - a.at)[0].x;
 }
 
+/**
+ * 会期が重なる別のイベント（1つの期間に開けるイベントは1つ）。重なりがなければ null
+ * list = store.listEvents() の要約（公開済みなら公開中の会期、未公開なら下書きの会期）
+ */
+function findOverlap(list, id, openAt, closeAt) {
+  const a0 = schedule.parseDateTime(openAt);
+  const a1 = schedule.parseDateTime(closeAt);
+  if (a0 == null || a1 == null) return null;
+  for (const x of list) {
+    if (x.id === id) continue;
+    const e = x; // 一覧の要約（listEvents）：open_at / close_at は公開中の会期、未公開なら下書きの会期
+    const b0 = schedule.parseDateTime(e.open_at);
+    const b1 = schedule.parseDateTime(e.close_at);
+    if (b0 == null || b1 == null) continue;
+    if (a0 < b1 && b0 < a1) return { id: x.id, title: e.title || '（名前なし）', period: schedule.periodText(e) };
+  }
+  return null;
+}
+const overlapMessage = (o) => `この会期は、イベント「${o.title}」（${o.period}）と重なっています。1つの期間に開けるイベントは1つです`;
+
 /** 一覧に出す要約 */
 function summary(x, activeId) {
   const d = x.draft?.event || {};
@@ -71,4 +91,4 @@ function copyForNew(event = {}, title = '') {
   return out;
 }
 
-module.exports = { newId, validId, pickActive, summary, copyForNew };
+module.exports = { newId, validId, pickActive, summary, copyForNew, findOverlap, overlapMessage };
