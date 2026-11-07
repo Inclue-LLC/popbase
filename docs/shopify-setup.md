@@ -50,6 +50,7 @@ window.SHOPIFY_CONFIG = {
    - `read_files`, `write_files`
    - `read_legal_policies`（規約・ポリシーを POP BASE の中で表示するため。なくても動きますが、その場合は Shopify のページへのリンクになります）
    - `read_orders`（管理画面の「注文」タブ。出品者が自分のイベントの注文を見て発送するため。読めるのは直近60日の注文）
+   - `read_merchant_managed_fulfillment_orders`, `write_merchant_managed_fulfillment_orders`（「注文」タブの「発送済みにする」。チェックを入れると、Shopify の「発送確認」の通知メールがお客さまに届きます。文面は Shopify の「設定 → 通知」で変えられます）
      - お届け先を出すため、アプリの設定の **お客さまの情報（Protected customer data）** で、名前・住所・電話番号・メールアドレスを読む許可も付けてください。付いていないと「注文」タブに案内が出ます
 3. アプリを **このストア（popbase.myshopify.com）にインストール** する
 4. アプリの **設定** 画面にある **クライアント ID** と **シークレット** を、サーバーの環境変数に設定する（ファイル・チャットには書かない）

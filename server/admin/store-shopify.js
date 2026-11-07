@@ -185,10 +185,26 @@ async function products(collection = COLLECTION) {
  * Admin API の権限 read_orders と、お客さまの情報（名前・住所・電話・メール）を読む許可が必要
  * （read_orders で読めるのは直近60日の注文）
  */
-async function orders(collection, sinceIso) {
+// 都道府県（Shopify の provinceCode「JP-13」→ 日本語）。Shopify の province は英語（Tokyo など）で返るため
+const PREFS = ['', '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+  '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県',
+  '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'];
+const prefOf = (a) => {
+  const m = /^JP-(\d{2})$/.exec(a.provinceCode || '');
+  return m && PREFS[Number(m[1])] ? PREFS[Number(m[1])] : (a.province || '');
+};
+// お名前は日本の順（姓 名）。姓・名がなければ、Shopify の name のまま
+const nameOf = (a) => (a.lastName || a.firstName ? [a.lastName, a.firstName].filter(Boolean).join(' ') : (a.name || ''));
+
+/** このイベントのコレクションの商品 ID */
+async function collectionProductIds(collection) {
   const pd = await gql(`
     query P($q: String!) { collections(first: 1, query: $q) { nodes { products(first: 250) { nodes { id } } } } }`, { q: `handle:${collection}` });
-  const ids = new Set((pd.collections.nodes[0]?.products.nodes || []).map((n) => n.id));
+  return new Set((pd.collections.nodes[0]?.products.nodes || []).map((n) => n.id));
+}
+
+async function orders(collection, sinceIso) {
+  const ids = await collectionProductIds(collection);
   if (!ids.size) return [];
   const out = [];
   let after = null;
@@ -201,8 +217,9 @@ async function orders(collection, sinceIso) {
           nodes {
             id name createdAt cancelledAt email phone note
             displayFinancialStatus displayFulfillmentStatus
-            shippingAddress { name zip province city address1 address2 phone company }
-            lineItems(first: 100) { nodes { title variantTitle sku quantity product { id } } }
+            shippingAddress { name firstName lastName zip province provinceCode city address1 address2 phone company }
+            lineItems(first: 100) { nodes { title variantTitle sku quantity unfulfilledQuantity product { id } } }
+            fulfillments(first: 20) { createdAt trackingInfo(first: 3) { company number url } }
           }
         }
       }`, { q, after });
@@ -214,14 +231,53 @@ async function orders(collection, sinceIso) {
         id: o.id, name: o.name, createdAt: o.createdAt, cancelled: !!o.cancelledAt,
         financial: o.displayFinancialStatus, fulfillment: o.displayFulfillmentStatus,
         email: o.email || '', phone: o.phone || a.phone || '', note: o.note || '',
-        ship: { name: a.name || '', company: a.company || '', zip: a.zip || '', province: a.province || '', city: a.city || '', address1: a.address1 || '', address2: a.address2 || '', phone: a.phone || '' },
-        items: items.map((li) => ({ title: li.title, variant: li.variantTitle || '', sku: li.sku || '', quantity: li.quantity })),
+        ship: { name: nameOf(a), company: a.company || '', zip: a.zip || '', province: prefOf(a), city: a.city || '', address1: a.address1 || '', address2: a.address2 || '', phone: a.phone || '' },
+        items: items.map((li) => ({ title: li.title, variant: li.variantTitle || '', sku: li.sku || '', quantity: li.quantity, unfulfilled: li.unfulfilledQuantity ?? li.quantity })),
+        // このイベントの商品が、すべて発送済みか（ほかのイベントの商品が同じ注文に入っていても、こちらの分だけで判断）
+        shipped: items.every((li) => (li.unfulfilledQuantity ?? li.quantity) === 0),
+        tracking: (o.fulfillments || []).flatMap((f) => (f.trackingInfo || []).map((t) => ({ company: t.company || '', number: t.number || '', url: t.url || '' }))).filter((t) => t.number),
       });
     }
     if (!data.orders.pageInfo.hasNextPage) break;
     after = data.orders.pageInfo.endCursor;
   }
   return out;
+}
+
+/**
+ * 発送済みにする（Shopify の「発送」を作る）。このイベントの商品の、まだ発送していない分だけ。
+ * notify が true なら、Shopify から注文した人へ発送通知メール（Shopify の「発送確認」の通知）が届く。
+ * Admin API の権限 read_merchant_managed_fulfillment_orders / write_merchant_managed_fulfillment_orders が必要
+ */
+const CARRIERS = {
+  yamato: { company: 'Yamato (JA)', url: (n) => `https://jizen.kuronekoyamato.co.jp/jizen/servlet/crjz.b.NQ0010?id=${encodeURIComponent(n)}` },
+  sagawa: { company: 'Sagawa (JA)', url: (n) => `https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo=${encodeURIComponent(n)}` },
+  japanpost: { company: 'Japan Post (JA)', url: (n) => `https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=${encodeURIComponent(n)}&locale=ja` },
+  other: { company: 'Other', url: () => '' },
+};
+async function fulfill(collection, orderId, { carrier = 'other', number = '', notify = true } = {}) {
+  if (!/^gid:\/\/shopify\/Order\/\d+$/.test(orderId || '')) throw new InputError('注文');
+  const ids = await collectionProductIds(collection);
+  const data = await gql(`
+    query F($id: ID!) { order(id: $id) { id fulfillmentOrders(first: 20) { nodes { id status
+      lineItems(first: 100) { nodes { id remainingQuantity lineItem { product { id } } } } } } } }`, { id: orderId });
+  if (!data.order) throw new InputError('注文が見つかりません');
+  const groups = [];
+  for (const fo of data.order.fulfillmentOrders.nodes) {
+    if (!['OPEN', 'IN_PROGRESS'].includes(fo.status)) continue;
+    const lines = fo.lineItems.nodes.filter((l) => l.remainingQuantity > 0 && l.lineItem?.product && ids.has(l.lineItem.product.id))
+      .map((l) => ({ id: l.id, quantity: l.remainingQuantity }));
+    if (lines.length) groups.push({ fulfillmentOrderId: fo.id, fulfillmentOrderLineItems: lines });
+  }
+  if (!groups.length) throw new InputError('このイベントの商品は、すでに発送済みです');
+  const c = CARRIERS[carrier] || CARRIERS.other;
+  const num = String(number || '').trim().slice(0, 60);
+  const trackingInfo = num ? { company: c.company, number: num, ...(c.url(num) ? { url: c.url(num) } : {}) } : undefined;
+  const r = await gql(`
+    mutation C($f: FulfillmentInput!) { fulfillmentCreate(fulfillment: $f) { fulfillment { id status } userErrors { field message } } }`,
+  { f: { lineItemsByFulfillmentOrder: groups, notifyCustomer: !!notify, ...(trackingInfo ? { trackingInfo } : {}) } });
+  userErrors(r.fulfillmentCreate.userErrors);
+  return { ok: true, status: r.fulfillmentCreate.fulfillment?.status || 'SUCCESS' };
 }
 
 /**
@@ -261,6 +317,7 @@ module.exports = {
   enabled: auth.configured,
   defaultCollection: COLLECTION,
   orders,
+  fulfill,
   setProductTags,
 
   /**
