@@ -554,8 +554,6 @@ function refreshPreview() {
   E.applyEvent(state.draft.event);
   E.applyLayout(currentLayout());
   preview.update('event');
-  $('#leftTitle').textContent = window.STORE_LAYOUT.left.label || window.STORE_LAYOUT.left.title;
-  $('#rightTitle').textContent = window.STORE_LAYOUT.right.label || window.STORE_LAYOUT.right.title;
 }
 $('#previewViews').addEventListener('click', (e) => {
   const b = e.target.closest('[data-view]');
@@ -586,8 +584,8 @@ function placesOf(layout, id) {
 const where = (layout, id) => placesOf(layout, id)[0] || null;
 const getSlot = (L, s) => (s.zone === 'island' ? L.island[s.i] : L[s.zone][s.row][s.i]);
 const setSlot = (L, s, v) => { if (s.zone === 'island') L.island[s.i] = v; else L[s.zone][s.row][s.i] = v; };
-const ZONE_NAME = { left: '左の棚', right: '右の棚', island: '限定テーブル' };
-const placeText = (s) => (s.zone === 'island' ? `限定テーブル ${s.i + 1}番` : `${ZONE_NAME[s.zone]} ${['下段', '上段'][s.row]} ${s.i + 1}番`);
+const ZONE_NAME = { left: '左の棚', right: '右の棚', island: '中央のテーブル' };
+const placeText = (s) => (s.zone === 'island' ? `中央のテーブル ${s.i + 1}番` : `${ZONE_NAME[s.zone]} ${['下段', '上段'][s.row]} ${s.i + 1}番`);
 
 function thumb(p) {
   if (!p) return '';
@@ -768,7 +766,7 @@ function themeDefault(path) {
   return path.split('.').reduce((o, k) => o?.[k], base);
 }
 
-const FORMS = { event: '#eventForm', entrance: '#entranceForm' };
+const FORMS = { event: '#eventForm', entrance: '#entranceForm', 'sign-left': '#signLeft', 'sign-island': '#signIsland', 'sign-right': '#signRight' };
 function renderForm() {
   const ev = state.draft.event;
   const base = window.THEMES[ev.theme_preset] || window.THEMES[E.original.theme];
@@ -777,6 +775,11 @@ function renderForm() {
   for (const [tab, sel] of Object.entries(FORMS)) {
     const fields = E.FIELDS.filter((f) => (f.tab || 'event') === tab && (!f.showIf || f.showIf(ev)));
     const groups = [...new Set(fields.map((f) => f.group))];
+    // 棚・テーブルの看板（商品の配置タブ）は、欄だけを並べる
+    if (tab.startsWith('sign-')) {
+      $(sel).innerHTML = fields.map((f) => fieldHtml(f, ev[f.key], placeholders)).join('');
+      continue;
+    }
     $(sel).innerHTML = NEED_LEGEND + groups.map((g) => `
       <fieldset class="fgroup"><legend>${esc(g)}</legend>
         ${fields.filter((f) => f.group === g).map((f) => fieldHtml(f, f.value ? f.value(ev) : ev[f.key], placeholders)).join('')}

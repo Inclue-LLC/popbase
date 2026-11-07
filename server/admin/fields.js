@@ -2,7 +2,7 @@
  * イベント設定・棚の配置の入力チェック（サーバー側）
  * キーは js/event.js の FIELDS と同じにしてください。
  */
-const TEXT = ['brand', 'title', 'period', 'left_title', 'left_label', 'right_title', 'right_label', 'novelty_name',
+const TEXT = ['brand', 'title', 'period', 'left_title', 'left_label', 'right_title', 'right_label', 'island_title', 'island_label', 'novelty_name',
   'entrance_kicker', 'entrance_heading', 'entrance_message', 'entrance_button'];
 const MULTILINE = ['entrance_notice', 'shipping_note', 'shipping_text', 'payment_text', 'return_text']; // 改行を許す（300文字まで）
 const COLOR = ['wall_color', 'wall_pattern_color', 'lower_color', 'trim_color', 'floor_color_1', 'floor_color_2', 'rug_color', 'sign_color', 'sign_text_color', 'sign_sub_color',

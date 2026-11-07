@@ -35,7 +35,7 @@ const EVENT_FIELDS = [
   t('admin_meta', '管理情報（管理画面が書き込みます）', 'json'),
 ];
 
-// 商品ページに出す項目（キャラクター・会場限定・仕様は使わない。会場限定は「テーブルに置く」かタグ limited で決まる）
+// 商品ページに出す項目（キャラクター・会場限定・仕様は使わない。会場限定はタグ limited で決まる）
 const PRODUCT_FIELDS = [
   { key: 'purchase_limit', name: 'お一人様の購入上限', type: 'number_integer' },
   { key: 'size', name: '棚での大きさ', type: 'single_line_text_field', validations: [{ name: 'choices', value: JSON.stringify(['大', '中', '小']) }] },

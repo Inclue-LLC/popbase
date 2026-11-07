@@ -198,12 +198,13 @@ export async function buildRoom(theme) {
       : { minX: HALF_W - shelfDepth, maxX: HALF_W, minZ, maxZ });
   }
 
-  /* ---------- 中央：会場限定テーブル ---------- */
+  /* ---------- 中央のテーブル（看板の文字は「商品の配置」で入力。英字・日本語とも空なら文字なし） ---------- */
   const tW = 3.6; const tH = 0.9; const tD = 1.4; const tZ = -1.6;
+  const isl = window.STORE_LAYOUT.island || {};
   const tableSign = T.signTexture([
-    { text: (window.STORE_LAYOUT.island || {}).title || 'LIMITED', size: 0.42, spacing: 16 },
-    { text: (window.STORE_LAYOUT.island || {}).label || '会場限定', size: 0.26, color: theme.sign.sub },
-  ], { ...theme.sign, style: 'board' }, tW, tH, { full: true });
+    isl.title && { text: isl.title, size: isl.label ? 0.42 : 0.46, spacing: 16 },
+    isl.label && { text: isl.label, size: isl.title ? 0.26 : 0.4, color: isl.title ? theme.sign.sub : theme.sign.ink },
+  ].filter(Boolean), { ...theme.sign, style: 'board' }, tW, tH, { full: true });
   const sideM = lambert(theme.shelf.edge);
   const table = new THREE.Mesh(new THREE.BoxGeometry(tW, tH, tD), [
     sideM, sideM, lambert(theme.shelf.board), sideM,

@@ -15,7 +15,7 @@
   const enabled = !!(cfg.domain && cfg.storefrontToken);
 
   // 置き場所メタフィールドの値（管理画面の選択肢）→ 店内のゾーン
-  const ZONES = { '左の棚': 'left', '右の棚': 'right', '限定テーブル': 'island', '置かない': 'none',
+  const ZONES = { '左の棚': 'left', '右の棚': 'right', '中央のテーブル': 'island', 'テーブル': 'island', '限定テーブル': 'island', '置かない': 'none',
     left: 'left', right: 'right', island: 'island', table: 'island', none: 'none' };
   const SIZES = { '大': 'plush', '中': 'mug', '小': 'keychain' };
 
@@ -71,8 +71,8 @@
   function mapProduct(node, i) {
     const v = node.variants.nodes[0] || {};
     const zone = ZONES[mf(node, 'zone')] || null;
-    // 会場限定：テーブルに置いた商品、またはタグ limited の商品
-    const limited = zone === 'island' || (node.tags || []).includes('limited');
+    // 会場限定：タグ limited の商品（中央のテーブルに置いても会場限定にはならない）
+    const limited = (node.tags || []).includes('limited');
     const qty = typeof v.quantityAvailable === 'number' ? v.quantityAvailable : null;
     const stock = v.availableForSale === false ? 0 : qty != null && qty > 0 ? qty : 99;
     return {
@@ -116,7 +116,7 @@
     const cats = [];
     for (const p of products) if (!cats.some((c) => c.id === p.category)) cats.push({ id: p.category, name: p.categoryName });
     window.CATEGORIES = cats;
-    // 置き場所が未設定の商品は、会場限定→テーブル、それ以外は左右の棚に交互に並べる
+    // 置き場所が未設定の商品は、会場限定→中央のテーブル、それ以外は左右の棚に交互に並べる
     let flip = 0;
     for (const p of products) if (!p.display) p.display = p.limited ? 'island' : (flip++ % 2 ? 'right' : 'left');
   }
