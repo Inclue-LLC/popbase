@@ -1,5 +1,5 @@
 /*
- * クリエイター向けの出品案内（creators.html）：相談フォームの送信
+ * 出品のご案内（creators.html。企業・ブランド・クリエイター向け）：相談フォームの送信
  * 送信先はサイトのお問い合わせと同じ /api/contact（server/contact.js）。種類は「出店について」で届く。
  */
 (function () {
