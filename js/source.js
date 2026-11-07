@@ -29,6 +29,8 @@
   const DEMO_EVENT = {
     brand: 'SAMPLE SHOP', title: '見本のお店',
     open_at: jstDay(-7, '10:00'), close_at: jstDay(7, '20:00'),
+    novelty: 'on', novelty_name: 'アクリルキーホルダー', novelty_threshold: 5000,
+    shipping_note: '会期終了後、順次発送します。',
     payment_text: 'クレジットカード、Apple Pay、Google Pay、PayPal、コンビニ決済、銀行振込をご利用いただけます。\n\n※コンビニ決済・銀行振込には、別途手数料が発生する場合があります。',
     left_label: 'ぬいぐるみ・キーホルダー', left_title: 'PLUSH & KEY HOLDER', right_label: '文具・雑貨', right_title: 'STATIONERY & GOODS',
     island_label: 'おすすめ', island_title: 'PICK UP',
