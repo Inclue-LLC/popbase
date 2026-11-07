@@ -224,6 +224,30 @@ async function orders(collection, sinceIso) {
   return out;
 }
 
+/**
+ * 商品の「NEW」「会場限定」を、Shopify の商品タグ（new / limited）で付け外しする（管理画面の「商品の配置」から）
+ * Admin API の権限 write_products が必要
+ */
+async function setProductTags(handle, { isNew, limited }) {
+  const found = await gql(`query P($q: String!) { products(first: 1, query: $q) { nodes { id handle tags } } }`, { q: `handle:${handle}` });
+  const prod = found.products.nodes.find((n) => n.handle === handle);
+  if (!prod) throw new InputError('商品が見つかりません');
+  const has = (t) => prod.tags.some((x) => x.toLowerCase() === t);
+  const add = []; const remove = [];
+  if (typeof isNew === 'boolean') { if (isNew && !has('new')) add.push('new'); if (!isNew && has('new')) remove.push(...prod.tags.filter((x) => x.toLowerCase() === 'new')); }
+  if (typeof limited === 'boolean') { if (limited && !prod.tags.includes('limited')) add.push('limited'); if (!limited && prod.tags.includes('limited')) remove.push('limited'); }
+  if (add.length) {
+    const r = await gql(`mutation A($id: ID!, $tags: [String!]!) { tagsAdd(id: $id, tags: $tags) { userErrors { field message } } }`, { id: prod.id, tags: add });
+    userErrors(r.tagsAdd.userErrors);
+  }
+  if (remove.length) {
+    const r = await gql(`mutation R($id: ID!, $tags: [String!]!) { tagsRemove(id: $id, tags: $tags) { userErrors { field message } } }`, { id: prod.id, tags: remove });
+    userErrors(r.tagsRemove.userErrors);
+  }
+  const tags = [...prod.tags.filter((t) => !remove.includes(t)), ...add];
+  return { id: handle, isNew: tags.some((t) => t.toLowerCase() === 'new'), limited: tags.includes('limited') };
+}
+
 // 画像の値（{ id: MediaImage の GID, url: Shopify CDN }）
 const imageOk = (v) => v && typeof v === 'object' &&
   /^gid:\/\/shopify\/MediaImage\/\d+$/.test(v.id) && /^https:\/\/cdn\.shopify\.com\//.test(v.url);
@@ -237,6 +261,7 @@ module.exports = {
   enabled: auth.configured,
   defaultCollection: COLLECTION,
   orders,
+  setProductTags,
 
   /**
    * 規約・ポリシー（Shopify 管理画面「設定 → ポリシー」）。お客さんのサイトのページ下から、POP BASE の中で開く

@@ -68,6 +68,8 @@ function cleanSubmission(b) {
     spec: oneLine(b?.spec, 200),
     size: SIZES.includes(b?.size) ? b.size : '中',
     limit: intOr(b?.limit, 1, 999),
+    isNew: b?.isNew === true, // 「NEW」の印を付けてほしい
+    limited: b?.limited === true, // 「会場限定」の印を付けてほしい
     images: Array.isArray(b?.images) ? b.images.filter((x) => typeof x === 'string' && FILE_RE.test(x) && fs.existsSync(path.join(SUB_DIR, x))).slice(0, MAX_IMAGES) : [],
   };
   const miss = [];
@@ -195,7 +197,7 @@ const safeName = (s) => String(s || '').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_
 function submissionsZip(eventId, { onlyPending = false } = {}) {
   const items = listSubmissions(eventId).filter((x) => !onlyPending || x.status === 'pending');
   const files = [];
-  const rows = [['番号', '商品名', '価格（税込）', '在庫数', '棚での大きさ', 'お一人様の購入上限', '仕様', '説明', '状態', '申請者', '申請日時', '画像']];
+  const rows = [['番号', '商品名', '価格（税込）', '在庫数', '棚での大きさ', 'お一人様の購入上限', 'タグ', '仕様', '説明', '状態', '申請者', '申請日時', '画像']];
   items.forEach((x, i) => {
     const dir = `${String(i + 1).padStart(3, '0')}_${safeName(x.name)}`;
     const names = x.images.map((f, k) => {
@@ -205,7 +207,7 @@ function submissionsZip(eventId, { onlyPending = false } = {}) {
       files.push({ name, data: fs.readFileSync(p) });
       return name;
     }).filter(Boolean);
-    rows.push([i + 1, x.name, x.price, x.stock, x.size, x.limit ?? '', x.spec, x.description, STATUS[x.status], x.by, x.createdAt, names.join(' / ')]);
+    rows.push([i + 1, x.name, x.price, x.stock, x.size, x.limit ?? '', [x.isNew && 'new', x.limited && 'limited'].filter(Boolean).join(', '), x.spec, x.description, STATUS[x.status], x.by, x.createdAt, names.join(' / ')]);
   });
   // Excel で文字化けしないよう、先頭に BOM を付ける
   files.unshift({ name: '商品一覧.csv', data: Buffer.from(`﻿${rows.map((r) => r.map(csvCell).join(',')).join('\r\n')}\r\n`, 'utf8') });

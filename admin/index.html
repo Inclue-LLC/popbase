@@ -192,6 +192,9 @@
               <label>在庫数<span class="need need-required">必須</span><input name="stock" type="number" min="0" step="1" inputmode="numeric" required></label>
               <label>棚での大きさ<select name="size"><option value="大">大（ぬいぐるみなど）</option><option value="中" selected>中（マグカップなど）</option><option value="小">小（キーホルダーなど）</option></select></label>
               <label>お一人様の購入上限<span class="need need-hide">任意</span><input name="limit" type="number" min="1" step="1" inputmode="numeric" placeholder="空欄なら上限なし"></label>
+              <div class="wide sub-flags"><span>表示する印<span class="need need-hide">任意</span></span>
+                <label class="check"><input type="checkbox" name="isNew"> NEW</label>
+                <label class="check"><input type="checkbox" name="limited"> 会場限定</label></div>
               <label class="wide">仕様（サイズ・素材など）<span class="need need-hide">任意</span><input name="spec" maxlength="200" placeholder="例：約 W24 × H20cm / ポリエステル"></label>
               <label class="wide">商品の説明<span class="need need-hide">任意</span><textarea name="description" rows="4" maxlength="2000"></textarea></label>
             </div>

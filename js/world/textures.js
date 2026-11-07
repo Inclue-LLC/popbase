@@ -349,6 +349,19 @@ function bottomGap(img, w, h, S) {
   return 0;
 }
 
+/** 描いた絵の上端と右端（px）。読み取れないとき（許可のない別サイトの画像）は画像の枠いっぱい */
+function contentBox(ctx, S) {
+  try {
+    const data = ctx.getImageData(0, 0, S, S).data;
+    const solid = (x, y) => data[(y * S + x) * 4 + 3] > 40;
+    let top = 0;
+    find: for (let y = 0; y < S; y++) for (let x = 0; x < S; x += 2) if (solid(x, y)) { top = y; break find; }
+    let right = S;
+    findR: for (let x = S - 1; x >= 0; x--) for (let y = 0; y < S; y += 2) if (solid(x, y)) { right = x; break findR; }
+    return { top, right };
+  } catch { return { top: 0, right: S }; }
+}
+
 /** 商品画像（Shopify の写真 or 見本の SVG イラスト）→ [テクスチャ, 縦横比] */
 export async function productTexture(p) {
   const S = 512;
@@ -380,14 +393,19 @@ export async function productTexture(p) {
     ctx.globalCompositeOperation = 'source-over';
   }
   if (p.isNew) {
-    rr(ctx, S - 150, 12, 136, 54, 27);
+    // NEW の札は、絵の右上に添える（絵の上に余白がある商品で、札だけ高く浮かないように）
+    const box = contentBox(ctx, S);
+    const bw = 136; const bh = 54;
+    const x = Math.min(S - bw - 8, Math.max(8, box.right - bw + 24));
+    const y = Math.min(S - bh - 8, Math.max(8, box.top - bh / 2));
+    rr(ctx, x, y, bw, bh, 27);
     ctx.fillStyle = '#ffd76a';
     ctx.fill();
     ctx.fillStyle = '#5a4300';
     ctx.font = `800 34px ${font()}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('NEW', S - 82, 40);
+    ctx.fillText('NEW', x + bw / 2, y + bh / 2 + 1);
   }
   return [toTexture(c), aspect];
 }

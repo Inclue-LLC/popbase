@@ -682,8 +682,9 @@ function renderPalette() {
       aria-label="${esc(p.name)}${at ? `（${placeText(at)}）` : '（未配置）'}">
       ${thumb(p)}
       <span><span class="pname">${esc(p.name)}</span><br>
-      <span class="pmeta">${yen(p.price)}${p.limited ? ' ・<span class="tag-limited">会場限定</span>' : ''}${p.stock === 0 ? ' ・<span class="tag-sold">在庫なし</span>' : ''}<br>
-      ${at ? `${esc(placeText(at))}${places.length > 1 ? ` ほか${places.length - 1}か所` : ''}` : '未配置'}</span></span></li>`;
+      <span class="pmeta">${yen(p.price)}${p.limited && !tagEditable() ? ' ・<span class="tag-limited">会場限定</span>' : ''}${p.isNew && !tagEditable() ? ' ・<span class="tag-limited">NEW</span>' : ''}${p.stock === 0 ? ' ・<span class="tag-sold">在庫なし</span>' : ''}<br>
+      ${at ? `${esc(placeText(at))}${places.length > 1 ? ` ほか${places.length - 1}か所` : ''}` : '未配置'}</span>
+      ${tagEditable() ? `<span class="ptags"><button type="button" class="ptag ${p.isNew ? 'is-on' : ''}" data-tag="isNew" aria-pressed="${!!p.isNew}" title="Shopify の商品タグ new を付け外し">NEW</button><button type="button" class="ptag ${p.limited ? 'is-on' : ''}" data-tag="limited" aria-pressed="${!!p.limited}" title="Shopify の商品タグ limited を付け外し">会場限定</button></span>` : ''}</span></li>`;
   }).join('') || '<li class="pmeta">該当する商品がありません</li>';
 }
 $('#search').addEventListener('input', renderPalette);
@@ -749,7 +750,23 @@ document.addEventListener('drop', (e) => {
 });
 
 /* クリック操作（ドラッグが難しいとき用） */
+// 商品の NEW・会場限定（運営のみ。Shopify の商品タグ new / limited を付け外しする）
+const tagEditable = () => !isSeller() && window.ADMIN_SHOPIFY;
+async function toggleTag(id, key) {
+  const p = state.products.find((x) => x.id === id);
+  if (!p) return;
+  const next = !p[key];
+  try {
+    const r = await api('product-tags', { method: 'POST', body: { handle: id, [key]: next } });
+    for (const x of state.products) if (x.id === id) { x.isNew = r.isNew; x.limited = r.limited; }
+    renderPalette();
+    refreshPreview();
+    toast(`「${p.name}」の${key === 'isNew' ? 'NEW' : '会場限定'}を${next ? '付けました' : '外しました'}（Shopify の商品タグ）`);
+  } catch (err) { toast(err.message, { error: true }); }
+}
 $('#productList').addEventListener('click', (e) => {
+  const tag = e.target.closest('[data-tag]');
+  if (tag) { e.stopPropagation(); toggleTag(tag.closest('.pcard').dataset.id, tag.dataset.tag); return; }
   const card = e.target.closest('.pcard');
   if (!card) return;
   state.selected = state.selected?.id === card.dataset.id ? null : { id: card.dataset.id };
@@ -1487,7 +1504,7 @@ function renderSubmissions() {
     <li class="sub-item is-${x.status}" data-id="${esc(x.id)}">
       <div class="sub-pics">${x.images.map((f, i) => `<a href="${subImg(f, { download: !isSeller() })}" ${isSeller() ? 'target="_blank" rel="noopener"' : 'download'} title="${isSeller() ? '画像を開く' : 'この画像をダウンロード'}"><img src="${subImg(f)}" alt="" loading="lazy"></a>`).join('')}</div>
       <div class="sub-info">
-        <p class="sub-head"><span class="pill sub-st-${x.status}">${esc(SUB.status[x.status] || x.status)}</span> <b>${esc(x.name)}</b></p>
+        <p class="sub-head"><span class="pill sub-st-${x.status}">${esc(SUB.status[x.status] || x.status)}</span> <b>${esc(x.name)}</b>${x.isNew ? ' <span class="pill pill-new">NEW</span>' : ''}${x.limited ? ' <span class="pill pill-sub">会場限定</span>' : ''}</p>
         <p class="sub-meta">${yen(x.price)}（税込）　在庫 ${x.stock}　大きさ ${esc(x.size)}${x.limit ? `　お一人様 ${x.limit} 点まで` : ''}</p>
         ${x.spec ? `<p class="sub-meta">${esc(x.spec)}</p>` : ''}
         ${x.description ? `<p class="sub-desc">${esc(x.description)}</p>` : ''}
@@ -1513,6 +1530,8 @@ function openSubForm(item = null) {
   SUB.editing = item?.id || null;
   SUB.images = item ? [...item.images] : [];
   if (item) for (const k of ['name', 'price', 'stock', 'size', 'limit', 'spec', 'description']) f.elements[k].value = item[k] ?? '';
+  f.elements.isNew.checked = !!item?.isNew;
+  f.elements.limited.checked = !!item?.limited;
   $('#subFormTitle').textContent = item ? `「${item.name}」を直す` : '商品を申請する';
   $('#subSubmit').textContent = item ? '変更を保存' : '申請する';
   $('#subError').textContent = '';
@@ -1548,7 +1567,7 @@ $('#subImageInput').addEventListener('change', async (e) => {
 $('#subForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = e.currentTarget.elements;
-  const body = { name: f.name.value, price: f.price.value, stock: f.stock.value, size: f.size.value, limit: f.limit.value, spec: f.spec.value, description: f.description.value, images: SUB.images };
+  const body = { name: f.name.value, price: f.price.value, stock: f.stock.value, size: f.size.value, limit: f.limit.value, spec: f.spec.value, description: f.description.value, images: SUB.images, isNew: f.isNew.checked, limited: f.limited.checked };
   const miss = [[!body.name.trim(), '商品名'], [!body.price, '価格'], [body.stock === '', '在庫数'], [!body.images.length, '商品の画像']].filter(([b]) => b).map(([, l]) => l);
   if (miss.length) { $('#subError').textContent = `${miss.join('・')}を入力してください`; return; }
   try {

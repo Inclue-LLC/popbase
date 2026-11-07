@@ -20,6 +20,7 @@
  *   POST /admin/api/users                運営：アカウントを作る・変える { name, password?, role, events }
  *   DELETE /admin/api/users?name=NAME    運営：アカウントを削除
  *   GET  /admin/api/orders?event=ID      このイベントの商品が入った注文（Shopify）
+ *   POST /admin/api/product-tags         運営：商品の NEW・会場限定（Shopify のタグ new / limited）{ handle, isNew?, limited? }
  *   GET  /admin/api/submissions?event=ID 商品の申請の一覧
  *   POST /admin/api/submissions?event=ID 商品を申請 { name, price, stock, description, spec, size, limit, images }
  *   PUT  /admin/api/submissions?event=ID&id=ID   直す（運営は { status, note } も）
@@ -263,6 +264,14 @@ async function handle(req, res, urlPath) {
         console.log(`[admin] ${user} がアカウント ${name} を削除しました`);
         return json(res, 200, { ok: true });
       }
+    }
+    if (route === 'product-tags' && req.method === 'POST') {
+      if (!store.setProductTags) return json(res, 400, { error: 'NEW・会場限定の設定は、Shopify につないでいるときにできます' });
+      const { handle, isNew, limited } = await readJson(req);
+      if (typeof handle !== 'string' || !/^[a-z0-9][a-z0-9-]{0,254}$/.test(handle)) throw new InputError('商品');
+      const r = await store.setProductTags(handle, { isNew: typeof isNew === 'boolean' ? isNew : undefined, limited: typeof limited === 'boolean' ? limited : undefined });
+      console.log(`[admin] ${user} が商品 ${handle} のタグを変更しました（NEW: ${r.isNew} / 会場限定: ${r.limited}）`);
+      return json(res, 200, r);
     }
     if (route === 'orders' && req.method === 'GET') {
       const d = (await store.getState(id)).draft.event || {};
