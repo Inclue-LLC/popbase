@@ -47,15 +47,15 @@ function serveStatic(req, res) {
   try { urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { urlPath = '/'; }
   if (urlPath === '/' || urlPath === '') urlPath = '/index.html';
   if (urlPath === '/admin' || urlPath === '/admin/') urlPath = '/admin/index.html';
-  // 出品のご案内（企業・ブランド・クリエイター向け）。以前の /creators は /partners へ移す
-  if (urlPath === '/creators' || urlPath === '/creators/' || urlPath === '/creators.html') { res.writeHead(301, { location: '/partners' }); return res.end(); }
-  if (urlPath === '/partners' || urlPath === '/partners/') urlPath = '/partners.html';
+  // 出品のご案内（企業・ブランド・クリエイター向け）。以前のアドレス（/creators・/partners）は /about へ移す
+  if (/^\/(creators|partners)(\/|\.html)?$/.test(urlPath)) { res.writeHead(301, { location: '/about' }); return res.end(); }
+  if (urlPath === '/about' || urlPath === '/about/') urlPath = '/about.html';
   if (urlPath === '/healthz') { res.writeHead(200, { 'content-type': 'application/json' }); return res.end(JSON.stringify(stats())); }
 
   const filePath = path.resolve(ROOT, `.${urlPath}`);
   const rel = path.relative(ROOT, filePath);
   const top = rel.split(path.sep)[0];
-  const allowed = !rel.startsWith('..') && (rel === 'index.html' || rel === 'partners.html' || PUBLIC_DIRS.includes(top));
+  const allowed = !rel.startsWith('..') && (rel === 'index.html' || rel === 'about.html' || PUBLIC_DIRS.includes(top));
   if (!allowed) { res.writeHead(404); return res.end('Not found'); }
 
   fs.stat(filePath, (err, st) => {
