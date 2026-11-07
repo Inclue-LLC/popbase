@@ -101,6 +101,7 @@
   // 購入特典があるか。「なし／あり」を選ぶ前の設定は、特典の名前が入っていれば「あり」
   const NOVELTY_THRESHOLD = 3000;
   // 返品・交換について：管理画面の記入欄に最初から入れておく文（空欄のときも、お店にはこの文を出す）
+  const PAYMENT_TEXT = 'クレジットカード（Visa、Mastercard、American Express）、Apple Pay、Google Pay、PayPal、コンビニ決済、銀行振込をご利用いただけます。\n\nコンビニ決済は、ファミリーマート、ローソン、ミニストップ、デイリーヤマザキに対応しています。\n\n※ご利用可能な決済方法は、ご注文時の決済画面にてご確認ください。\n※コンビニ決済・銀行振込には、別途手数料が発生する場合があります。';
   const RETURN_TEXT = 'POP BASEの商品は期間・数量限定のため、お客様のご都合による返品・交換・キャンセルはお受けしていません。不良品やお届け間違いは、至急、交換をさせていただきます。\nただし、在庫切れ等の理由により、交換商品をご用意できない場合はご返品にて承りいたします。';
   const noveltyOn = (ev = {}) => ev.novelty === 'on' || (ev.novelty !== 'off' && ev.novelty_name != null && String(ev.novelty_name).trim() !== '');
 
@@ -117,7 +118,7 @@
     { group: '送料・発送・お支払い', key: 'shipping_text', label: '送料', hint: 'ご案内の「送料」に出す文（例：全国一律550円（税込））。改行できます（300文字まで）', type: 'textarea' },
     { group: '送料・発送・お支払い', key: 'free_shipping_threshold', label: '送料無料になる金額（円）', hint: 'この金額（税込）以上で、カートの送料を「無料」と表示し、届かないときは「あと○円で送料無料」と表示します。空欄なら表示しません', type: 'number' },
     { group: '送料・発送・お支払い', key: 'shipping_note', label: '発送について', hint: 'ご案内の「発送について」に出す文（例：会期終了後、12月下旬より順次発送します）。改行できます（300文字まで）', type: 'textarea' },
-    { group: '送料・発送・お支払い', key: 'payment_text', label: 'お支払い方法', hint: 'ご案内の「お支払い方法」に出す文（例：クレジットカード、Apple Pay、Google Pay、Shop Pay）。実際に使える方法は Shopify の「設定 → 決済」で決まるので、同じ内容にしてください。改行できます（300文字まで）', type: 'textarea' },
+    { group: '送料・発送・お支払い', key: 'payment_text', label: 'お支払い方法', hint: 'ご案内の「お支払い方法」に出す文。実際に使える方法は Shopify の「設定 → 決済」で決まるので、同じ内容にしてください。空欄にすると初期の文に戻ります。改行できます（300文字まで）', type: 'textarea', defaultValue: PAYMENT_TEXT },
     { group: '送料・発送・お支払い', key: 'return_text', label: '返品・交換・キャンセルについて', hint: 'ご案内の「返品・交換・キャンセルについて」に出す文。改行できます（300文字まで）', type: 'textarea', defaultValue: RETURN_TEXT },
     { group: 'イベント', key: 'theme_preset', label: 'ベースのテーマ', hint: '下の項目で空欄のものは、このテーマの値になります', type: 'select', options: () => Object.entries(window.THEMES).filter(([k]) => k !== 'event').map(([k, t]) => ({ value: k, label: t.name })) },
     { group: 'イベント', key: 'capacity', label: '店内の上限人数', hint: '同時に店内に入れる人数。いっぱいのときは、入口で順番待ちになります', type: 'select', options: () => opt([['10', '10人'], ['20', '20人'], ['30', '30人'], ['40', '40人'], ['', '50人']]) },
@@ -176,7 +177,7 @@
    */
   const NEED = {
     brand: ['required'], title: ['required'], open_at: ['required'], close_at: ['required'], collection: ['required'],
-    novelty: ['default', 'なし'], novelty_name: ['required'], novelty_threshold: ['required'], shipping_note: ['required'], shipping_text: ['required'], payment_text: ['required'], return_text: ['default', '初期の文'],
+    novelty: ['default', 'なし'], novelty_name: ['required'], novelty_threshold: ['required'], shipping_note: ['required'], shipping_text: ['required'], payment_text: ['default', '初期の文'], return_text: ['default', '初期の文'],
     free_shipping_threshold: ['hide'], capacity: ['none'], // 選ぶだけの欄なのでバッジなし
     product_bg_color: ['default', 'テーマの色'],
     daily_open: ['default', '24時間営業'], daily_close: ['default', '24時間営業'], period: ['default', '日時から自動で作成'],
@@ -308,7 +309,7 @@
     S.shippingText = has(f, 'shipping_text') ? String(f.shipping_text) : '';
     S.freeShippingThreshold = has(f, 'free_shipping_threshold') ? Number(f.free_shipping_threshold) : 0; // 空欄なら送料無料なし
     S.shippingNote = has(f, 'shipping_note') ? String(f.shipping_note) : '';
-    S.paymentText = has(f, 'payment_text') ? String(f.payment_text) : '';
+    S.paymentText = has(f, 'payment_text') && String(f.payment_text).trim() ? String(f.payment_text) : PAYMENT_TEXT;
     S.returnText = has(f, 'return_text') ? String(f.return_text) : RETURN_TEXT;
     S.capacity = [10, 20, 30, 40, 50].includes(Number(f.capacity)) ? Number(f.capacity) : 50; // 店内の上限人数（ご案内の「混雑時の入店」）
     S.novelty = noveltyOn(f) && has(f, 'novelty_name')
