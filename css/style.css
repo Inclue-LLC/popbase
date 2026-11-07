@@ -269,12 +269,13 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .policy-body table { border-collapse: collapse; width: 100%; margin: .6em 0 1em; }
 .policy-body th, .policy-body td { border: 1px solid var(--line); padding: .5em .7em; text-align: left; vertical-align: top; }
 .policy-body a { color: var(--accent); }
-/* PC：写真（左 6）と、商品名・値段・説明（右 7） */
-.product-detail { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 7fr); }
+/* PC：写真（左）と、商品名・値段・説明（右）は 1:1。写真は正方形で固定し、右側だけスクロール */
+.product-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 @media (min-width: 681px) {
-  /* 写真の枠は右の文の高さに合わせる（正方形にしない） */
-  .product-detail .pd-image { aspect-ratio: auto; min-height: 400px; }
-  .product-detail .pd-body { padding: 36px 36px 32px; gap: 8px; }
+  .product-detail { width: min(920px, 100%); overflow: hidden; }
+  .product-detail .pd-image { aspect-ratio: 1; max-height: calc(100dvh - 32px); }
+  /* 右の文は行の高さ（＝写真の高さ）に収め、はみ出た分はこの中でスクロール */
+  .product-detail .pd-body { contain: size; overflow-y: auto; overscroll-behavior: contain; padding: 36px 36px 32px; gap: 8px; }
   .product-detail .pd-body h3 { font-size: 1.45rem; }
   .product-detail .pd-price { font-size: 1.7rem; }
   .product-detail .pd-desc { font-size: 1rem; line-height: 1.85; }
