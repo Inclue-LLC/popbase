@@ -375,6 +375,8 @@ window.AppReady = (async function () {
     // （次のイベントが予定されていれば、サーバーはそのイベントを返すので、ここには来ない）
     const idle = !window.PREVIEW_MODE && (window.NO_EVENT || st.state === 'ended');
     entrance.classList.toggle('is-idle', idle);
+    // 会期が終わった（イベントのない期間の画面になった）ら、カートを空にする（前のイベントの商品を残さない）
+    if (idle && Object.keys(state.cart).length) { state.cart = {}; saveCart(); }
     $('#entIdle').hidden = !idle;
     document.body.classList.toggle('shop-idle', idle);
     entrance.classList.toggle('is-closed', !open);
