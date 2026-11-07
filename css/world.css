@@ -84,6 +84,10 @@ body.world-fs .world {
   box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
 }
 .hud-btn:hover { background: #fff; }
+/* 全画面：ほかのボタンより目立つよう、濃い色＋アイコン */
+.hud-fs { display: inline-flex; align-items: center; gap: 5px; background: rgba(30, 28, 44, .88); color: #fff; box-shadow: 0 2px 10px rgba(0, 0, 0, .25); }
+.hud-fs:hover { background: rgba(30, 28, 44, 1); }
+.hud-fs .fs-icon { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .hud-cart { position: relative; }
 .hud-cart-count {
   position: absolute; top: -6px; right: -6px;
