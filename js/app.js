@@ -59,8 +59,8 @@ window.AppReady = (async function () {
         a.rel = 'noopener';
       });
     } else {
-      if (links) links.hidden = true;
-      $('#entIdleLinks')?.setAttribute('hidden', '');
+      // Shopify につないでいないとき：規約・ポリシーのリンクは出さない（お問い合わせは出す）
+      links?.querySelectorAll('[data-policy]').forEach((a) => { a.hidden = true; });
     }
     const demo = $('#demoNote');
     if (demo) demo.hidden = !!shopify;
@@ -83,6 +83,69 @@ window.AppReady = (async function () {
       }).catch(() => { /* そのままリンクで開く */ });
     }
   }
+  /* ---------- お問い合わせフォーム（送信先は server/contact.js。メールで届く） ---------- */
+  {
+    const modal = $('#contactModal');
+    const form = $('#contactForm');
+    const err = $('#contactError');
+    const kind = () => form.category.value;
+    const syncKind = () => form.querySelectorAll('[data-for]').forEach((el) => { el.hidden = el.dataset.for !== kind(); });
+    form.addEventListener('change', (e) => { if (e.target.name === 'category') syncKind(); });
+    const showError = (msg) => { err.textContent = msg; err.hidden = !msg; };
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('[data-contact]');
+      if (!a) return;
+      e.preventDefault();
+      // 送信が済んだあとに開き直したら、まっさらなフォームに戻す
+      if (!$('#contactDone').hidden) { form.reset(); form.hidden = false; $('#contactDone').hidden = true; }
+      syncKind();
+      showError('');
+      openLayer(modal);
+      modal.querySelector('.modal-card').scrollTop = 0;
+    });
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = form.elements;
+      const data = {
+        category: kind(), name: f.name.value, email: f.email.value,
+        order: kind() === 'product' ? f.order.value : '', company: kind() === 'shop' ? f.company.value : '',
+        message: f.message.value, agree: f.agree.checked, website: f.website.value,
+      };
+      // 入力の確認（足りない欄を知らせて、その欄へ移る）
+      const missing = [
+        [!data.name.trim(), f.name, 'お名前'],
+        [!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim()), f.email, '正しいメールアドレス'],
+        [!data.message.trim(), f.message, 'お問い合わせ内容'],
+      ].filter(([bad]) => bad);
+      if (missing.length) { showError(`${missing.map((m) => m[2]).join('・')}を入力してください`); missing[0][1].focus(); return; }
+      if (!data.agree) { showError('プライバシーポリシーへの同意にチェックを入れてください'); f.agree.focus(); return; }
+      showError('');
+      const btn = form.querySelector('.cf-submit');
+      btn.disabled = true;
+      btn.textContent = '送信中…';
+      try {
+        const r = await fetch('/api/contact', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+        if (r.ok) {
+          form.hidden = true;
+          $('#contactDone').hidden = false;
+          modal.querySelector('.modal-card').scrollTop = 0;
+          $('#contactDone .btn')?.focus();
+        } else if (r.status === 429) {
+          showError('短い時間に何度も送信されたため、受け付けられませんでした。しばらくしてからお試しください。');
+        } else if (r.status === 400) {
+          showError('入力内容をご確認ください。');
+        } else {
+          showError('送信できませんでした。お手数ですが、しばらくしてからもう一度お試しください。');
+        }
+      } catch {
+        showError('通信できませんでした。電波の良いところで、もう一度お試しください。');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '送信する';
+      }
+    });
+  }
+
   /* 入口の「ご利用案内を見る」：ご案内（INFORMATION）の枠をそのまま写して表示 */
   $('#entInfoBtn')?.addEventListener('click', () => {
     const grid = document.querySelector('#info .info-grid').cloneNode(true);

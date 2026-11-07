@@ -34,3 +34,14 @@ services:
         sync: false
       - key: ADMIN_INITIAL_PASSWORD
         sync: false
+      # お問い合わせフォームのメール送信（server/contact.js）。値は Render の画面で入力（GitHub には書かない）
+      - key: CONTACT_TO
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false

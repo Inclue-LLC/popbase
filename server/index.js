@@ -17,6 +17,7 @@
  *   TEST_BOTS         混雑テスト用：このサーバーの中から、自動で歩き回るお客さん（ボット）をこの人数入れる（試すときだけ。終わったら消す）
  *   ALLOWED_ORIGINS   接続を許可するサイトのURL（カンマ区切り。空なら制限なし）
  *   CLIENT_IP_HEADER / TRUST_PROXY_HOPS  接続元 IP の読み方（server/client-ip.js）
+ *   CONTACT_TO / SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / CONTACT_FROM  お問い合わせフォームのメール送信（server/contact.js）
  */
 const http = require('http');
 const fs = require('fs');
@@ -25,6 +26,7 @@ const { WebSocketServer } = require('ws');
 const adminApi = require('./admin/api');
 const visit = require('./visit');
 const { clientIp } = require('./client-ip');
+const contact = require('./contact');
 
 const PORT = Number(process.env.PORT) || 8080;
 const MAX_PER_IP = Number(process.env.MAX_PER_IP) || 6;
@@ -77,6 +79,14 @@ const server = http.createServer(async (req, res) => {
   if (urlPath === '/api/ip') {
     res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
     return res.end(JSON.stringify({ ip: clientIp(req) }));
+  }
+  // お問い合わせフォーム（server/contact.js）
+  if (urlPath === '/api/contact') {
+    try { return await contact.handle(req, res); } catch (e) {
+      console.error(e);
+      if (!res.headersSent) { res.writeHead(500); res.end(); }
+      return;
+    }
   }
   if (urlPath.startsWith('/admin/api/') || urlPath === '/api/published' || urlPath === '/api/policies' || urlPath.startsWith('/uploads/')) {
     try {

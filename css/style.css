@@ -279,6 +279,31 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .policy-body table { border-collapse: collapse; width: 100%; margin: .6em 0 1em; }
 .policy-body th, .policy-body td { border: 1px solid var(--line); padding: .5em .7em; text-align: left; vertical-align: top; }
 .policy-body a { color: var(--accent); }
+/* お問い合わせフォーム */
+#contactForm { display: grid; gap: 14px; }
+.cf-field { display: grid; gap: 6px; font-weight: 700; font-size: .9rem; border: 0; padding: 0; margin: 0; min-width: 0; }
+.cf-field[hidden] { display: none; }
+.cf-field input, .cf-field textarea {
+  width: 100%; box-sizing: border-box; padding: .65em .85em; border: 1.5px solid var(--line); border-radius: 12px;
+  background: var(--surface); color: var(--ink); font: inherit; font-weight: 400; font-size: 1rem;
+}
+.cf-field textarea { resize: vertical; min-height: 9em; line-height: 1.7; }
+.cf-field input:focus, .cf-field textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.cf-req, .cf-opt { display: inline-block; margin-left: 8px; padding: .1em .6em; border-radius: 999px; font-size: .7rem; font-weight: 700; vertical-align: .1em; }
+.cf-req { background: #fde7ec; color: #b23a5a; }
+.cf-opt { background: var(--line); color: var(--ink-soft); }
+.cf-kinds legend { padding: 0; margin-bottom: 6px; }
+.cf-kinds { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.cf-kinds legend { width: 100%; }
+.cf-kinds label, .cf-agree { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; cursor: pointer; }
+.cf-kinds input, .cf-agree input { width: 1.1em; height: 1.1em; accent-color: var(--accent); }
+.cf-agree a { color: var(--accent); text-decoration: underline; cursor: pointer; }
+.cf-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.cf-error { margin: 0; padding: .6em .9em; border-radius: 10px; background: #fde7ec; color: #b23a5a; font-size: .88rem; font-weight: 700; }
+.cf-submit { justify-self: center; min-width: 12em; }
+.cf-done { text-align: center; display: grid; gap: 10px; justify-items: center; padding: 12px 0 4px; }
+.cf-done-title { font-weight: 800; font-size: 1.15rem; margin: 0; }
+.cf-done p { margin: 0; line-height: 1.8; }
 /* PC：写真（左）と、商品名・値段・説明（右）は 1:1。写真は正方形で固定し、右側だけスクロール */
 .product-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 @media (min-width: 681px) {
