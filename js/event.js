@@ -78,7 +78,7 @@
     const text = `${shopText()}${extraText}`;
     const wait = (async () => {
       await fontLoading;
-      await Promise.all([500, 700, 800].map((w) => document.fonts.load(`${w} 20px "${def.family}"`, text).catch(() => {})));
+      await Promise.all([500, 600, 700, 800].map((w) => document.fonts.load(`${w} 20px "${def.family}"`, text).catch(() => {})));
     })();
     await Promise.race([wait, new Promise((r) => setTimeout(r, 5000))]);
   }
