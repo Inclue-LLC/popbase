@@ -403,6 +403,10 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .entrance.is-waiting #enterBtn, .entrance.is-waiting #entNotice { display: none; }
 /* 順番待ちの画面は、キャラクターを出さずに詰める（小さいスマホでも画面に収まるように） */
 .entrance.is-waiting #entranceCast { display: none; }
+.entrance.is-waiting .entrance-brand img { width: 44px; }
+.entrance.is-waiting .logo-big { font-size: clamp(1.5rem, 4.4vw, 2.4rem); }
+.entrance.is-waiting .entrance-theme { margin-bottom: .4rem; }
+.entrance.is-waiting .entrance-period { margin-bottom: .8rem; }
 #enterBtn:disabled { opacity: .7; }
 
 .visit-timer {
