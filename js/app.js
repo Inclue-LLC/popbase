@@ -632,7 +632,7 @@ window.AppReady = (async function () {
     if (!Object.keys(state.cart).length) return;
     state.cart = {};
     saveCart();
-    toast('ご注文ありがとうございました。カートを空にしました');
+    toast('ご注文ありがとうございました。');
   }
   checkFinishedOrder();
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkFinishedOrder(); });
