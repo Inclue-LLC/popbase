@@ -33,6 +33,13 @@ window.AppReady = (async function () {
   };
   // 存在しない商品をカートから除外
   for (const id of Object.keys(state.cart)) if (!productById[id]) delete state.cart[id];
+  // イベントが変わっていたら（前のイベントの商品が残っていたら）、カートを空にする
+  // （どのイベントか記録がない古いカートは、いまのイベントのものとみなす）
+  if (window.EVENT_ID && Object.keys(state.cart).length) {
+    const was = store.get('cartEvent', null);
+    if (was && was !== window.EVENT_ID) { state.cart = {}; store.set('cart', {}); }
+    else if (!was) store.set('cartEvent', window.EVENT_ID);
+  }
 
   const maxQty = (p) => Math.min(p.stock, p.limit || 10);
 
@@ -594,6 +601,8 @@ window.AppReady = (async function () {
 
   function saveCart() {
     store.set('cart', state.cart);
+    // どのイベントのカートかを覚えておく（イベントが変わったら空にする）
+    if (window.EVENT_ID && Object.keys(state.cart).length) store.set('cartEvent', window.EVENT_ID);
     renderCart();
   }
 
