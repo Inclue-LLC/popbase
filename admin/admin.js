@@ -587,7 +587,7 @@ const where = (layout, id) => placesOf(layout, id)[0] || null;
 const getSlot = (L, s) => (s.zone === 'island' ? L.island[s.i] : L[s.zone][s.row][s.i]);
 const setSlot = (L, s, v) => { if (s.zone === 'island') L.island[s.i] = v; else L[s.zone][s.row][s.i] = v; };
 const ZONE_NAME = { left: '左の棚', right: '右の棚', island: '限定テーブル' };
-const placeText = (s) => (s.zone === 'island' ? `限定テーブル ${s.i + 1}番` : `${ZONE_NAME[s.zone]} ${['下段', '中段', '上段'][s.row]} ${s.i + 1}番`);
+const placeText = (s) => (s.zone === 'island' ? `限定テーブル ${s.i + 1}番` : `${ZONE_NAME[s.zone]} ${['下段', '上段'][s.row]} ${s.i + 1}番`);
 
 function thumb(p) {
   if (!p) return '';
@@ -677,8 +677,8 @@ function renderFixtures() {
   };
   for (const zone of ['left', 'right']) {
     // 画面では上段を上に表示する
-    $(`#zone-${zone}`).innerHTML = [2, 1, 0].map((r) => `
-      <div class="row"><span class="row-label">${['下段', '中段', '上段'][r]}</span>
+    $(`#zone-${zone}`).innerHTML = [...Array(E.ROWS).keys()].reverse().map((r) => `
+      <div class="row"><span class="row-label">${['下段', '上段'][r]}</span>
       ${L[zone][r].map((id, i) => slotHtml({ zone, row: r, i }, id)).join('')}</div>`).join('');
   }
   $('#zone-island').innerHTML = `<div class="row"><span class="row-label">テーブル</span>${L.island.map((id, i) => slotHtml({ zone: 'island', row: 0, i }, id)).join('')}</div>`;
