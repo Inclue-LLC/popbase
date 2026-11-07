@@ -321,7 +321,16 @@ async function main() {
       if (d < 0.12) walkTarget = null;
       else { const s = Math.min(d, SPEED * dt); dx = (vx / d) * s; dz = (vz / d) * s; }
     }
-    const moving = (dx || dz) ? moveBy(dx, dz) : false;
+    const p0 = self.group.position;
+    const bx = p0.x; const bz = p0.z;
+    const dBefore = walkTarget ? Math.hypot(walkTarget.x - bx, walkTarget.z - bz) : 0;
+    let moving = (dx || dz) ? moveBy(dx, dz) : false;
+    // ほとんど動いていない（ぶつかって、すき間をわずかずつ進んでいるだけ）なら止まっている扱い
+    const step = Math.hypot(p0.x - bx, p0.z - bz);
+    if (moving && step < SPEED * dt * 0.05) moving = false;
+    // クリックで歩いているとき：テーブルなどにぶつかって目的地にほとんど近づけなくなったら、そこで止まる
+    // （ぶつかったまま、横へごくわずかずつ動き続けて、歩く動き（跳ねる）が止まらないのを防ぐ）
+    if (walkTarget && moving && dBefore - Math.hypot(walkTarget.x - p0.x, walkTarget.z - p0.z) < SPEED * dt * 0.03) moving = false;
     if ((dx || dz) && !moving) walkTarget = null;
     self.moving = moving;
     self.update(dt);

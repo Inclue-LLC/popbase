@@ -169,6 +169,10 @@ export async function buildRoom(theme) {
         return rowItems.map((p, i) => ({ p, i, n: rowItems.length }));
       });
     }
+    // 棚の段と段のすき間（いちばん上の段は天板まで）。いちばん大きい商品（大）がはみ出さないよう、
+    // 棚に置く商品はすき間に合わせて同じ割合で縮める（大・中・小の比率はそのまま）
+    const clear = levels.map((y, r) => (r + 1 < levels.length ? levels[r + 1] - 0.025 : shelfH - 0.04) - (y + 0.025) - 0.04);
+    const fit = Math.min(1, Math.min(...clear) / Math.max(...Object.values(ITEM_HEIGHT)));
     for (let r = 0; r < levels.length; r++) {
       const y = levels[r];
       const plank = new THREE.Mesh(new THREE.BoxGeometry(shelfLen - 0.12, 0.05, shelfDepth - 0.04), boardM);
@@ -177,7 +181,7 @@ export async function buildRoom(theme) {
       for (const { p, i, n } of rowSlots[r] || []) {
         const gap = (shelfLen - 0.6) / Math.max(n, 1);
         const lx = -shelfLen / 2 + 0.3 + gap * (i + 0.5);
-        const h = ITEM_HEIGHT[p.shape] || 0.48;
+        const h = (ITEM_HEIGHT[p.shape] || 0.48) * fit;
         // 商品画像は正方形のテクスチャに下揃えで描いてあるので、下端を板に合わせて置く
         const [tex] = await T.productTexture(p);
         const item = plane(h, h, basic(tex, { transparent: true, alphaTest: 0.05 }));
