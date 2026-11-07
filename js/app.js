@@ -560,7 +560,7 @@ window.AppReady = (async function () {
         <div><dt>送料</dt><dd>${t.free ? '無料' : shopify ? 'お会計時に計算' : t.shipping ? yen(t.shipping) : '無料'}</dd></div>
         <div class="total"><dt>${shopify && !t.free ? '合計（税込・送料別）' : '合計（税込）'}</dt><dd>${yen(shopify && !t.free ? t.subtotal : t.total)}</dd></div>
       </dl>
-      ${shopify && !t.free ? '<p class="hint">送料は、次の購入手続き画面（Shopify）で計算されます</p>' : ''}
+      ${shopify && !t.free ? '<p class="hint">送料は、次の購入手続き画面で計算されます</p>' : ''}
       ${!t.free && SHOP.freeShippingThreshold > 0 ? `<p class="hint">あと ${yen(SHOP.freeShippingThreshold - t.subtotal)} で送料無料</p>` : ''}` : '';
     $('#checkoutBtn').disabled = t.lines.length === 0;
     document.dispatchEvent(new CustomEvent('haneul:cart', { detail: { count: t.count } }));
@@ -577,7 +577,7 @@ window.AppReady = (async function () {
   function openCart() { renderCart(); openLayer($('#cartDrawer')); }
   $('#cartBtn').addEventListener('click', openCart);
 
-  if (shopify) $('#checkoutBtn').textContent = '購入手続きへ（Shopify）';
+  if (shopify) $('#checkoutBtn').textContent = '購入手続きへ';
   $('#checkoutBtn').addEventListener('click', async () => {
     const t = totals();
     if (!t.lines.length) return;
@@ -594,7 +594,7 @@ window.AppReady = (async function () {
         console.error(err);
         toast('購入手続きを開始できませんでした。時間をおいてもう一度お試しください');
         btn.disabled = false;
-        btn.textContent = '購入手続きへ（Shopify）';
+        btn.textContent = '購入手続きへ';
       }
       return;
     }
