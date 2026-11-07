@@ -150,8 +150,8 @@ export async function buildRoom(theme) {
     // 棚の看板：上に日本語、下に英字（正面の看板の「ブランド名→イベント名」と同じ並び）。
     // 入っているものだけ出し、どちらも空なら看板を出さない
     const signLines = [
-      lay.label && { text: lay.label, size: sizeFor(lay.title ? SIGN_JA_SUB_M : SIGN_JA_M, 0.7), weight: 600, color: lay.title ? theme.sign.sub : theme.sign.ink },
-      lay.title && { text: lay.title, size: sizeFor(SIGN_EN_M, 0.7), spacing: 4, weight: 600 },
+      lay.label && { text: lay.label, size: sizeFor(lay.title ? SIGN_JA_SUB_M : SIGN_JA_M, 0.7), color: lay.title ? theme.sign.sub : theme.sign.ink },
+      lay.title && { text: lay.title, size: sizeFor(SIGN_EN_M, 0.7), spacing: 4 },
     ].filter(Boolean);
     if (signLines.length) {
       // 看板の幅は文字の長さ＋左右の余白（短い文字でも 1.8m は取る。最大は 2.8m）
@@ -211,8 +211,8 @@ export async function buildRoom(theme) {
   const isl = window.STORE_LAYOUT.island || {};
   const tableSign = T.signTexture([
     // 上に日本語、下に英字
-    isl.label && { text: isl.label, size: sizeFor(isl.title ? SIGN_JA_SUB_M : SIGN_JA_M, tH), weight: 600, color: isl.title ? theme.sign.sub : theme.sign.ink },
-    isl.title && { text: isl.title, size: sizeFor(SIGN_EN_M, tH), spacing: 6, weight: 600, gap: isl.label ? 0.07 : 0 },
+    isl.label && { text: isl.label, size: sizeFor(isl.title ? SIGN_JA_SUB_M : SIGN_JA_M, tH), color: isl.title ? theme.sign.sub : theme.sign.ink },
+    isl.title && { text: isl.title, size: sizeFor(SIGN_EN_M, tH), spacing: 6, gap: isl.label ? 0.07 : 0 },
   ].filter(Boolean), { ...theme.sign, style: 'board' }, tW, tH, { full: true, shiftY: 0.07 });
   const sideM = lambert(theme.shelf.edge);
   const table = new THREE.Mesh(new THREE.BoxGeometry(tW, tH, tD), [
@@ -254,14 +254,14 @@ export async function buildRoom(theme) {
 
   /* ---------- レジ ---------- */
   const rW = 2.2; const rH = 1.0; const rD = 0.9; const rX = -5.3; const rZ = -6.1;
-  const regTex = T.signTexture([{ text: 'REGISTER', size: sizeFor(SIGN_EN_M, rH), spacing: 10, weight: 600, color: '#6f6880' }], { bg: theme.shelf.back, ink: '#6f6880' }, rW, rH, { full: true });
+  const regTex = T.signTexture([{ text: 'REGISTER', size: sizeFor(SIGN_EN_M, rH), spacing: 10, color: '#6f6880' }], { bg: theme.shelf.back, ink: '#6f6880' }, rW, rH, { full: true });
   const register = new THREE.Mesh(new THREE.BoxGeometry(rW, rH, rD), [
     sideM, sideM, lambert(theme.shelf.board), sideM, new THREE.MeshBasicMaterial({ map: regTex }), sideM,
   ]);
   register.position.set(rX, rH / 2, rZ);
   group.add(register);
   const regSign = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: T.signTexture([{ text: 'カートを見る', size: 0.2, weight: 600, color: theme.sign.sub }, { text: 'お会計', size: 0.46, weight: 600 }], theme.sign, 1.0, 0.5),
+    map: T.signTexture([{ text: 'カートを見る', size: 0.2, color: theme.sign.sub }, { text: 'お会計', size: 0.46 }], theme.sign, 1.0, 0.5),
     transparent: true,
   }));
   regSign.center.set(0.5, 0);
