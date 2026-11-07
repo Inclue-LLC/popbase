@@ -1,4 +1,4 @@
-/* クリエイター向けの出品案内（creators.html）。色・ボタン・フォームの部品は css/style.css を使う */
+/* 出品のご案内（creators.html）。色・ボタン・フォームの部品は css/style.css を使う */
 .creators a.btn { display: inline-block; text-decoration: none; text-align: center; }
 .cr-header-cta { margin-left: auto; padding: .55em 1.3em; font-size: .9rem; box-shadow: none; }
 /* スマホ：ヘッダーのボタンは出さない（ロゴが2行に落ちないように。すぐ下に大きなボタンがある） */

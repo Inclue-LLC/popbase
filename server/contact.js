@@ -75,7 +75,7 @@ function validate(body) {
     email: oneLine(b.email, LIMITS.email),
     order: oneLine(b.order, LIMITS.order),
     company: oneLine(b.company, LIMITS.company),
-    links: oneLine(b.links, LIMITS.links), // クリエイター向けの出品案内（creators.html）の「作品が見られるURL」
+    links: oneLine(b.links, LIMITS.links), // 出品のご案内（creators.html）の「ブランド・商品が見られるURL」
     message: multiLine(b.message, LIMITS.message),
     agree: b.agree === true,
   };
@@ -99,7 +99,7 @@ function mailText(f) {
     `メールアドレス：${f.email}`,
     ...(f.category === 'product' && f.order ? [`ご注文番号：${f.order}`] : []),
     ...(f.category === 'shop' && f.company ? [`会社名・ブランド名：${f.company}`] : []),
-    ...(f.category === 'shop' && f.links ? [`作品が見られるURL：${f.links}`] : []),
+    ...(f.category === 'shop' && f.links ? [`ブランド・商品のURL：${f.links}`] : []),
     `送信日時：${at}`,
     '',
     '―――― お問い合わせ内容 ――――',
