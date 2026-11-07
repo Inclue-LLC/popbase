@@ -1409,7 +1409,17 @@ function resetAccForm() {
   accEventChecks([]);
   syncAccRole();
 }
-function syncAccRole() { $('#accEvents').hidden = $('#accForm').role.value !== 'seller'; }
+function syncAccRole() {
+  const seller = $('#accForm').role.value === 'seller';
+  $('#accEvents').hidden = !seller;
+  // 出品者の ID はメールアドレス。運営はメールアドレスか半角英数字
+  const f = $('#accForm').elements.name;
+  if (!f.readOnly) {
+    f.type = seller ? 'email' : 'text';
+    $('#accNameLabel').textContent = seller ? 'メールアドレス（ID）' : 'ID（メールアドレス、または半角英数字）';
+    f.placeholder = seller ? '例: shop@example.com' : '例: staff@example.com';
+  }
+}
 $('#accForm').role.addEventListener('change', syncAccRole);
 $('#accCancel').addEventListener('click', resetAccForm);
 function showAccLink(name, url, expiresAt) {
@@ -1450,6 +1460,7 @@ $('#accList').addEventListener('click', async (e) => {
     accEditing = u.name;
     const f = $('#accForm');
     f.name.value = u.name;
+    f.name.type = "text"; // 前からある ID（メールアドレスでないもの）もそのまま保存できるように
     f.name.readOnly = true;
     f.role.value = u.role;
     accEventChecks(u.events);
@@ -1485,7 +1496,7 @@ $('#accForm').addEventListener('submit', async (e) => {
   const events = [...document.querySelectorAll('#accEventList input:checked')].map((x) => x.value);
   if (role === 'seller' && !events.length && !confirm('担当のイベントが選ばれていません。このまま保存しますか？（ログインしても、何も表示されません）')) return;
   try {
-    const r = await api('users', { method: 'POST', body: { name: f.name.value.trim(), role, events } });
+    const r = await api('users', { method: 'POST', body: { name: f.name.value.trim(), role, events, edit: !!accEditing } });
     toast(accEditing ? 'アカウントを変更しました' : 'アカウントを追加しました。パスワード設定用のリンクをご本人に送ってください');
     if (r.url) showAccLink(r.user.name, r.url, r.expiresAt);
     resetAccForm();
