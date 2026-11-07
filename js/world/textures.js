@@ -397,7 +397,7 @@ export async function productTexture(p) {
     const box = contentBox(ctx, S);
     const bw = 136; const bh = 54;
     const x = Math.min(S - bw - 8, Math.max(8, box.right - bw + 24));
-    const y = Math.min(S - bh - 8, Math.max(8, box.top - bh / 2));
+    const y = Math.min(S - bh - 8, Math.max(8, box.top - bh - 6)); // 絵の上端のすぐ上
     rr(ctx, x, y, bw, bh, 27);
     ctx.fillStyle = '#ffd76a';
     ctx.fill();
