@@ -99,12 +99,34 @@
       const SPOTS = [[-5.6, 2.2], [-5.6, 0.6], [-5.6, -1.0], [-5.6, -2.6], [5.6, 2.2], [5.6, 0.6], [5.6, -1.0], [5.6, -2.6],
         [-1.3, -0.3], [1.3, -0.3], [-2.5, -1.6], [2.5, -1.6], [-1.3, -2.9], [1.3, -2.9], [0, 2.5], [-2, 4], [2, 4], [-3, 1.5], [3, 1.5]];
       const rnd = (a, b) => a + Math.random() * (b - a);
-      const pick = () => { const s = SPOTS[Math.floor(Math.random() * SPOTS.length)]; return [s[0] + rnd(-0.5, 0.5), s[1] + rnd(-0.4, 0.4)]; };
+      // テーブル・棚・レジをすり抜けないように：店内のぶつかり判定（js/world/room.js の colliders）を使う
+      const R = 0.42; // アバターの半径（少し余裕をもたせる）
+      const boxes = () => window.World?.debug?.room?.colliders || [];
+      const inside = (x, z) => boxes().some((c) => x > c.minX - R && x < c.maxX + R && z > c.minZ - R && z < c.maxZ + R);
+      // 2点を結ぶ線が、どれかの箱（半径の分ふくらませる）を通るか（細かく区切って確かめる）
+      const clear = (x0, z0, x1, z1) => {
+        const n = Math.max(2, Math.ceil(Math.hypot(x1 - x0, z1 - z0) / 0.15));
+        for (let k = 1; k <= n; k++) { const t = k / n; if (inside(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t)) return false; }
+        return true;
+      };
+      const pickRaw = () => { const s = SPOTS[Math.floor(Math.random() * SPOTS.length)]; return [s[0] + rnd(-0.5, 0.5), s[1] + rnd(-0.4, 0.4)]; };
+      const pick = () => { for (let i = 0; i < 30; i++) { const p = pickRaw(); if (!inside(p[0], p[1])) return p; } return [0, 3]; };
+      // 次の行き先：まっすぐ行けなければ、両方の区間が空いている中継点を経由する（見つからなければ別の行き先に）
+      const route = (b) => {
+        for (let i = 0; i < 20; i++) {
+          const [tx, tz] = pick();
+          if (clear(b.x, b.z, tx, tz)) return [[tx, tz]];
+          for (let j = 0; j < 25; j++) {
+            const w = [rnd(-6, 6), rnd(-5.5, 6)];
+            if (!inside(w[0], w[1]) && clear(b.x, b.z, w[0], w[1]) && clear(w[0], w[1], tx, tz)) return [w, [tx, tz]];
+          }
+        }
+        return [];
+      };
       const ids = (window.AVATARS || []).map((a) => a.id);
       const bots = Array.from({ length: 5 }, (_, i) => {
         const [x, z] = pick();
-        const [tx, tz] = pick();
-        return { id: 9000 + i, avatar: ids[i % Math.max(1, ids.length)] || 'haru', x, z, tx, tz, wait: rnd(0, 4) };
+        return { id: 9000 + i, avatar: ids[i % Math.max(1, ids.length)] || 'haru', x, z, path: [], wait: rnd(0, 4) };
       });
       emit('message', { t: 'welcome', peers: bots.map((b) => ({ id: b.id, avatar: b.avatar, x: b.x, z: b.z, ry: 0, m: false })) });
       let last = Date.now();
@@ -115,9 +137,14 @@
         for (const b of bots) {
           let moving = false;
           if (b.wait > 0) b.wait -= dt;
-          else {
-            const dx = b.tx - b.x; const dz = b.tz - b.z; const d = Math.hypot(dx, dz);
-            if (d < 0.1) { b.wait = rnd(3, 9); [b.tx, b.tz] = pick(); } else { const s = Math.min(d, 1.3 * dt); b.x += (dx / d) * s; b.z += (dz / d) * s; moving = true; }
+          else if (!b.path.length) {
+            // 店内の準備ができたら（ぶつかり判定が読めたら）道順を決める
+            if (boxes().length) b.path = route(b);
+            if (inside(b.x, b.z)) [b.x, b.z] = pick(); // 最初の位置が箱の中なら外へ
+          } else {
+            const [tx, tz] = b.path[0];
+            const dx = tx - b.x; const dz = tz - b.z; const d = Math.hypot(dx, dz);
+            if (d < 0.1) { b.path.shift(); if (!b.path.length) b.wait = rnd(3, 9); } else { const s = Math.min(d, 1.3 * dt); b.x += (dx / d) * s; b.z += (dz / d) * s; moving = true; }
           }
           emit('message', { t: 'move', id: b.id, x: b.x, z: b.z, ry: 0, m: moving });
           if (Math.random() < 0.003) emit('message', { t: 'emote', id: b.id, e: Math.floor(Math.random() * 6) });
