@@ -250,4 +250,8 @@ function flatten(event) {
   return out;
 }
 
-module.exports = { REQUIRED, missingRequired, KEYS, TEXT, MULTILINE, COLOR, IMAGE, SELECT, NUMBER, JSON_KEYS, cleanEvent, cleanLayout, flatten, InputError };
+// 出品者が変えられない項目（会期・営業時間・人数・商品のコレクション・送料や支払いなどの案内・購入特典）。js/event.js の SELLER_LOCKED と同じ
+const SELLER_LOCKED = ['open_at', 'close_at', 'daily_open', 'daily_close', 'capacity', 'collection',
+  'shipping_text', 'shipping_note', 'free_shipping_threshold', 'payment_text', 'return_text', 'novelty', 'novelty_name', 'novelty_threshold'];
+
+module.exports = { SELLER_LOCKED, REQUIRED, missingRequired, KEYS, TEXT, MULTILINE, COLOR, IMAGE, SELECT, NUMBER, JSON_KEYS, cleanEvent, cleanLayout, flatten, InputError };

@@ -502,5 +502,8 @@
   }
 
   applyCast(''); // 最初は自社の4体
-  window.HaneulEvent = { placeLimit, CARD_PRESETS, avatarCharacters, castOf, applyCast, MAX_CAST, noveltyOn, NOVELTY_THRESHOLD, missingRequired, returnTextOf, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
+  // 出品者が変えられない項目（server/admin/fields.js の SELLER_LOCKED と同じ）
+  const SELLER_LOCKED = ['open_at', 'close_at', 'daily_open', 'daily_close', 'capacity', 'collection',
+    'shipping_text', 'shipping_note', 'free_shipping_threshold', 'payment_text', 'return_text', 'novelty', 'novelty_name', 'novelty_threshold'];
+  window.HaneulEvent = { SELLER_LOCKED, placeLimit, CARD_PRESETS, avatarCharacters, castOf, applyCast, MAX_CAST, noveltyOn, NOVELTY_THRESHOLD, missingRequired, returnTextOf, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
 })();

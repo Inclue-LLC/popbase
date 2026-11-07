@@ -2,7 +2,11 @@
  * 管理画面のログイン（スタッフごとのアカウント）
  * --------------------------------------------------
  * アカウントは data/users.json に保存（パスワードは scrypt でハッシュ化。平文は保存しない）。
- * 追加・削除は npm run admin:user で行います。
+ * 追加・削除は管理画面の「アカウント」（運営のみ）か、npm run admin:user で行います。
+ *
+ * 権限（role）:
+ *   admin  … 運営。すべてのイベント・アカウントを扱え、「サイトに反映する」ができる（以前からのアカウントはすべて admin）
+ *   seller … 出品者。担当のイベント（events）だけ。会期・送料などは変えられず、反映は運営に「確認を依頼」する
  * ログイン状態は署名付き Cookie（HttpOnly / SameSite=Strict / 12時間）で保持します。
  */
 const fs = require('fs');
@@ -31,11 +35,29 @@ function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
   return { salt, hash };
 }
 
-function setUser(name, password) {
-  const users = readUsers().filter((u) => u.name !== name);
-  users.push({ name, ...hashPassword(password), createdAt: new Date().toISOString() });
-  writeUsers(users);
+const ROLES = ['admin', 'seller'];
+const roleOf = (u) => (u?.role === 'seller' ? 'seller' : 'admin');
+
+/** アカウントを作る・変える。password を省くとパスワードはそのまま（role・events だけ変える） */
+function setUser(name, password, { role, events } = {}) {
+  const users = readUsers();
+  const old = users.find((u) => u.name === name);
+  const next = {
+    name,
+    ...(password ? hashPassword(password) : { salt: old?.salt, hash: old?.hash }),
+    role: ROLES.includes(role) ? role : roleOf(old),
+    events: Array.isArray(events) ? [...new Set(events.map(String))] : (old?.events || []),
+    createdAt: old?.createdAt || new Date().toISOString(),
+  };
+  if (!next.hash) throw new Error('password');
+  writeUsers([...users.filter((u) => u.name !== name), next]);
 }
+/** 画面に出す用（パスワードのハッシュは出さない） */
+function getUser(name) {
+  const u = readUsers().find((x) => x.name === name);
+  return u ? { name: u.name, role: roleOf(u), events: u.events || [], createdAt: u.createdAt || null } : null;
+}
+const listUsers = () => readUsers().map((u) => getUser(u.name));
 function deleteUser(name) {
   const users = readUsers();
   const next = users.filter((u) => u.name !== name);
@@ -98,6 +120,6 @@ function loginFailed(ip) {
 function loginSucceeded(ip) { attempts.delete(ip); }
 
 module.exports = {
-  DATA_DIR, readUsers, setUser, deleteUser, verify, sessionCookie, clearCookie, currentUser,
+  DATA_DIR, ROLES, readUsers, setUser, getUser, listUsers, deleteUser, verify, sessionCookie, clearCookie, currentUser,
   loginAllowed, loginFailed, loginSucceeded,
 };

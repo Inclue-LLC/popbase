@@ -14,6 +14,19 @@
  *   GET  /admin/api/products?collection=HANDLE  コレクションの商品（Shopify）
  *   GET  /admin/api/preview?event=ID  下書きをサイトで確認する用
  *   POST /admin/api/upload    画像（PNG / JPEG / WebP、8MB まで）
+ * 出品者まわり（運営 admin と 出品者 seller。出品者は担当のイベントだけ。server/admin/seller.js）
+ *   POST /admin/api/review?event=ID      出品者：運営に「サイトへの反映」の確認を依頼 { note }
+ *   GET  /admin/api/users                運営：アカウントの一覧
+ *   POST /admin/api/users                運営：アカウントを作る・変える { name, password?, role, events }
+ *   DELETE /admin/api/users?name=NAME    運営：アカウントを削除
+ *   GET  /admin/api/orders?event=ID      このイベントの商品が入った注文（Shopify）
+ *   GET  /admin/api/submissions?event=ID 商品の申請の一覧
+ *   POST /admin/api/submissions?event=ID 商品を申請 { name, price, stock, description, spec, size, limit, images }
+ *   PUT  /admin/api/submissions?event=ID&id=ID   直す（運営は { status, note } も）
+ *   DELETE /admin/api/submissions?event=ID&id=ID
+ *   POST /admin/api/submission-image     申請の画像（PNG / JPEG / WebP、8MB まで）→ { file }
+ *   GET  /admin/api/submission-image?event=ID&file=NAME   申請の画像
+ *   GET  /admin/api/submissions.zip?event=ID[&pending=1]   運営：画像と一覧（CSV）をまとめてダウンロード
  * 公開用
  *   GET  /api/published       お客さんに出すイベント（会期で自動）の設定と棚の配置（サイトが読む）
  *   GET  /uploads/...         アップロードした画像（ローカル保存のとき）
@@ -21,7 +34,8 @@
 const fs = require('fs');
 const path = require('path');
 const auth = require('./auth');
-const { InputError, missingRequired } = require('./fields');
+const { InputError, missingRequired, SELLER_LOCKED } = require('./fields');
+const seller = require('./seller');
 const local = require('./store-local');
 const ev = require('./events');
 const shopify = require('./store-shopify');
@@ -52,6 +66,7 @@ async function readJson(req) {
 }
 
 const { clientIp } = require('../client-ip');
+const contact = require('../contact');
 
 // 画像の種類をファイルの中身で判定（拡張子や Content-Type は信用しない）
 function sniffImage(buf) {
@@ -129,11 +144,27 @@ async function handle(req, res, urlPath) {
     const user = auth.currentUser(req);
     if (!user) return json(res, 401, { error: 'ログインしてください', needsSetup: auth.readUsers().length === 0 });
 
-    if (route === 'session' && req.method === 'GET') return json(res, 200, { user, mode: store.mode, storage: store.label });
+    const me = auth.getUser(user);
+    const isAdmin = me.role === 'admin';
+    if (route === 'session' && req.method === 'GET') return json(res, 200, { user, role: me.role, events: me.events, mode: store.mode, storage: store.label });
     const q = new URL(req.url, 'http://x').searchParams;
     const id = q.get('event') || '';
+    // 出品者は担当のイベントだけ。運営だけができる操作は断る
+    const own = (eventId) => isAdmin || me.events.includes(eventId);
+    const SELLER_ROUTES = new Set(['events:GET', 'state:GET', 'draft:PUT', 'preview:GET', 'upload:POST', 'products:GET', 'collections:GET',
+      'review:POST', 'orders:GET', 'submissions:GET', 'submissions:POST', 'submissions:PUT', 'submissions:DELETE', 'submission-image:GET', 'submission-image:POST', 'discard:POST']);
+    if (!isAdmin) {
+      if (!SELLER_ROUTES.has(`${route}:${req.method}`)) return json(res, 403, { error: 'この操作は運営のアカウントでのみできます' });
+      if (id && !own(id)) return json(res, 403, { error: '担当していないイベントです' });
+    }
 
-    if (route === 'events' && req.method === 'GET') return json(res, 200, { events: await store.listEvents() });
+    if (route === 'events' && req.method === 'GET') {
+      const all = await store.listEvents();
+      const rv = seller.reviews();
+      const subs = (eid) => seller.listSubmissions(eid).filter((x) => x.status === 'pending').length;
+      const list = all.filter((x) => own(x.id)).map((x) => ({ ...x, review: rv[x.id] || null, pendingSubmissions: subs(x.id) }));
+      return json(res, 200, { events: list });
+    }
     if (route === 'events' && req.method === 'POST') {
       const { title, copyFrom } = await readJson(req);
       if (typeof title !== 'string' || !title.trim() || title.length > 60) throw new InputError('イベント名を入れてください');
@@ -154,6 +185,11 @@ async function handle(req, res, urlPath) {
     if (route === 'products' && req.method === 'GET') {
       const c = q.get('collection') || '';
       if (!store.products || !/^[a-z0-9][a-z0-9-]{0,254}$/.test(c)) return json(res, 200, { products: null });
+      // 出品者は、担当のイベントのコレクションの商品だけ
+      if (!isAdmin) {
+        const mine = (await store.listEvents()).filter((x) => own(x.id)).map((x) => x.collection);
+        if (!mine.includes(c)) return json(res, 403, { error: '担当していないコレクションです' });
+      }
       return json(res, 200, { products: await store.products(c) });
     }
     if (route === 'preview' && req.method === 'GET') return json(res, 200, await store.getDraft(id));
@@ -164,6 +200,8 @@ async function handle(req, res, urlPath) {
       // 会期を変えたときは、ほかのイベントの会期と重ならないこと（1つの期間に開けるイベントは1つ）
       const next = body?.event || {};
       const prev = (await store.getState(id)).draft.event || {};
+      // 出品者は会期・送料などを変えられない（送られてきても、いまの値のままにする）
+      if (!isAdmin) for (const k of SELLER_LOCKED) { if (k in prev) next[k] = prev[k]; else delete next[k]; }
       if (next.open_at !== prev.open_at || next.close_at !== prev.close_at) {
         const o = ev.findOverlap(await store.listEvents(), id, next.open_at, next.close_at);
         if (o) return json(res, 409, { error: ev.overlapMessage(o) });
@@ -181,6 +219,7 @@ async function handle(req, res, urlPath) {
       const pub = await store.publish(id, user, rev);
       // 会期・営業時間をすぐ入店管理に反映（お客さんに出すイベントが変わることもある）
       try { require('../visit').setSchedule((await store.getPublished()).event || {}); } catch (e) { console.error(e); }
+      seller.clearReview(id); // 出品者からの確認依頼は、反映した時点で済み
       console.log(`[admin] ${user} がイベント ${id} を公開しました (${pub.publishedAt})`);
       return json(res, 200, pub);
     }
@@ -191,8 +230,99 @@ async function handle(req, res, urlPath) {
       if (!kind) return json(res, 400, { error: 'PNG・JPEG・WebP の画像を選んでください' });
       return json(res, 200, await store.upload(buf, kind[0], kind[1]));
     }
+
+    /* ---------- 出品者まわり ---------- */
+    if (route === 'review' && req.method === 'POST') {
+      const { note } = await readJson(req);
+      await store.getState(id); // イベントがあるか
+      const r = seller.requestReview(id, user, note);
+      const title = (await store.listEvents()).find((x) => x.id === id)?.title || id;
+      contact.notify(`「${title}」の反映の確認依頼`, `${user} さんから、イベント「${title}」をサイトに反映する確認の依頼がありました。\n\n${r.note ? `メッセージ：\n${r.note}\n\n` : ''}管理画面でイベントを開き、内容を確認して「サイトに反映する」を押してください。`);
+      return json(res, 200, { review: r });
+    }
+    if (route === 'users') {
+      if (req.method === 'GET') return json(res, 200, { users: auth.listUsers() });
+      if (req.method === 'POST') {
+        const { name, password, role, events } = await readJson(req);
+        if (typeof name !== 'string' || !/^[\w.@-]{2,40}$/.test(name)) throw new InputError('ID は半角英数字・. @ - _ の2〜40文字');
+        const exists = !!auth.getUser(name);
+        if (!exists && !password) throw new InputError('パスワードを入れてください');
+        if (password && (typeof password !== 'string' || password.length < 10 || password.length > 200)) throw new InputError('パスワードは10文字以上');
+        if (!auth.ROLES.includes(role)) throw new InputError('権限');
+        if (name === user && role !== 'admin') throw new InputError('自分のアカウントを出品者にはできません');
+        const ids = new Set((await store.listEvents()).map((x) => x.id));
+        const evs = Array.isArray(events) ? events.filter((x) => ids.has(x)) : [];
+        auth.setUser(name, password || null, { role, events: evs });
+        console.log(`[admin] ${user} がアカウント ${name} を${exists ? '変更' : '作成'}しました（${role}）`);
+        return json(res, 200, { user: auth.getUser(name) });
+      }
+      if (req.method === 'DELETE') {
+        const name = q.get('name') || '';
+        if (name === user) throw new InputError('自分のアカウントは削除できません');
+        if (!auth.deleteUser(name)) return json(res, 404, { error: 'アカウントが見つかりません' });
+        console.log(`[admin] ${user} がアカウント ${name} を削除しました`);
+        return json(res, 200, { ok: true });
+      }
+    }
+    if (route === 'orders' && req.method === 'GET') {
+      const d = (await store.getState(id)).draft.event || {};
+      const p = (await store.getState(id)).published?.event || {};
+      const col = p.collection || d.collection;
+      if (!store.orders) return json(res, 200, { orders: null, reason: 'local' });
+      if (!col) return json(res, 200, { orders: null, reason: 'no_collection' });
+      // 会期の始まり（日本時間）の1日前から。会期未設定なら直近60日
+      const open = require('../../js/schedule.js').parseDateTime(p.open_at || d.open_at);
+      const since = open ? new Date(open - 86400e3).toISOString() : null;
+      try {
+        return json(res, 200, { orders: await store.orders(col, since), collection: col });
+      } catch (e) {
+        console.error('[orders]', e.message);
+        const denied = /access|scope|denied|protected customer/i.test(e.message);
+        return json(res, 200, { orders: null, reason: denied ? 'scope' : 'error', message: e.message });
+      }
+    }
+    if (route === 'submissions') {
+      if (req.method !== 'POST') await store.getState(id); // イベントがあるか
+      if (req.method === 'GET') return json(res, 200, { items: seller.listSubmissions(id), status: seller.STATUS });
+      if (req.method === 'POST') {
+        await store.getState(id);
+        const item = seller.addSubmission(id, await readJson(req), user);
+        const title = (await store.listEvents()).find((x) => x.id === id)?.title || id;
+        if (!isAdmin) contact.notify(`「${title}」に商品の申請`, `${user} さんから、イベント「${title}」に商品の申請がありました。\n\n商品名：${item.name}\n価格：${item.price}円（税込）\n在庫数：${item.stock}\n\n管理画面でイベントを開き、「商品の申請」タブから画像をダウンロードして Shopify に登録してください。`);
+        return json(res, 200, { item });
+      }
+      if (req.method === 'PUT') return json(res, 200, { item: seller.updateSubmission(id, q.get('id'), await readJson(req), user, isAdmin) });
+      if (req.method === 'DELETE') { seller.deleteSubmission(id, q.get('id'), isAdmin); return json(res, 200, { ok: true }); }
+    }
+    if (route === 'submission-image' && req.method === 'POST') {
+      const buf = await readBody(req, 8 * 1024 * 1024);
+      const kind = sniffImage(buf);
+      if (!kind) return json(res, 400, { error: 'PNG・JPEG・WebP の画像を選んでください' });
+      return json(res, 200, { file: seller.saveImage(buf, kind[0]) });
+    }
+    if (route === 'submission-image' && req.method === 'GET') {
+      const p = seller.imagePath(id, q.get('file'));
+      if (!p) { res.writeHead(404); res.end(); return true; }
+      const ext = path.extname(p).slice(1);
+      res.writeHead(200, {
+        'content-type': { png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp' }[ext], 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff',
+        ...(q.get('download') ? { 'content-disposition': `attachment; filename="${path.basename(p)}"` } : {}),
+      });
+      fs.createReadStream(p).pipe(res);
+      return true;
+    }
+    if (route === 'submissions.zip' && req.method === 'GET') {
+      if (!isAdmin) return json(res, 403, { error: 'この操作は運営のアカウントでのみできます' });
+      await store.getState(id);
+      const buf = seller.submissionsZip(id, { onlyPending: q.get('pending') === '1' });
+      const name = `申請_${id}${q.get('pending') === '1' ? '_申請中' : ''}.zip`;
+      res.writeHead(200, { 'content-type': 'application/zip', 'cache-control': 'no-store', 'content-length': buf.length, 'content-disposition': `attachment; filename="submissions.zip"; filename*=UTF-8''${encodeURIComponent(name)}` });
+      res.end(buf);
+      return true;
+    }
     return json(res, 404, { error: 'not found' });
   } catch (e) {
+    if (e instanceof seller.SellerError) return json(res, e.status, { error: e.message });
     if (e instanceof InputError) return json(res, e.status || 400, { error: e.status === 404 ? e.message : `入力内容を確認してください（${e.message}）` });
     if (e instanceof store.Conflict) return json(res, 409, { error: '他のスタッフが先に変更を保存しました。最新の内容を読み込み直します' });
     if (e.status === 413) return json(res, 413, { error: 'ファイルが大きすぎます（8MB まで）' });

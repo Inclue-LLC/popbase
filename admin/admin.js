@@ -15,6 +15,7 @@ const SAMPLE_PRODUCTS = window.PRODUCTS; // Shopify につないでいないと�
 
 const state = {
   user: null,
+  role: 'admin',     // 'admin'（運営） | 'seller'（出品者：担当のイベントだけ）
   mode: 'local',     // 'local' | 'shopify'
   events: [],        // イベントの一覧（サーバーの要約）
   eventId: null,     // 編集中のイベント
@@ -28,6 +29,10 @@ const state = {
   dirtyLocal: false, // 未保存の編集がある
   selected: null,    // クリック操作で選んでいるもの { id } or { zone, row, i }
 };
+
+const isSeller = () => state.role === 'seller';
+// 必須の未入力（出品者は、自分で変えられない項目＝会期・送料など は数えない）
+const missingNow = () => E.missingRequired(state.draft.event).filter((f) => !isSeller() || !E.SELLER_LOCKED.includes(f.key));
 
 /* ---------- 通信 ---------- */
 async function api(path, { method = 'GET', body, raw, type } = {}) {
@@ -63,7 +68,12 @@ async function start() {
   try {
     const s = await api('session');
     state.user = s.user;
-    $('#storage').textContent = `保存先：${s.storage}`;
+    state.role = s.role || 'admin';
+    document.body.classList.toggle('is-seller', isSeller());
+    $('#accountsBtn').hidden = isSeller();
+    $('#publishBtn').textContent = isSeller() ? '反映の確認を依頼する' : 'サイトに反映する';
+    $('#publishBtn').title = isSeller() ? '運営が内容を確認して、お客さんのサイトに反映します' : '';
+    $('#storage').textContent = isSeller() ? '出品者のアカウント' : `保存先：${s.storage}`;
     $('#userName').textContent = `${s.user} さん`;
     state.mode = s.mode;
     window.ADMIN_SHOPIFY = s.mode === 'shopify';
@@ -175,6 +185,8 @@ function renderEventBar() {
 /* ---------- 画面の切り替え（#/ = イベント一覧、#/event/ID = イベントの編集） ---------- */
 let openTab = null; // イベントを開いたときに選ぶタブ
 async function route() {
+  if (location.hash === '#/accounts' && !isSeller()) { await flushSave(); showAccounts(); return; }
+  $('#accounts').hidden = true;
   const m = /^#\/event\/([\w-]+)$/.exec(location.hash);
   let target = m && state.events.find((x) => x.id === m[1]);
   // ほかのスタッフが作ったばかりのイベントなど、一覧にまだないときは読み込み直す
@@ -223,7 +235,7 @@ function renderEventList() {
     if (x.updatedAt) meta.push(`最終更新：${fmtTime(x.updatedAt)}`);
     return `<article class="ev-card ${x.active ? 'is-active' : ''} ${cls === 'ended' ? 'is-ended' : ''}" data-id="${esc(x.id)}">
       <div class="ev-main">
-        <div class="ev-badges"><span class="pill pill-${cls}">${label}</span>${x.active ? '<span class="pill pill-active">お客さんに表示中</span>' : ''}</div>
+        <div class="ev-badges"><span class="pill pill-${cls}">${label}</span>${x.active ? '<span class="pill pill-active">お客さんに表示中</span>' : ''}${x.review ? `<span class="pill pill-review" title="${esc(x.review.by)} さんが ${esc(fmtTime(x.review.at))} に依頼${x.review.note ? `：${esc(x.review.note)}` : ''}">${isSeller() ? '確認を依頼中' : '反映の確認依頼あり'}</span>` : ''}${x.pendingSubmissions ? `<span class="pill pill-sub">商品の申請 ${x.pendingSubmissions}件</span>` : ''}</div>
         ${x.brand ? `<p class="ev-brand">${esc(x.brand)}</p>` : ''}
         <h3>${esc(x.title || '（イベント名なし）')}</h3>
         <p class="ev-period">${esc(when)}</p>
@@ -242,7 +254,10 @@ function renderEventList() {
   $('#eventGroups').innerHTML = state.events.length
     ? section('live', '開催中', '') + section('soon', '開催予定', '開始日時になると自動で表示') +
       section('draftonly', '準備中（未公開）', '「サイトに反映する」を押すまで表示されません') + section('ended', '終了', '')
-    : `<div class="el-empty"><h2>イベントがまだありません</h2>
+    : isSeller()
+      ? `<div class="el-empty"><h2>担当のイベントがまだありません</h2>
+        <p>運営がイベントを用意して、このアカウントを担当にすると、ここに表示されます。</p></div>`
+      : `<div class="el-empty"><h2>イベントがまだありません</h2>
         <p>「＋ 新しいイベント」でイベントを作ると、内装・棚の配置・入口の画面などを、イベントごとに設定できます。</p></div>`;
 }
 
@@ -263,6 +278,10 @@ async function selectEvent(id) {
   $('#previewLink').href = `/?preview=draft&event=${encodeURIComponent(id)}`;
   renderEventBar();
   await loadState();
+  updateSubCount();
+  $('#subForm').hidden = true;
+  if (activeTab === 'submissions') loadSubmissions();
+  if (activeTab === 'orders') loadOrders();
 }
 
 $('#eventSel').addEventListener('change', (e) => openEvent(e.target.value));
@@ -377,13 +396,16 @@ function renderStatus() {
     ? '保存しています…'
     : state.draft.updatedAt ? `保存済み ${fmtTime(state.draft.updatedAt)}` : '';
   const savedTitle = state.draft.updatedAt ? `下書きを保存しました（${fmtTime(state.draft.updatedAt)}${state.draft.updatedBy ? `・${state.draft.updatedBy}` : ''}）` : '';
-  const miss = E.missingRequired(state.draft.event);
+  const miss = missingNow();
   const missPill = miss.length ? `<span class="pill pill-missing" title="${esc(miss.map((f) => f.label).join('・'))}">必須の未入力 ${miss.length}</span>` : '';
   $('#status').innerHTML = `${pill}${missPill}<span class="saved" title="${esc(savedTitle)}">${saved}</span>`;
   // 保存ボタン：未保存の変更があれば「保存」、保存中は「保存中…」、なければ「保存済み」
   const sb = $('#saveBtn');
   sb.textContent = state.saving ? '保存中…' : state.dirtyLocal ? '保存' : '保存済み ✓';
   sb.classList.toggle('is-dirty', state.dirtyLocal && !state.saving);
+  // 出品者：確認を依頼済みなら、その旨を出す
+  const rv = state.events.find((x) => x.id === state.eventId)?.review;
+  if (isSeller() && rv) $('#status').insertAdjacentHTML('afterbegin', `<span class="pill pill-review" title="${esc(fmtTime(rv.at))} に依頼">確認を依頼中</span>`);
   $('#publishBtn').disabled = !differs || state.saving || state.dirtyLocal;
 }
 
@@ -443,6 +465,7 @@ document.addEventListener('keydown', (e) => {
 
 /* ---------- 公開・取り消し ---------- */
 $('#publishBtn').addEventListener('click', async () => {
+  if (isSeller()) { requestReview(); return; }
   // 必須項目が空欄なら公開しない
   const miss = E.missingRequired(state.draft.event);
   if (miss.length) {
@@ -503,6 +526,10 @@ document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () 
   $('#entrancePreview').hidden = !onEntrance;
   if (onEntrance) openEntrancePreview();
   else if (wasEntrance) refreshPreview();
+  // 商品の申請・注文：右の 3D プレビューは使わない
+  $('.workspace').classList.toggle('no-preview', activeTab === 'submissions' || activeTab === 'orders');
+  if (activeTab === 'submissions') loadSubmissions();
+  if (activeTab === 'orders') loadOrders();
   if (activeTab === 'characters' && preview) {
     preview.setView('back');
     document.querySelectorAll('#previewViews button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.view === 'back')));
@@ -788,6 +815,17 @@ function renderForm() {
   }
   renderScheduleStatus();
   markMissing();
+  // 出品者：会期・送料などは運営が設定する（見えるが変えられない）
+  if (isSeller()) {
+    for (const key of E.SELLER_LOCKED) {
+      const el = document.getElementById(`f_${key}`);
+      if (!el) continue;
+      el.disabled = true;
+      el.closest('.field')?.classList.add('is-locked');
+      el.closest('.field')?.querySelector('label')?.insertAdjacentHTML('beforeend', '<span class="hint locked-note">運営が設定します</span>');
+      el.closest('.field')?.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+    }
+  }
 }
 
 /** この設定で今お店が開いているか（日本時間） */
@@ -826,7 +864,7 @@ const NEED_LEGEND = `<p class="need-legend">
 
 /** 必須で空欄の欄に印を付ける */
 function markMissing() {
-  const miss = new Set(E.missingRequired(state.draft.event).map((f) => f.key));
+  const miss = new Set(missingNow().map((f) => f.key));
   for (const f of E.FIELDS.filter((x) => x.need === 'required')) {
     document.getElementById(`f_${f.key}`)?.classList.toggle('is-missing', miss.has(f.key));
   }
@@ -1305,6 +1343,312 @@ function renderHistory() {
 }
 
 // 未保存のまま閉じようとしたら確認
+/* ==========================================================
+   出品者まわり：反映の確認依頼・アカウント・商品の申請・注文
+   ========================================================== */
+
+/* ---------- 反映の確認依頼（出品者は「サイトに反映する」の代わりに、運営へ依頼する） ---------- */
+async function requestReview() {
+  await flushSave();
+  const note = prompt('運営に、サイトへの反映の確認を依頼します。\n伝えたいことがあれば書いてください（なくても大丈夫です）：', '');
+  if (note == null) return;
+  try {
+    await evApi('review', { method: 'POST', body: { note } });
+    await loadEvents();
+    renderStatus();
+    toast('運営に確認を依頼しました。確認が済むと、お客さんのサイトに反映されます');
+  } catch (e) { toast(e.message, { error: true }); }
+}
+
+/* ---------- アカウント（運営だけ） ---------- */
+let accEditing = null; // 変更中のアカウントの ID
+async function showAccounts() {
+  state.eventId = null;
+  state.draft = null;
+  $('#app').classList.add('is-list');
+  $('#eventList').hidden = true;
+  $('#accounts').hidden = false;
+  window.scrollTo(0, 0);
+  await loadEvents().catch(() => {}); // 担当のイベントの選択肢を最新に
+  resetAccForm();
+  await renderAccounts();
+}
+function accEventChecks(selected = []) {
+  const HS = window.HaneulSchedule;
+  $('#accEventList').innerHTML = state.events.length
+    ? state.events.map((x) => `<label class="check"><input type="checkbox" value="${esc(x.id)}" ${selected.includes(x.id) ? 'checked' : ''}>
+        ${esc(x.title || '（イベント名なし）')}<small>${esc(x.open_at ? HS.periodText({ open_at: x.open_at, close_at: x.close_at }) : '会期未設定')}</small></label>`).join('')
+    : '<p class="hint">イベントがまだありません。先にイベントを作ってください。</p>';
+}
+function resetAccForm() {
+  accEditing = null;
+  const f = $('#accForm');
+  f.reset();
+  f.name.readOnly = false;
+  f.password.placeholder = '10文字以上';
+  $('#accFormTitle').textContent = 'アカウントを追加';
+  $('#accSubmit').textContent = '追加する';
+  $('#accCancel').hidden = true;
+  accEventChecks([]);
+  syncAccRole();
+}
+function syncAccRole() { $('#accEvents').hidden = $('#accForm').role.value !== 'seller'; }
+$('#accForm').role.addEventListener('change', syncAccRole);
+$('#accCancel').addEventListener('click', resetAccForm);
+async function renderAccounts() {
+  try {
+    const { users } = await api('users');
+    const title = (id) => state.events.find((x) => x.id === id)?.title || '（削除されたイベント）';
+    $('#accList').innerHTML = users.sort((a, b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name)).map((u) => `
+      <li class="acc-item" data-name="${esc(u.name)}">
+        <div><b>${esc(u.name)}</b> <span class="pill ${u.role === 'admin' ? 'pill-active' : 'pill-sub'}">${u.role === 'admin' ? '運営' : '出品者'}</span>${u.name === state.user ? ' <small>（あなた）</small>' : ''}
+          <p class="hint">${u.role === 'admin' ? 'すべてのイベント' : u.events.length ? `担当：${u.events.map((id) => esc(title(id))).join('、')}` : '<span class="warn">担当のイベントがありません</span>'}</p></div>
+        <div class="acc-item-actions">
+          <button class="btn btn-small" data-edit type="button">変更</button>
+          <button class="btn btn-small btn-ghost btn-danger" data-del type="button" ${u.name === state.user ? 'disabled title="自分のアカウントは削除できません"' : ''}>削除</button>
+        </div>
+      </li>`).join('');
+    $('#accList')._users = users;
+  } catch (e) { toast(e.message, { error: true }); }
+}
+$('#accList').addEventListener('click', async (e) => {
+  const li = e.target.closest('.acc-item');
+  if (!li) return;
+  const u = $('#accList')._users.find((x) => x.name === li.dataset.name);
+  if (e.target.closest('[data-edit]')) {
+    accEditing = u.name;
+    const f = $('#accForm');
+    f.name.value = u.name;
+    f.name.readOnly = true;
+    f.password.value = '';
+    f.password.placeholder = '変えるときだけ入力（10文字以上）';
+    f.role.value = u.role;
+    accEventChecks(u.events);
+    syncAccRole();
+    $('#accFormTitle').textContent = `「${u.name}」を変更`;
+    $('#accSubmit').textContent = '変更を保存';
+    $('#accCancel').hidden = false;
+    f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  if (e.target.closest('[data-del]')) {
+    if (!confirm(`アカウント「${u.name}」を削除します。このアカウントではログインできなくなります。よろしいですか？`)) return;
+    try {
+      await api(`users?name=${encodeURIComponent(u.name)}`, { method: 'DELETE' });
+      toast('アカウントを削除しました');
+      if (accEditing === u.name) resetAccForm();
+      renderAccounts();
+    } catch (err) { toast(err.message, { error: true }); }
+  }
+});
+$('#accForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = e.currentTarget;
+  const role = f.role.value;
+  const events = [...document.querySelectorAll('#accEventList input:checked')].map((x) => x.value);
+  if (!accEditing && f.password.value.length < 10) { toast('パスワードは10文字以上にしてください', { error: true }); f.password.focus(); return; }
+  if (role === 'seller' && !events.length && !confirm('担当のイベントが選ばれていません。このまま保存しますか？（ログインしても、何も表示されません）')) return;
+  try {
+    await api('users', { method: 'POST', body: { name: f.name.value.trim(), password: f.password.value || undefined, role, events } });
+    toast(accEditing ? 'アカウントを変更しました' : 'アカウントを追加しました。ID とパスワードをご本人にお伝えください');
+    resetAccForm();
+    renderAccounts();
+  } catch (err) { toast(err.message, { error: true }); }
+});
+
+/* ---------- 商品の申請 ---------- */
+const SUB = { items: [], status: {}, editing: null, images: [] };
+const subImg = (file, { download = false } = {}) => `/admin/api/submission-image?event=${encodeURIComponent(state.eventId)}&file=${encodeURIComponent(file)}${download ? '&download=1' : ''}`;
+function updateSubCount() {
+  const n = state.events.find((x) => x.id === state.eventId)?.pendingSubmissions || 0;
+  $('#subCount').textContent = n;
+  $('#subCount').hidden = !n;
+}
+async function loadSubmissions() {
+  $('#subHelp').innerHTML = isSeller()
+    ? '店内に並べたい商品を申請してください。運営が内容を確認して Shopify に登録すると、「商品の配置」タブに出てきて、棚に並べられるようになります。<br>登録済みになった商品の変更は、運営にご連絡ください。'
+    : '出品者から届いた商品の申請です。画像と一覧（CSV）をダウンロードして Shopify に登録し、登録したら状態を「Shopifyに登録済み」にしてください。';
+  $('#subZipAll').href = `/admin/api/submissions.zip?event=${encodeURIComponent(state.eventId)}`;
+  $('#subZipPending').href = `/admin/api/submissions.zip?event=${encodeURIComponent(state.eventId)}&pending=1`;
+  const evTitle = (state.events.find((x) => x.id === state.eventId)?.title || state.eventId).replace(/[\\/:*?"<>|]/g, '_');
+  $('#subZipAll').download = `商品の申請_${evTitle}.zip`;
+  $('#subZipPending').download = `商品の申請_${evTitle}_申請中.zip`;
+  try {
+    const r = await evApi('submissions');
+    SUB.items = r.items;
+    SUB.status = r.status;
+    renderSubmissions();
+  } catch (e) { toast(e.message, { error: true }); }
+}
+function renderSubmissions() {
+  const list = SUB.items;
+  $('#subZipAll').hidden = isSeller() || !list.length;
+  $('#subZipPending').hidden = isSeller() || !list.some((x) => x.status === 'pending');
+  $('#subList').innerHTML = list.length ? list.map((x) => `
+    <li class="sub-item is-${x.status}" data-id="${esc(x.id)}">
+      <div class="sub-pics">${x.images.map((f, i) => `<a href="${subImg(f, { download: !isSeller() })}" ${isSeller() ? 'target="_blank" rel="noopener"' : 'download'} title="${isSeller() ? '画像を開く' : 'この画像をダウンロード'}"><img src="${subImg(f)}" alt="" loading="lazy">${i === 0 ? '<span>棚</span>' : ''}</a>`).join('')}</div>
+      <div class="sub-info">
+        <p class="sub-head"><span class="pill sub-st-${x.status}">${esc(SUB.status[x.status] || x.status)}</span> <b>${esc(x.name)}</b></p>
+        <p class="sub-meta">${yen(x.price)}（税込）　在庫 ${x.stock}　大きさ ${esc(x.size)}${x.limit ? `　お一人様 ${x.limit} 点まで` : ''}</p>
+        ${x.spec ? `<p class="sub-meta">${esc(x.spec)}</p>` : ''}
+        ${x.description ? `<p class="sub-desc">${esc(x.description)}</p>` : ''}
+        <p class="hint">${esc(x.by)} さん・${fmtTime(x.createdAt)}${x.updatedAt !== x.createdAt ? `（更新 ${fmtTime(x.updatedAt)}）` : ''}</p>
+        ${x.note && isSeller() ? `<p class="sub-note">運営より：${esc(x.note)}</p>` : ''}
+        ${isSeller() ? '' : `<div class="sub-admin">
+          <label>状態 <select data-status>${Object.entries(SUB.status).map(([k, v]) => `<option value="${k}" ${k === x.status ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select></label>
+          <label class="sub-note-input">出品者へのメモ <input data-note value="${esc(x.note || '')}" maxlength="500" placeholder="差し戻しの理由など"></label>
+        </div>`}
+      </div>
+      <div class="sub-item-actions">
+        ${isSeller() && x.status === 'registered' ? '' : '<button class="btn btn-small" data-edit type="button">直す</button>'}
+        ${isSeller() && x.status === 'registered' ? '' : '<button class="btn btn-small btn-ghost btn-danger" data-del type="button">削除</button>'}
+      </div>
+    </li>`).join('') : `<li class="sub-empty">${isSeller() ? 'まだ申請した商品はありません。「＋ 商品を申請する」から登録してください。' : 'まだ申請はありません。'}</li>`;
+  const ev = state.events.find((x) => x.id === state.eventId);
+  if (ev) ev.pendingSubmissions = list.filter((x) => x.status === 'pending').length;
+  updateSubCount();
+}
+function openSubForm(item = null) {
+  const f = $('#subForm');
+  f.reset();
+  SUB.editing = item?.id || null;
+  SUB.images = item ? [...item.images] : [];
+  if (item) for (const k of ['name', 'price', 'stock', 'size', 'limit', 'spec', 'description']) f.elements[k].value = item[k] ?? '';
+  $('#subFormTitle').textContent = item ? `「${item.name}」を直す` : '商品を申請する';
+  $('#subSubmit').textContent = item ? '変更を保存' : '申請する';
+  $('#subError').textContent = '';
+  f.hidden = false;
+  renderSubThumbs();
+  f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  f.elements.name.focus({ preventScroll: true });
+}
+function renderSubThumbs() {
+  $('#subThumbs').innerHTML = SUB.images.map((f, i) => `<li><img src="${subImg(f)}" alt="">${i === 0 ? '<span>棚</span>' : ''}<button type="button" data-rm="${i}" aria-label="この画像を外す">×</button></li>`).join('');
+  $('#subAddImage').hidden = SUB.images.length >= 5;
+}
+$('#subNewBtn').addEventListener('click', () => openSubForm());
+$('#subCancel').addEventListener('click', () => { $('#subForm').hidden = true; });
+$('#subThumbs').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-rm]');
+  if (!b) return;
+  SUB.images.splice(Number(b.dataset.rm), 1);
+  renderSubThumbs();
+});
+$('#subImageInput').addEventListener('change', async (e) => {
+  const files = [...e.target.files].slice(0, 5 - SUB.images.length);
+  e.target.value = '';
+  for (const file of files) {
+    if (file.size > 8 * 1024 * 1024) { toast(`「${file.name}」は 8MB を超えています`, { error: true }); continue; }
+    try {
+      const r = await api('submission-image', { method: 'POST', raw: file, type: file.type });
+      SUB.images.push(r.file);
+      renderSubThumbs();
+    } catch (err) { toast(err.message, { error: true }); }
+  }
+});
+$('#subForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = e.currentTarget.elements;
+  const body = { name: f.name.value, price: f.price.value, stock: f.stock.value, size: f.size.value, limit: f.limit.value, spec: f.spec.value, description: f.description.value, images: SUB.images };
+  const miss = [[!body.name.trim(), '商品名'], [!body.price, '価格'], [body.stock === '', '在庫数'], [!body.images.length, '商品の画像']].filter(([b]) => b).map(([, l]) => l);
+  if (miss.length) { $('#subError').textContent = `${miss.join('・')}を入力してください`; return; }
+  try {
+    if (SUB.editing) await api(`submissions?event=${encodeURIComponent(state.eventId)}&id=${encodeURIComponent(SUB.editing)}`, { method: 'PUT', body });
+    else await evApi('submissions', { method: 'POST', body });
+    $('#subForm').hidden = true;
+    toast(SUB.editing ? '変更しました' : isSeller() ? '申請しました。運営が確認して Shopify に登録します' : '申請を追加しました');
+    loadSubmissions();
+  } catch (err) { $('#subError').textContent = err.message; }
+});
+$('#subList').addEventListener('click', async (e) => {
+  const li = e.target.closest('.sub-item');
+  if (!li) return;
+  const item = SUB.items.find((x) => x.id === li.dataset.id);
+  if (e.target.closest('[data-edit]')) openSubForm(item);
+  if (e.target.closest('[data-del]')) {
+    if (!confirm(`「${item.name}」の申請を削除します。よろしいですか？`)) return;
+    try {
+      await api(`submissions?event=${encodeURIComponent(state.eventId)}&id=${encodeURIComponent(item.id)}`, { method: 'DELETE' });
+      toast('申請を削除しました');
+      loadSubmissions();
+    } catch (err) { toast(err.message, { error: true }); }
+  }
+});
+// 運営：状態・メモを変えたら保存
+$('#subList').addEventListener('change', async (e) => {
+  const li = e.target.closest('.sub-item');
+  if (!li || !(e.target.matches('[data-status]') || e.target.matches('[data-note]'))) return;
+  const body = e.target.matches('[data-status]') ? { status: e.target.value } : { note: e.target.value };
+  try {
+    const r = await api(`submissions?event=${encodeURIComponent(state.eventId)}&id=${encodeURIComponent(li.dataset.id)}`, { method: 'PUT', body });
+    Object.assign(SUB.items.find((x) => x.id === r.item.id), r.item);
+    renderSubmissions();
+    toast(body.status ? `状態を「${SUB.status[body.status]}」にしました` : 'メモを保存しました');
+  } catch (err) { toast(err.message, { error: true }); }
+});
+
+/* ---------- 注文（このイベントの商品が入った注文） ---------- */
+const ORD = { list: [] };
+const FIN = { PAID: '支払い済み', PENDING: '支払い待ち', AUTHORIZED: '承認済み', PARTIALLY_PAID: '一部支払い', REFUNDED: '返金済み', PARTIALLY_REFUNDED: '一部返金', VOIDED: '取消', EXPIRED: '期限切れ' };
+const FUL = { UNFULFILLED: '未発送', FULFILLED: '発送済み', PARTIALLY_FULFILLED: '一部発送', IN_PROGRESS: '準備中', ON_HOLD: '保留', SCHEDULED: '予定', RESTOCKED: '返品・在庫戻し', PENDING_FULFILLMENT: '発送待ち', OPEN: '未発送' };
+const shipText = (o) => [o.ship.zip && `〒${o.ship.zip}`, `${o.ship.province}${o.ship.city}${o.ship.address1}${o.ship.address2 ? ` ${o.ship.address2}` : ''}`].filter(Boolean).join(' ');
+const needsShipping = (o) => !o.cancelled && !['FULFILLED', 'RESTOCKED'].includes(o.fulfillment);
+async function loadOrders() {
+  const body = $('#ordersBody');
+  body.innerHTML = '<p class="hint">注文を読み込んでいます…</p>';
+  $('#ordersCsv').disabled = true;
+  try {
+    const r = await evApi('orders');
+    if (!r.orders) {
+      const msg = {
+        local: 'Shopify につないでいないため、注文はありません（Shopify につなぐと、ここに注文が出ます）。',
+        no_collection: 'このイベントに Shopify のコレクションが設定されていません。',
+        scope: 'Shopify のアプリに、注文を読む権限（read_orders）と、お客さまの情報（名前・住所・電話・メール）を読む許可がありません。運営に設定を依頼してください。',
+        error: `注文を読み込めませんでした（${esc(r.message || '')}）。`,
+      }[r.reason] || '注文を読み込めませんでした。';
+      body.innerHTML = `<p class="note-box">${msg}</p>`;
+      return;
+    }
+    ORD.list = r.orders;
+    renderOrders();
+  } catch (e) { body.innerHTML = `<p class="note-box">${esc(e.message)}</p>`; }
+}
+function renderOrders() {
+  const only = $('#ordersUnfulfilled').checked;
+  const list = ORD.list.filter((o) => !only || needsShipping(o));
+  $('#ordersCsv').disabled = !list.length;
+  const todo = ORD.list.filter(needsShipping).length;
+  $('#ordersBody').innerHTML = `<p class="hint">${ORD.list.length}件の注文（未発送 ${todo}件）</p>` + (list.length ? `<ul class="order-list">${list.map((o) => `
+    <li class="order ${o.cancelled ? 'is-cancelled' : ''}">
+      <div class="order-head"><b>${esc(o.name)}</b><span class="hint">${fmtTime(o.createdAt)}</span>
+        ${o.cancelled ? '<span class="pill pill-ended">キャンセル</span>' : ''}
+        <span class="pill ${o.fulfillment === 'FULFILLED' ? 'pill-clean' : 'pill-dirty'}">${esc(FUL[o.fulfillment] || o.fulfillment || '')}</span>
+        <span class="pill">${esc(FIN[o.financial] || o.financial || '')}</span></div>
+      <ul class="order-items">${o.items.map((i) => `<li>${esc(i.title)}${i.variant && i.variant !== 'Default Title' ? `（${esc(i.variant)}）` : ''} × <b>${i.quantity}</b></li>`).join('')}</ul>
+      <div class="order-ship"><b>お届け先</b><p>${esc(o.ship.name)}${o.ship.company ? `（${esc(o.ship.company)}）` : ''} 様<br>${esc(shipText(o))}${o.ship.phone || o.phone ? `<br>TEL ${esc(o.ship.phone || o.phone)}` : ''}${o.email ? `<br>${esc(o.email)}` : ''}</p>
+        ${o.note ? `<p class="hint">備考：${esc(o.note)}</p>` : ''}</div>
+    </li>`).join('')}</ul>` : '<p class="note-box">表示する注文はありません。</p>');
+}
+$('#ordersReload').addEventListener('click', loadOrders);
+$('#ordersUnfulfilled').addEventListener('change', renderOrders);
+$('#ordersCsv').addEventListener('click', () => {
+  const only = $('#ordersUnfulfilled').checked;
+  const rows = [['注文番号', '注文日時', '支払い', '発送', 'キャンセル', '商品', '数量', 'お届け先の名前', '会社名', '郵便番号', '住所', '電話番号', 'メール', '備考']];
+  for (const o of ORD.list.filter((x) => !only || needsShipping(x))) {
+    for (const i of o.items) {
+      rows.push([o.name, new Date(o.createdAt).toLocaleString('ja-JP'), FIN[o.financial] || o.financial, FUL[o.fulfillment] || o.fulfillment, o.cancelled ? 'キャンセル' : '',
+        `${i.title}${i.variant && i.variant !== 'Default Title' ? `（${i.variant}）` : ''}`, i.quantity, o.ship.name, o.ship.company, o.ship.zip,
+        `${o.ship.province}${o.ship.city}${o.ship.address1}${o.ship.address2 ? ` ${o.ship.address2}` : ''}`, o.ship.phone || o.phone, o.email, o.note]);
+    }
+  }
+  const csv = `﻿${rows.map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n')}\r\n`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  const ev = state.events.find((x) => x.id === state.eventId);
+  a.download = `注文_${(ev?.title || state.eventId).replace(/[\\/:*?"<>|]/g, '_')}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+
 window.addEventListener('beforeunload', (e) => {
   if (state.dirtyLocal || state.saving) { e.preventDefault(); e.returnValue = ''; }
 });

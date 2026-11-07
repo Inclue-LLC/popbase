@@ -374,3 +374,86 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
   .eventbar .btn-small { padding: .3em .8em; }
 }
 
+
+/* ---------- 出品者まわり ---------- */
+/* 出品者：イベントを作る・複製・削除はできない */
+.is-seller #listNewBtn, .is-seller [data-copy], .is-seller [data-delete], .is-seller #copyEventBtn, .is-seller #deleteEventBtn, .is-seller .admin-only { display: none !important; }
+.field.is-locked { opacity: .62; }
+.locked-note { color: var(--accent, #9b80e0) !important; font-weight: 700; }
+.pill-review { background: #fff1d6; color: #9a6400; }
+.pill-sub { background: #e9e2fb; color: #5b45a8; }
+.tab-count { display: inline-block; min-width: 1.5em; padding: 0 .4em; border-radius: 999px; background: #d9729a; color: #fff; font-size: .72rem; line-height: 1.5em; margin-left: 4px; }
+.tab-count[hidden] { display: none; }
+.workspace.no-preview { grid-template-columns: minmax(0, 1fr); }
+.workspace.no-preview .preview { display: none; }
+.note-box { padding: 14px 16px; border-radius: 12px; background: var(--surface-2, #f8f2fb); line-height: 1.8; }
+
+/* アカウント */
+.accounts { max-width: 1000px; margin: 0 auto; padding: 24px 20px 60px; }
+.acc-form { background: var(--surface); border-radius: 16px; padding: 18px; display: grid; gap: 12px; margin-bottom: 20px; }
+.acc-form h2 { font-size: 1.05rem; margin: 0; }
+.acc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.acc-grid label { display: grid; gap: 4px; font-weight: 700; font-size: .85rem; }
+.acc-grid input, .acc-grid select { padding: .5em .7em; border: 1.5px solid var(--line); border-radius: 8px; font: inherit; background: var(--surface); color: inherit; }
+.acc-grid input[readonly] { background: var(--surface-2, #f5f0f7); }
+.acc-events { border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 14px; display: grid; gap: 6px; }
+.acc-events[hidden] { display: none; }
+.acc-events legend { font-weight: 700; font-size: .85rem; padding: 0 4px; }
+.acc-events .check { display: flex; gap: 8px; align-items: baseline; font-size: .9rem; }
+.acc-events small { color: var(--ink-soft); }
+.acc-actions { display: flex; gap: 8px; }
+.acc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.acc-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--surface); border-radius: 12px; padding: 12px 16px; }
+.acc-item p { margin: 4px 0 0; }
+.acc-item-actions { display: flex; gap: 6px; flex: none; }
+
+/* 商品の申請 */
+.sub-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.sub-actions a.btn { text-decoration: none; }
+.sub-actions [hidden] { display: none !important; }
+.sub-form { border: 1.5px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 16px; display: grid; gap: 12px; }
+.sub-form[hidden] { display: none; }
+.sub-form h3 { margin: 0; font-size: 1rem; }
+.sub-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.sub-grid label { display: grid; gap: 4px; font-weight: 700; font-size: .85rem; align-content: start; }
+.sub-grid .wide { grid-column: 1 / -1; }
+.sub-grid input, .sub-grid select, .sub-grid textarea { padding: .5em .7em; border: 1.5px solid var(--line); border-radius: 8px; font: inherit; font-weight: 400; background: var(--surface); color: inherit; }
+.sub-grid .need, .sub-images .need { margin-left: 6px; }
+.sub-images-label { margin: 0 0 6px; font-weight: 700; font-size: .85rem; }
+.sub-images-label small { font-weight: 500; color: var(--ink-soft); }
+.sub-thumbs { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.sub-thumbs li { position: relative; width: 96px; height: 96px; border-radius: 10px; background: var(--surface-2, #f5f0f7); overflow: hidden; }
+.sub-thumbs img, .sub-pics img { width: 100%; height: 100%; object-fit: contain; }
+.sub-thumbs span, .sub-pics span { position: absolute; left: 4px; top: 4px; padding: 0 6px; border-radius: 999px; background: var(--ink, #2e2729); color: #fff; font-size: .68rem; }
+.sub-thumbs button { position: absolute; right: 4px; top: 4px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0, 0, 0, .55); color: #fff; line-height: 1; }
+.sub-form-actions { display: flex; gap: 8px; }
+.sub-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.sub-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; padding: 14px; border: 1.5px solid var(--line); border-radius: 14px; }
+.sub-item.is-registered { opacity: .75; }
+@media (max-width: 700px) { .sub-item { grid-template-columns: 1fr; } }
+.sub-pics { display: grid; grid-template-columns: repeat(3, 64px); gap: 6px; align-content: start; }
+.sub-pics a { position: relative; width: 64px; height: 64px; border-radius: 8px; background: var(--surface-2, #f5f0f7); overflow: hidden; display: block; }
+.sub-info p { margin: 0 0 4px; }
+.sub-head b { font-size: 1rem; }
+.sub-meta { font-size: .88rem; }
+.sub-desc { font-size: .85rem; color: var(--ink-soft); white-space: pre-line; }
+.sub-note { padding: 6px 10px; border-radius: 8px; background: #fff1d6; font-size: .85rem; }
+.sub-admin { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: .85rem; }
+.sub-admin label { display: flex; gap: 6px; align-items: center; font-weight: 700; }
+.sub-admin select, .sub-admin input { padding: .3em .5em; border: 1.5px solid var(--line); border-radius: 8px; font: inherit; font-weight: 400; background: var(--surface); color: inherit; }
+.sub-note-input { flex: 1 1 260px; }
+.sub-note-input input { flex: 1; min-width: 0; }
+.sub-item-actions { display: flex; flex-direction: column; gap: 6px; }
+.sub-st-pending { background: #fff1d6; color: #9a6400; }
+.sub-st-registered { background: #dff3e6; color: #22764a; }
+.sub-st-returned { background: #fde7ec; color: #b23a5a; }
+.sub-empty { padding: 24px; text-align: center; color: var(--ink-soft); border: 1.5px dashed var(--line); border-radius: 14px; }
+
+/* 注文 */
+.order-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.order { border: 1.5px solid var(--line); border-radius: 14px; padding: 12px 16px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 20px; }
+.order.is-cancelled { opacity: .55; }
+@media (max-width: 700px) { .order { grid-template-columns: 1fr; } }
+.order-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.order-items { margin: 0; padding-left: 1.2em; font-size: .9rem; }
+.order-ship p { margin: 2px 0 0; font-size: .88rem; line-height: 1.7; }
