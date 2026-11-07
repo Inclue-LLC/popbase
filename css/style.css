@@ -431,7 +431,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .demo-bar a { color: #f7c9d8; flex: none; }
 body.is-demo { padding-top: 34px; }
 body.is-demo .site-header { top: 34px; }
-body.is-demo .entrance { top: 34px; }
+body.is-demo .entrance, body.is-demo .modal, body.is-demo .drawer { top: 34px; }
 body.world-fs .demo-bar { display: none; }
 body.is-demo.world-fs { padding-top: 0; }
 .demo-bar .db-short { display: none; }
@@ -577,3 +577,6 @@ body.shop-idle main { display: none; }
   .toast.toast-note { bottom: calc(152px + env(safe-area-inset-bottom)); }
 }
 .pre-line { white-space: pre-line; }
+
+/* 言葉の途中で折り返さない */
+.nb { display: inline-block; }
