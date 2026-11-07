@@ -10,9 +10,10 @@
   padding: clamp(56px, 10vw, 112px) 16px clamp(56px, 9vw, 96px);
   text-align: center;
 }
-.cr-hero-inner { max-width: 760px; margin: 0 auto; }
+.cr-hero-inner { max-width: 920px; margin: 0 auto; }
 .cr-hero .eyebrow { color: #7d63c4; }
 .cr-hero h1 { margin: 10px 0 18px; font-size: clamp(1.7rem, 5.4vw, 2.8rem); font-weight: 900; line-height: 1.4; color: var(--brand-ink); }
+.cr-lead + .cr-lead { margin-top: 1em; }
 .cr-lead { margin: 0 auto; max-width: 46em; line-height: 2; color: #4a3f45; }
 /* 見出しと説明は、言葉の切れ目で折り返す */
 .cr-hero h1 span, .cr-lead span { display: inline-block; }
@@ -39,7 +40,7 @@
   background: var(--surface); border-radius: 16px; padding: 18px 20px 18px 72px; box-shadow: var(--shadow);
 }
 .cr-steps li::before {
-  content: counter(step); position: absolute; left: 20px; top: 18px;
+  content: counter(step, decimal-leading-zero); position: absolute; left: 20px; top: 18px;
   width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
   background: var(--primary); color: var(--primary-ink); font-family: var(--font-latin); font-weight: 600;
 }
@@ -48,8 +49,9 @@
 
 /* ---------- ご用意いただくもの ---------- */
 .cr-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.cr-list li { display: grid; grid-template-columns: 13em 1fr; gap: 4px 16px; padding: 16px 0; border-bottom: 1px solid var(--line); line-height: 1.8; }
-.cr-list li span { color: var(--ink-soft); font-size: .92rem; }
+.cr-list li { display: grid; grid-template-columns: 17em 1fr; gap: 4px 16px; padding: 16px 0; border-bottom: 1px solid var(--line); line-height: 1.8; }
+.cr-list li > span { color: var(--ink-soft); font-size: .92rem; }
+.cr-nb { display: inline-block; }
 @media (max-width: 680px) { .cr-list li { grid-template-columns: 1fr; } }
 
 /* ---------- よくあるご質問 ---------- */
