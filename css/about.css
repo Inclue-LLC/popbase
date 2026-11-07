@@ -66,13 +66,3 @@
 .cr-form { display: grid; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(20px, 4vw, 32px); box-shadow: var(--shadow); }
 .cr-done { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 32px 20px; box-shadow: var(--shadow); }
 .about-page .site-footer a { color: var(--ink-soft); }
-
-/* ---------- 実際の画面（スクリーンショット） ---------- */
-.cr-shot { margin: 0; }
-.cr-shot img { display: block; width: 100%; height: auto; border-radius: 18px; border: 1px solid var(--line); box-shadow: 0 18px 50px rgba(110, 80, 140, .16); background: var(--surface); }
-.cr-hero-shot { max-width: 980px; margin: clamp(36px, 6vw, 56px) auto 0; }
-.cr-hero-shot img { border: 0; box-shadow: 0 24px 60px rgba(110, 80, 140, .22); }
-.cr-screens { display: grid; gap: clamp(28px, 4vw, 44px); max-width: 980px; margin: 0 auto; }
-.cr-shot figcaption { margin-top: 14px; line-height: 1.85; color: var(--ink-soft); font-size: .92rem; }
-.cr-shot figcaption b { display: block; color: var(--ink); font-size: 1.02rem; margin-bottom: 2px; }
-@media (max-width: 680px) { .cr-shot img { border-radius: 12px; } }
