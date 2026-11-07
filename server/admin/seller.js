@@ -46,7 +46,7 @@ function clearReview(eventId) {
 /* ---------- 2. 商品の申請 ---------- */
 const SIZES = ['大', '中', '小'];
 const STATUS = { pending: '申請中', registered: 'Shopifyに登録済み', returned: '差し戻し' };
-const MAX_IMAGES = 5;
+const MAX_IMAGES = 1; // 商品の画像は1枚（サイトの商品の詳細も1枚だけ表示）
 const oneLine = (v, max) => String(v ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max);
 const multiLine = (v, max) => String(v ?? '').replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, '').trim().slice(0, max);
 const intOr = (v, min, max) => {
