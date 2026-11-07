@@ -457,3 +457,13 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .order-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .order-items { margin: 0; padding-left: 1.2em; font-size: .9rem; }
 .order-ship p { margin: 2px 0 0; font-size: .88rem; line-height: 1.7; }
+
+/* 商品の NEW・会場限定（運営：押して付け外し） */
+.ptags { display: flex; gap: 4px; margin-top: 4px; }
+.ptag { border: 1.5px solid var(--line); background: var(--surface); color: var(--ink-soft); border-radius: 999px; padding: 0 .6em; font-size: .66rem; font-weight: 700; line-height: 1.7; }
+.ptag.is-on { background: #ffd76a; border-color: #ffd76a; color: #5a4300; }
+.ptag[data-tag="limited"].is-on { background: #e9e2fb; border-color: #e9e2fb; color: #5b45a8; }
+.pill-new { background: #ffd76a; color: #5a4300; }
+.sub-flags { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-weight: 700; font-size: .85rem; }
+.sub-flags .check { display: inline-flex; gap: 6px; align-items: center; font-weight: 500; }
+.sub-grid .need, .sub-images .need { justify-self: start; }
