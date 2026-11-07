@@ -69,6 +69,7 @@ async function start() {
     const s = await api('session');
     state.user = s.user;
     state.role = s.role || 'admin';
+    state.minPassword = s.minPassword || 10;
     document.body.classList.toggle('is-seller', isSeller());
     $('#accountsBtn').hidden = isSeller();
     $('#publishBtn').textContent = isSeller() ? '反映の確認を依頼する' : 'サイトに反映する';
@@ -1693,6 +1694,7 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 /* ---------- パスワードの設定（運営が発行したリンク #/setup/TOKEN） ---------- */
+let setupMin = 10;
 async function showSetup(token) {
   $('#app').hidden = true;
   $('#login').hidden = true;
@@ -1702,6 +1704,8 @@ async function showSetup(token) {
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || 'このリンクは使えません');
     $('#setupId').textContent = `ID：${j.name}`;
+    setupMin = j.minLength || 10;
+    $('#setupForm .pw-label').textContent = `新しいパスワード（${setupMin}文字以上）`;
     $('#setupForm [name=password]').focus();
   } catch (e) {
     $('#setupId').textContent = '';
@@ -1712,7 +1716,7 @@ async function showSetup(token) {
     ev.preventDefault();
     const f = ev.currentTarget.elements;
     $('#setupError').textContent = '';
-    if (f.password.value.length < 10) { $('#setupError').textContent = 'パスワードは10文字以上にしてください'; return; }
+    if (f.password.value.length < setupMin) { $('#setupError').textContent = `パスワードは${setupMin}文字以上にしてください`; return; }
     if (f.password.value !== f.again.value) { $('#setupError').textContent = '2つのパスワードが一致しません'; return; }
     try {
       await api('setup', { method: 'POST', body: { token, password: f.password.value } });
@@ -1725,13 +1729,19 @@ async function showSetup(token) {
 }
 
 /* ---------- パスワード変更（自分） ---------- */
-$('#pwBtn').addEventListener('click', () => { $('#pwForm').reset(); $('#pwError').textContent = ''; $('#pwDialog').showModal(); });
+$('#pwBtn').addEventListener('click', () => {
+  $('#pwForm').reset();
+  $('#pwError').textContent = '';
+  $('#pwForm .pw-label').textContent = `新しいパスワード（${state.minPassword || 10}文字以上）`;
+  $('#pwDialog').showModal();
+});
 $('#pwCancel').addEventListener('click', () => $('#pwDialog').close());
 $('#pwForm').addEventListener('submit', async (ev) => {
   ev.preventDefault();
   const f = ev.currentTarget.elements;
   $('#pwError').textContent = '';
-  if (f.password.value.length < 10) { $('#pwError').textContent = '新しいパスワードは10文字以上にしてください'; return; }
+  const min = state.minPassword || 10;
+  if (f.password.value.length < min) { $('#pwError').textContent = `新しいパスワードは${min}文字以上にしてください`; return; }
   if (f.password.value !== f.again.value) { $('#pwError').textContent = '新しいパスワードが一致しません'; return; }
   try {
     await api('password', { method: 'POST', body: { current: f.current.value, password: f.password.value } });

@@ -33,8 +33,8 @@
       <p class="login-brand"><img src="/images/popbase-mark.svg" alt="" width="34" height="36">POP BASE</p>
       <h1>パスワードの設定</h1>
       <p class="setup-id" id="setupId"></p>
-      <label>新しいパスワード（10文字以上）<input name="password" type="password" autocomplete="new-password" minlength="10" required></label>
-      <label>もう一度<input name="again" type="password" autocomplete="new-password" minlength="10" required></label>
+      <label><span class="pw-label">新しいパスワード</span><input name="password" type="password" autocomplete="new-password" required></label>
+      <label>もう一度<input name="again" type="password" autocomplete="new-password" required></label>
       <p class="form-error" id="setupError" role="alert"></p>
       <button class="btn btn-primary" type="submit">設定してログイン</button>
     </form>
@@ -293,8 +293,8 @@
     <form id="pwForm" method="dialog">
       <h2>パスワード変更</h2>
       <label>いまのパスワード<input name="current" type="password" autocomplete="current-password" required></label>
-      <label>新しいパスワード（10文字以上）<input name="password" type="password" autocomplete="new-password" minlength="10" required></label>
-      <label>もう一度<input name="again" type="password" autocomplete="new-password" minlength="10" required></label>
+      <label><span class="pw-label">新しいパスワード</span><input name="password" type="password" autocomplete="new-password" required></label>
+      <label>もう一度<input name="again" type="password" autocomplete="new-password" required></label>
       <p class="form-error" id="pwError" role="alert"></p>
       <div class="acc-actions"><button class="btn btn-primary" type="submit" value="ok">変更する</button><button class="btn btn-ghost" type="button" id="pwCancel">やめる</button></div>
     </form>
