@@ -15,7 +15,7 @@
 window.THEMES = {
   /*
    * やさしい色の 5 パターン（壁はギンガムチェック）。初期設定は Milk Tea（js/data.js の SHOP.theme）
-   * 指定いただいた色：壁・壁のチェック・腰壁・見切り・床（タイル・目地）・会場限定テーブルの下・看板（地・大きい文字・小さい文字）・
+   * 指定いただいた色：壁・壁のチェック・腰壁・見切り・床（タイル・目地）・中央のテーブルの下・看板（地・大きい文字・小さい文字）・
    * 商品の画面の背景・棚。それ以外（棚の板と奥・天井・入口）は、その色から合わせて作っている
    */
   milktea: {
@@ -109,7 +109,7 @@ window.THEMES = {
 window.STORE_LAYOUT = {
   left: { title: '', label: '', categories: ['plush', 'keychain'] }, // 看板の文字は管理画面で（空なら看板を出さない）
   right: { title: '', label: '', categories: ['stationery', 'living', 'bag'] },
-  island: { title: 'LIMITED', label: '会場限定テーブル' }, // limited: true の商品が並びます
+  island: { title: '', label: '' }, // 中央のテーブル（看板の文字は「商品の配置」で入力。空欄なら出さない）
 };
 
 /*

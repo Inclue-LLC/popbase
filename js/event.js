@@ -11,7 +11,7 @@
  * 棚の配置 layout … {
  *   left:   [[id|null ×5], [..]],   // 左の棚。行は下の段から順に2段、1段5枠
  *   right:  [[..], [..]],           // 右の棚
- *   island: [id|null ×5],                 // 会場限定テーブル
+ *   island: [id|null ×5],                 // 中央のテーブル
  * }
  */
 (function () {
@@ -93,7 +93,7 @@
       L.left?.title, L.left?.label, L.right?.title, L.right?.label, L.island?.title, L.island?.label,
       ...(window.PRODUCTS || []).map((p) => `${p.name}¥${p.price}`),
       ...(window.CHARACTERS || []).map((c) => c.name),
-      'REGISTER お会計 カートを見る EXIT LIMITED 会場限定テーブル SOLD OUT NEW ¥0123456789,…',
+      'REGISTER お会計 カートを見る EXIT 会場限定 SOLD OUT NEW ¥0123456789,…',
     ];
     return [...new Set(parts.filter(Boolean).join('').replace(/\s/g, ''))].join('');
   }
@@ -135,14 +135,17 @@
     { group: '床', key: 'floor_style', label: '床の種類', type: 'select', options: () => opt([['', 'テーマのまま'], ['wood', '木目'], ['check', 'チェック'], ['tile', 'タイル'], ['carpet', 'カーペット']]) },
     { group: '床', key: 'floor_color_1', label: '床の色 1', type: 'color', themePath: 'floor.colors.0' },
     { group: '床', key: 'floor_color_2', label: '床の色 2', type: 'color', themePath: 'floor.colors.1' },
-    { group: '床', key: 'rug_color', label: '会場限定テーブルの下の色', hint: 'テーブルの下に敷く楕円の色。指定した色のまま表示します', type: 'color', themePath: 'rug' },
+    { group: '床', key: 'rug_color', label: '中央のテーブルの下の色', hint: 'テーブルの下に敷く楕円の色。指定した色のまま表示します', type: 'color', themePath: 'rug' },
     { group: '看板・照明', key: 'sign_color', label: '看板の色', type: 'color', themePath: 'sign.bg' },
     { group: '看板・照明', key: 'sign_text_color', label: 'イベント名の色', hint: '正面の看板のイベント名と会期の文字の色', type: 'color', themePath: 'sign.ink' },
     { group: '看板・照明', key: 'sign_sub_color', label: 'ブランド名の色', hint: '正面の看板の、イベント名の上のブランド名の文字の色', type: 'color', themePath: 'sign.sub' },
-    { group: '棚の看板', key: 'left_label', label: '左の棚（日本語）', hint: '例：ぬいぐるみ・キーホルダー', type: 'text', placeholderPath: 'const.空欄なら表示しません' },
-    { group: '棚の看板', key: 'left_title', label: '左の棚（英字）', hint: '例：PLUSH & CHARM', type: 'text', placeholderPath: 'const.空欄なら表示しません' },
-    { group: '棚の看板', key: 'right_label', label: '右の棚（日本語）', hint: '例：文具・雑貨・バッグ', type: 'text', placeholderPath: 'const.空欄なら表示しません' },
-    { group: '棚の看板', key: 'right_title', label: '右の棚（英字）', hint: '例：STATIONERY & GOODS', type: 'text', placeholderPath: 'const.空欄なら表示しません' },
+    // 棚・テーブルの看板の文字：「商品の配置」タブの、それぞれの棚・テーブルの欄で入力する
+    { tab: 'sign-left', group: '看板', key: 'left_title', label: '看板（英字）', type: 'text', placeholderPath: 'const.空欄なら表示しません' },
+    { tab: 'sign-left', group: '看板', key: 'left_label', label: '看板（日本語）', type: 'text', placeholderPath: 'const.空欄なら表示しません' },
+    { tab: 'sign-island', group: '看板', key: 'island_title', label: '看板（英字）', type: 'text', placeholderPath: 'const.空欄なら表示しません' },
+    { tab: 'sign-island', group: '看板', key: 'island_label', label: '看板（日本語）', type: 'text', placeholderPath: 'const.空欄なら表示しません' },
+    { tab: 'sign-right', group: '看板', key: 'right_title', label: '看板（英字）', type: 'text', placeholderPath: 'const.空欄なら表示しません' },
+    { tab: 'sign-right', group: '看板', key: 'right_label', label: '看板（日本語）', type: 'text', placeholderPath: 'const.空欄なら表示しません' },
     { group: 'フォント', key: 'font', label: 'ショップの基本フォント', hint: '入口・メニュー・商品詳細・店内の看板や値札の文字に使います', type: 'select', options: () => FONTS.map((x) => ({ value: x.value, label: x.label })) },
     { group: 'アバター・キャラクター紹介', key: 'avatar_ring_color', label: 'アバターの下の円の色', hint: '店内で、自分のアバターの足元に出る円の色', type: 'color', themePath: 'avatarRing' },
     { group: 'アバター・キャラクター紹介', key: 'char_note_color', label: 'キャラクター紹介文の背景色', hint: '店内の壁のキャラクターをタップしたときに出る紹介文の背景の色（文字の色は自動で読みやすい色に）', type: 'color', themePath: 'charNote.bg' },
@@ -187,7 +190,7 @@
     theme_preset: ['default', 'Milk Tea'], font: ['default', '初期設定のフォント'],
     wall_image: ['default', '壁の色と柄'], wall_pattern: ['default', 'テーマの柄'], floor_image: ['default', '床の種類と色'],
     floor_style: ['default', 'テーマの床'],
-    left_title: ['hide'], left_label: ['hide'], right_title: ['hide'], right_label: ['hide'],
+    left_title: ['hide'], left_label: ['hide'], right_title: ['hide'], right_label: ['hide'], island_title: ['hide'], island_label: ['hide'],
 
     entrance_heading: ['default', 'ブランド名'],
     entrance_message: ['default', 'イベント名'], entrance_button: ['default', '「お店に入る」'],
@@ -286,7 +289,7 @@
     set(theme.floor, 'style', 'floor_style');
     if (has(f, 'floor_color_1')) theme.floor.colors[0] = f.floor_color_1;
     if (has(f, 'floor_color_2')) theme.floor.colors[1] = f.floor_color_2;
-    // 会場限定テーブルの下の敷物：指定したときは、その色のまま（透けさせない）
+    // 中央のテーブルの下の敷物：指定したときは、その色のまま（透けさせない）
     if (has(f, 'rug_color')) { theme.rug = f.rug_color; theme.rugOpacity = 1; }
     set(theme.sign, 'bg', 'sign_color');
     // 正面の看板のイベント名・ブランド名の色（棚やテーブルの看板はテーマの色のまま）
@@ -342,6 +345,10 @@
       L[side].title = has(f, `${side}_title`) ? f[`${side}_title`] : '';
       L[side].label = has(f, `${side}_label`) ? f[`${side}_label`] : '';
     }
+    // 中央のテーブルの看板：棚と同じく、未記入なら表示しない（会場限定の商品を置くとは限らない）
+    L.island ||= {};
+    L.island.title = f.island_title || '';
+    L.island.label = f.island_label || '';
     window.applyThemeMeta?.('event');
     return theme;
   }
