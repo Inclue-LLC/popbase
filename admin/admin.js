@@ -1644,7 +1644,10 @@ const FUL = { UNFULFILLED: '未発送', FULFILLED: '発送済み', PARTIALLY_FUL
 const shipText = (o) => [o.ship.zip && `〒${o.ship.zip}`, `${o.ship.province}${o.ship.city}${o.ship.address1}${o.ship.address2 ? ` ${o.ship.address2}` : ''}`].filter(Boolean).join(' ');
 // このイベントの商品で、まだ発送していないものがある注文（同じ注文のほかのイベントの商品は見ない）
 const needsShipping = (o) => !o.cancelled && (o.shipped === undefined ? !['FULFILLED', 'RESTOCKED'].includes(o.fulfillment) : !o.shipped);
-const CARRIER_NAMES = { yamato: 'ヤマト運輸', sagawa: '佐川急便', japanpost: '日本郵便', other: 'その他' };
+const CARRIER_NAMES = { '': '配送会社（未選択）', yamato: 'ヤマト運輸', sagawa: '佐川急便', japanpost: '日本郵便', other: 'その他' };
+// 支払いの状態：支払い済み（緑）／支払い待ち（オレンジ）／返金・取消など（グレー）
+const PAY_CLASS = { PAID: 'pay-ok', PARTIALLY_REFUNDED: 'pay-ok', PENDING: 'pay-wait', AUTHORIZED: 'pay-wait', PARTIALLY_PAID: 'pay-wait' };
+const payPill = (o) => `<span class="pill ${PAY_CLASS[o.financial] || 'pay-off'}">${PAY_CLASS[o.financial] === 'pay-ok' ? '✓ ' : PAY_CLASS[o.financial] === 'pay-wait' ? '⏳ ' : ''}${esc(FIN[o.financial] || o.financial || '')}</span>`;
 async function loadOrders() {
   const body = $('#ordersBody');
   body.innerHTML = '<p class="hint">注文を読み込んでいます…</p>';
@@ -1674,12 +1677,13 @@ function renderOrders() {
     <li class="order ${o.cancelled ? 'is-cancelled' : ''}">
       <div class="order-head"><b>${esc(o.name)}</b><span class="hint">${fmtTime(o.createdAt)}</span>
         ${o.cancelled ? '<span class="pill pill-ended">キャンセル</span>' : ''}
-        <span class="pill ${needsShipping(o) ? 'pill-dirty' : 'pill-clean'}">${o.shipped === undefined ? esc(FUL[o.fulfillment] || o.fulfillment || '') : o.shipped ? '発送済み' : '未発送'}</span>
-        <span class="pill">${esc(FIN[o.financial] || o.financial || '')}</span></div>
+        <span class="pill ${needsShipping(o) ? 'ship-todo' : 'ship-done'}">${o.shipped === undefined ? esc(FUL[o.fulfillment] || o.fulfillment || '') : o.shipped ? '発送済み' : '未発送'}</span>
+        ${payPill(o)}</div>
       <ul class="order-items">${o.items.map((i) => `<li>${esc(i.title)}${i.variant && i.variant !== 'Default Title' ? `（${esc(i.variant)}）` : ''} × <b>${i.quantity}</b></li>`).join('')}</ul>
       <div class="order-ship"><b>お届け先</b><p>${esc(o.ship.name)}${o.ship.company ? `（${esc(o.ship.company)}）` : ''} 様<br>${esc(shipText(o))}${o.ship.phone || o.phone ? `<br>TEL ${esc(o.ship.phone || o.phone)}` : ''}${o.email ? `<br>${esc(o.email)}` : ''}</p>
         ${o.note ? `<p class="hint">備考：${esc(o.note)}</p>` : ''}</div>
       ${(o.tracking || []).length ? `<p class="order-track">追跡番号：${o.tracking.map((t) => (t.url ? `<a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.number)}</a>` : esc(t.number))).join('、')}</p>` : ''}
+      ${needsShipping(o) && o.shipped !== undefined && PAY_CLASS[o.financial] === 'pay-wait' ? '<p class="order-paywait">⏳ お支払いがまだです（コンビニ決済・銀行振込など）。入金を確認してから発送してください。</p>' : ''}
       ${needsShipping(o) && o.shipped !== undefined ? `<form class="order-fulfill" data-order="${esc(o.id)}">
         <select name="carrier" aria-label="配送会社">${Object.entries(CARRIER_NAMES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
         <input name="number" maxlength="60" placeholder="追跡番号（任意）" aria-label="追跡番号" inputmode="text">
@@ -1697,7 +1701,9 @@ $('#ordersBody').addEventListener('submit', async (e) => {
   const o = ORD.list.find((x) => x.id === form.dataset.order);
   const f = form.elements;
   const notify = f.notify.checked;
-  const msg = `${o.name}（${o.ship.name} 様）の、このイベントの商品を発送済みにします。${notify ? '\nお客さまに発送通知メールが届きます。' : '\n発送通知メールは送りません。'}${f.number.value.trim() ? `\n追跡番号：${CARRIER_NAMES[f.carrier.value]} ${f.number.value.trim()}` : ''}\nよろしいですか？`;
+  const carrierName = f.carrier.value ? `${CARRIER_NAMES[f.carrier.value]} ` : '';
+  const waiting = PAY_CLASS[o.financial] === 'pay-wait' ? '\n\n⚠ この注文はまだお支払いが済んでいません。' : '';
+  const msg = `${o.name}（${o.ship.name} 様）の、このイベントの商品を発送済みにします。${notify ? '\nお客さまに発送通知メールが届きます。' : '\n発送通知メールは送りません。'}${f.number.value.trim() ? `\n追跡番号：${carrierName}${f.number.value.trim()}` : ''}${waiting}\nよろしいですか？`;
   if (!confirm(msg)) return;
   const btn = form.querySelector('button');
   btn.disabled = true;

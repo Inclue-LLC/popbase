@@ -494,3 +494,12 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .order-fulfill input[name=number] { width: 13em; }
 .order-fulfill .check { display: inline-flex; gap: 6px; align-items: center; font-size: .85rem; }
 .order-track { grid-column: 1 / -1; margin: 4px 0 0; font-size: .85rem; }
+
+/* 支払いの状態 */
+.pill.pay-ok { background: #dff3e6; color: #1f7a45; font-weight: 800; }
+.pill.pay-wait { background: #ffe7c7; color: #a35a00; font-weight: 800; }
+.pill.pay-off { background: #ececec; color: #666; }
+.order-paywait { grid-column: 1 / -1; margin: 6px 0 0; padding: 6px 10px; border-radius: 8px; background: #fff3e0; color: #8a4b00; font-size: .85rem; font-weight: 700; }
+/* 発送の状態（支払いの色と区別する） */
+.pill.ship-todo { background: #e9e2fb; color: #5b45a8; font-weight: 800; }
+.pill.ship-done { background: #ececec; color: #555; }

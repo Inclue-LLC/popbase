@@ -255,7 +255,7 @@ const CARRIERS = {
   japanpost: { company: 'Japan Post (JA)', url: (n) => `https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=${encodeURIComponent(n)}&locale=ja` },
   other: { company: 'Other', url: () => '' },
 };
-async function fulfill(collection, orderId, { carrier = 'other', number = '', notify = true } = {}) {
+async function fulfill(collection, orderId, { carrier = '', number = '', notify = true } = {}) {
   if (!/^gid:\/\/shopify\/Order\/\d+$/.test(orderId || '')) throw new InputError('注文');
   const ids = await collectionProductIds(collection);
   const data = await gql(`
@@ -270,9 +270,10 @@ async function fulfill(collection, orderId, { carrier = 'other', number = '', no
     if (lines.length) groups.push({ fulfillmentOrderId: fo.id, fulfillmentOrderLineItems: lines });
   }
   if (!groups.length) throw new InputError('このイベントの商品は、すでに発送済みです');
-  const c = CARRIERS[carrier] || CARRIERS.other;
+  // 配送会社が未選択なら、追跡番号だけを記録する
+  const c = CARRIERS[carrier] || null;
   const num = String(number || '').trim().slice(0, 60);
-  const trackingInfo = num ? { company: c.company, number: num, ...(c.url(num) ? { url: c.url(num) } : {}) } : undefined;
+  const trackingInfo = num ? { ...(c ? { company: c.company } : {}), number: num, ...(c && c.url(num) ? { url: c.url(num) } : {}) } : undefined;
   const r = await gql(`
     mutation C($f: FulfillmentInput!) { fulfillmentCreate(fulfillment: $f) { fulfillment { id status } userErrors { field message } } }`,
   { f: { lineItemsByFulfillmentOrder: groups, notifyCustomer: !!notify, ...(trackingInfo ? { trackingInfo } : {}) } });
