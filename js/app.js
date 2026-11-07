@@ -630,7 +630,7 @@ window.AppReady = (async function () {
     const remain = nov ? nov.threshold - t.subtotal : 0;
     const pct = nov ? Math.min(100, (t.subtotal / nov.threshold) * 100) : 0;
     if (nov) $('#noveltyBar').innerHTML = `
-      <p>${remain > 0 ? `あと <strong>${yen(remain)}</strong> で特典「${SHOP.novelty.name}」` : `🎉 特典「${SHOP.novelty.name}」が付きます`}</p>
+      <p>${remain > 0 ? `あと <strong>${yen(remain)}</strong> で特典「${SHOP.novelty.name}」<span class="nb">をプレゼント</span>` : `🎉 特典「${SHOP.novelty.name}」が付きます`}</p>
       <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}"><span style="width:${pct}%"></span></div>`;
 
     $('#cartItems').innerHTML = t.lines.length ? t.lines.map(({ p, q }) => `
