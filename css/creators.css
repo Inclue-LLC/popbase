@@ -1,0 +1,67 @@
+/* クリエイター向けの出品案内（creators.html）。色・ボタン・フォームの部品は css/style.css を使う */
+.creators a.btn { display: inline-block; text-decoration: none; text-align: center; }
+.cr-header-cta { margin-left: auto; padding: .55em 1.3em; font-size: .9rem; box-shadow: none; }
+/* スマホ：ヘッダーのボタンは出さない（ロゴが2行に落ちないように。すぐ下に大きなボタンがある） */
+@media (max-width: 520px) { .creators a.cr-header-cta { display: none; } }
+
+/* ---------- はじめ ---------- */
+.cr-hero {
+  background: var(--brand-grad);
+  padding: clamp(56px, 10vw, 112px) 16px clamp(56px, 9vw, 96px);
+  text-align: center;
+}
+.cr-hero-inner { max-width: 760px; margin: 0 auto; }
+.cr-hero .eyebrow { color: #7d63c4; }
+.cr-hero h1 { margin: 10px 0 18px; font-size: clamp(1.7rem, 5.4vw, 2.8rem); font-weight: 900; line-height: 1.4; color: var(--brand-ink); }
+.cr-lead { margin: 0 auto; max-width: 46em; line-height: 2; color: #4a3f45; }
+/* 見出しと説明は、言葉の切れ目で折り返す */
+.cr-hero h1 span, .cr-lead span { display: inline-block; }
+.cr-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 30px; }
+.cr-ghost { background: rgba(255, 255, 255, .85); color: var(--brand-ink); }
+@media (max-width: 680px) {
+  .cr-pc { display: none; }
+  .cr-hero-actions .btn { width: 100%; max-width: 360px; padding-left: 1em; padding-right: 1em; }
+}
+
+/* ---------- できること ---------- */
+.cr-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.cr-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 22px 24px; box-shadow: var(--shadow); }
+.cr-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: var(--surface-2); font-size: 1.5rem; margin-bottom: 12px; }
+.cr-card h3 { font-size: 1.05rem; margin-bottom: 8px; }
+.cr-card p { margin: 0; line-height: 1.85; color: var(--ink-soft); font-size: .92rem; }
+
+/* ---------- 流れ ---------- */
+.cr-narrow { max-width: 760px; margin: 0 auto; }
+.cr-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; display: grid; gap: 12px; }
+.cr-steps li {
+  counter-increment: step; position: relative;
+  background: var(--surface); border-radius: 16px; padding: 18px 20px 18px 72px; box-shadow: var(--shadow);
+}
+.cr-steps li::before {
+  content: counter(step); position: absolute; left: 20px; top: 18px;
+  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--primary); color: var(--primary-ink); font-family: var(--font-latin); font-weight: 600;
+}
+.cr-steps h3 { font-size: 1.02rem; margin-bottom: 4px; }
+.cr-steps p { margin: 0; line-height: 1.85; color: var(--ink-soft); font-size: .92rem; }
+
+/* ---------- ご用意いただくもの ---------- */
+.cr-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.cr-list li { display: grid; grid-template-columns: 13em 1fr; gap: 4px 16px; padding: 16px 0; border-bottom: 1px solid var(--line); line-height: 1.8; }
+.cr-list li span { color: var(--ink-soft); font-size: .92rem; }
+@media (max-width: 680px) { .cr-list li { grid-template-columns: 1fr; } }
+
+/* ---------- よくあるご質問 ---------- */
+.cr-faq { display: grid; gap: 10px; }
+.cr-faq details { background: var(--surface); border-radius: 14px; padding: 4px 18px; box-shadow: var(--shadow); }
+.cr-faq summary { cursor: pointer; padding: 14px 0; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+.cr-faq summary::-webkit-details-marker { display: none; }
+.cr-faq summary::after { content: '+'; font-family: var(--font-latin); color: var(--accent); font-size: 1.2rem; line-height: 1; }
+.cr-faq details[open] summary::after { content: '−'; }
+.cr-faq details p { margin: 0 0 16px; line-height: 1.85; color: var(--ink-soft); }
+
+/* ---------- 相談フォーム ---------- */
+.cr-sub { margin: 10px 0 0; color: var(--ink-soft); line-height: 1.8; }
+.cr-form { display: grid; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(20px, 4vw, 32px); box-shadow: var(--shadow); }
+.cr-done { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 32px 20px; box-shadow: var(--shadow); }
+.creators .site-footer a { color: var(--ink-soft); }

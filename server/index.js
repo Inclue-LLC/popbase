@@ -47,12 +47,13 @@ function serveStatic(req, res) {
   try { urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { urlPath = '/'; }
   if (urlPath === '/' || urlPath === '') urlPath = '/index.html';
   if (urlPath === '/admin' || urlPath === '/admin/') urlPath = '/admin/index.html';
+  if (urlPath === '/creators' || urlPath === '/creators/') urlPath = '/creators.html'; // クリエイター向けの出品案内
   if (urlPath === '/healthz') { res.writeHead(200, { 'content-type': 'application/json' }); return res.end(JSON.stringify(stats())); }
 
   const filePath = path.resolve(ROOT, `.${urlPath}`);
   const rel = path.relative(ROOT, filePath);
   const top = rel.split(path.sep)[0];
-  const allowed = !rel.startsWith('..') && (rel === 'index.html' || PUBLIC_DIRS.includes(top));
+  const allowed = !rel.startsWith('..') && (rel === 'index.html' || rel === 'creators.html' || PUBLIC_DIRS.includes(top));
   if (!allowed) { res.writeHead(404); return res.end('Not found'); }
 
   fs.stat(filePath, (err, st) => {
