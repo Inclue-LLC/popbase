@@ -289,7 +289,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .pd-price small { font-size: .7rem; margin-left: 4px; color: var(--ink-soft); font-weight: 500; }
 .pd-spec, .pd-stock { font-size: .85rem; color: var(--ink-soft); }
 .pd-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 14px; }
-.pd-actions .btn { flex: 1; min-width: 160px; }
+.pd-actions .btn { flex: 1 1 auto; min-width: max-content; white-space: nowrap; } /* ボタンの文字は1行（入りきらないときは、数量の下の行に横いっぱいで出る） */
 /* 「カートに入れる」は目立つように、テーマのアクセントの色（白い文字が読めるよう少しだけ濃く） */
 #pmAdd { --add: color-mix(in srgb, var(--theme-accent, #9b80e0) 88%, #000);
   background: var(--add); color: #fff;
