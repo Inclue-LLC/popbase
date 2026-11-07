@@ -144,8 +144,8 @@ export async function buildRoom(theme) {
     const lay = window.STORE_LAYOUT[side] || { title: '', label: '' };
     // 棚の看板：英字・日本語のうち入っているものだけ。どちらも空なら看板を出さない
     const signLines = [
-      lay.title && { text: lay.title, size: lay.label ? 0.5 : 0.56, spacing: 4 },
-      lay.label && { text: lay.label, size: lay.title ? 0.3 : 0.44, color: lay.title ? theme.sign.sub : theme.sign.ink },
+      lay.title && { text: lay.title, size: lay.label ? 0.5 : 0.56, spacing: 4, weight: 500 },
+      lay.label && { text: lay.label, size: lay.title ? 0.3 : 0.44, weight: 500, color: lay.title ? theme.sign.sub : theme.sign.ink },
     ].filter(Boolean);
     if (signLines.length) {
       // 看板の幅は文字の長さに合わせる（短い文字でも横に広がりすぎない。最大は棚の幅に合わせた 2.8m）
@@ -204,8 +204,8 @@ export async function buildRoom(theme) {
   const tW = 3.6; const tH = 0.9; const tD = 1.4; const tZ = -1.6;
   const isl = window.STORE_LAYOUT.island || {};
   const tableSign = T.signTexture([
-    isl.title && { text: isl.title, size: isl.label ? 0.32 : 0.36, spacing: 6 },
-    isl.label && { text: isl.label, size: isl.title ? 0.2 : 0.3, gap: isl.title ? 0.07 : 0, color: isl.title ? theme.sign.sub : theme.sign.ink },
+    isl.title && { text: isl.title, size: isl.label ? 0.32 : 0.36, spacing: 6, weight: 500 },
+    isl.label && { text: isl.label, size: isl.title ? 0.2 : 0.3, weight: 500, gap: isl.title ? 0.07 : 0, color: isl.title ? theme.sign.sub : theme.sign.ink },
   ].filter(Boolean), { ...theme.sign, style: 'board' }, tW, tH, { full: true });
   const sideM = lambert(theme.shelf.edge);
   const table = new THREE.Mesh(new THREE.BoxGeometry(tW, tH, tD), [
