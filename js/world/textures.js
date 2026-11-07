@@ -250,7 +250,7 @@ export async function floorTexture(theme, sizeM) {
  * 看板（角丸の板＋文字。style:'neon' で光る）
  * full: true … 台の側面などに貼る用。余白・角丸なしで端まで塗る（透明な部分が黒く見えるのを防ぐ）
  */
-export function signTexture(lines, sign, wM, hM, { radius = 0.18, full = false } = {}) {
+export function signTexture(lines, sign, wM, hM, { radius = 0.18, full = false, shiftY = 0 } = {}) {
   const W = wM * PPM * 2;
   const H = hM * PPM * 2;
   const c = makeCanvas(W, H);
@@ -267,7 +267,7 @@ export function signTexture(lines, sign, wM, hM, { radius = 0.18, full = false }
   ctx.textBaseline = 'middle';
   // gap：その行の上に空けるすき間（看板の高さに対する割合）
   const total = lines.reduce((s, l) => s + l.size + (l.gap || 0), 0);
-  let y = H / 2 - (total * H) / 2;
+  let y = H / 2 - (total * H) / 2 + shiftY * H; // shiftY：文字全体を下へずらす（看板の高さに対する割合）
   for (const l of lines) {
     y += (l.gap || 0) * H;
     const fs = l.size * H;

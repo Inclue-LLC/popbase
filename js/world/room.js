@@ -148,8 +148,8 @@ export async function buildRoom(theme) {
       lay.label && { text: lay.label, size: lay.title ? 0.3 : 0.44, weight: 600, color: lay.title ? theme.sign.sub : theme.sign.ink },
     ].filter(Boolean);
     if (signLines.length) {
-      // 看板の幅は文字の長さに合わせる（短い文字でも横に広がりすぎない。最大は棚の幅に合わせた 2.8m）
-      const zw = Math.min(2.8, Math.max(1.3, T.signTextWidth(signLines, 0.7) + 0.5));
+      // 看板の幅は文字の長さ＋左右の余白（短い文字でも 1.8m は取る。最大は 2.8m）
+      const zw = Math.min(2.8, Math.max(1.8, T.signTextWidth(signLines, 0.7) + 0.9));
       const zs = plane(zw, 0.7, basic(T.signTexture(signLines, theme.sign, zw, 0.7), { transparent: true }));
       zs.position.set(0, shelfH + 0.55, -shelfDepth / 2 + 0.03);
       unit.add(zs);
@@ -206,7 +206,7 @@ export async function buildRoom(theme) {
   const tableSign = T.signTexture([
     isl.title && { text: isl.title, size: isl.label ? 0.32 : 0.36, spacing: 6, weight: 600 },
     isl.label && { text: isl.label, size: isl.title ? 0.2 : 0.3, weight: 600, gap: isl.title ? 0.07 : 0, color: isl.title ? theme.sign.sub : theme.sign.ink },
-  ].filter(Boolean), { ...theme.sign, style: 'board' }, tW, tH, { full: true });
+  ].filter(Boolean), { ...theme.sign, style: 'board' }, tW, tH, { full: true, shiftY: 0.07 });
   const sideM = lambert(theme.shelf.edge);
   const table = new THREE.Mesh(new THREE.BoxGeometry(tW, tH, tD), [
     sideM, sideM, lambert(theme.shelf.board), sideM,
