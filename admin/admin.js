@@ -895,6 +895,35 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.classList?.contains('hex-input')) { e.preventDefault(); e.target.blur(); }
 });
 
+/**
+ * 会期が重なったときの案内：入力欄のすぐ下に、どのイベントと重なっているか・どう直せばよいかを出す
+ * （入れた日時は元に戻しているので、案内は次に正しい日時を入れるまで出したまま）
+ */
+function showOverlapAlert(input, key, o) {
+  clearOverlapAlert();
+  const HS = window.HaneulSchedule;
+  const when = (v) => { const t = HS.parseDateTime(v); return t == null ? '' : HS.periodText({ open_at: v }).replace(/ 〜$/, ''); };
+  const fix = key === 'open_at'
+    ? `開始日時を <b>${esc(when(o.close_at))}</b> 以降にしてください。`
+    : `終了日時を <b>${esc(when(o.open_at))}</b> 以前にしてください。`;
+  const box = document.createElement('div');
+  box.className = 'overlap-alert';
+  box.setAttribute('role', 'alert');
+  box.innerHTML = `<p class="oa-title">⚠ 会期がほかのイベントと重なっています</p>
+    <p>1つの期間に開けるイベントは1つです。入れた日時は元に戻しました。</p>
+    <dl><dt>重なっているイベント</dt><dd><b>${esc(o.title || '（名前なし）')}</b></dd>
+    <dt>そのイベントの会期</dt><dd>${esc(HS.periodText(o) || '')}</dd></dl>
+    <p class="oa-fix">${fix}</p>
+    <a class="btn btn-small" href="#/event/${encodeURIComponent(o.id)}">「${esc(o.title || '（名前なし）')}」を開く</a>`;
+  input.closest('.field').after(box);
+  input.classList.add('is-missing');
+  box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+function clearOverlapAlert() {
+  document.querySelectorAll('.overlap-alert').forEach((x) => x.remove());
+  document.querySelectorAll('[data-key="open_at"].is-missing, [data-key="close_at"].is-missing').forEach((x) => { if (x.value) x.classList.remove('is-missing'); });
+}
+
 /** この会期と重なる、ほかのイベント（イベント一覧の会期で比べる）。なければ null */
 function overlapWith(ev) {
   const HS = window.HaneulSchedule;
@@ -984,9 +1013,11 @@ for (const sel of Object.values(FORMS)) {
       const o = overlapWith({ ...state.draft.event, [key]: v });
       if (o) {
         e.target.value = state.draft.event[key] || '';
-        toast(`この会期は、イベント「${o.title || '（名前なし）'}」（${window.HaneulSchedule.periodText(o) || '会期'}）と重なっています。1つの期間に開けるイベントは1つです`, { error: true });
+        showOverlapAlert(e.target, key, o);
+        toast('会期がほかのイベントと重なっています', { error: true });
         return;
       }
+      clearOverlapAlert();
     }
     state.draft.event[key] = v;
     if (f.need === 'required') markMissing();
