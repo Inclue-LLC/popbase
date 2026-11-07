@@ -102,7 +102,10 @@
   const NOVELTY_THRESHOLD = 3000;
   // 返品・交換について：管理画面の記入欄に最初から入れておく文（空欄のときも、お店にはこの文を出す）
   const PAYMENT_TEXT = 'クレジットカード（Visa、Mastercard、American Express）、Apple Pay、Google Pay、PayPal、コンビニ決済、銀行振込をご利用いただけます。\n\nコンビニ決済は、ファミリーマート、ローソン、ミニストップ、デイリーヤマザキに対応しています。\n\n※ご利用可能な決済方法は、ご注文時の決済画面にてご確認ください。\n※コンビニ決済・銀行振込には、別途手数料が発生する場合があります。';
-  const RETURN_TEXT = 'POP BASEの商品は期間・数量限定のため、お客様のご都合による返品・交換・キャンセルはお受けしていません。不良品やお届け間違いは、至急、交換をさせていただきます。\nただし、在庫切れ等の理由により、交換商品をご用意できない場合はご返品にて承りいたします。';
+  const RETURN_TEXT = 'POP BASEの商品は期間・数量限定のため、お客様のご都合による返品・交換・キャンセルはお受けしていません。\n不良品やお届け間違いは、至急、交換をさせていただきます。\n\nただし、在庫切れ等の理由により、交換商品をご用意できない場合はご返品にて承りいたします。';
+  // 前の初期の文（そのまま保存されているイベントは、新しい初期の文で表示する）
+  const OLD_RETURN_TEXTS = ['POP BASEの商品は期間・数量限定のため、お客様のご都合による返品・交換・キャンセルはお受けしていません。不良品やお届け間違いは、至急、交換をさせていただきます。\nただし、在庫切れ等の理由により、交換商品をご用意できない場合はご返品にて承りいたします。'];
+  const returnTextOf = (v) => { const s = String(v ?? '').replace(/\r\n/g, '\n'); return !s.trim() || OLD_RETURN_TEXTS.includes(s.trim()) ? RETURN_TEXT : s; };
   const noveltyOn = (ev = {}) => ev.novelty === 'on' || (ev.novelty !== 'off' && ev.novelty_name != null && String(ev.novelty_name).trim() !== '');
 
   /* 管理画面のフォーム定義 */
@@ -310,7 +313,7 @@
     S.freeShippingThreshold = has(f, 'free_shipping_threshold') ? Number(f.free_shipping_threshold) : 0; // 空欄なら送料無料なし
     S.shippingNote = has(f, 'shipping_note') ? String(f.shipping_note) : '';
     S.paymentText = has(f, 'payment_text') && String(f.payment_text).trim() ? String(f.payment_text) : PAYMENT_TEXT;
-    S.returnText = has(f, 'return_text') ? String(f.return_text) : RETURN_TEXT;
+    S.returnText = returnTextOf(f.return_text);
     S.capacity = [10, 20, 30, 40, 50].includes(Number(f.capacity)) ? Number(f.capacity) : 50; // 店内の上限人数（ご案内の「混雑時の入店」）
     S.novelty = noveltyOn(f) && has(f, 'novelty_name')
       ? { threshold: has(f, 'novelty_threshold') ? Number(f.novelty_threshold) : NOVELTY_THRESHOLD, name: f.novelty_name }
@@ -480,5 +483,5 @@
   }
 
   applyCast(''); // 最初は自社の4体
-  window.HaneulEvent = { placeLimit, CARD_PRESETS, avatarCharacters, castOf, applyCast, MAX_CAST, noveltyOn, NOVELTY_THRESHOLD, missingRequired, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
+  window.HaneulEvent = { placeLimit, CARD_PRESETS, avatarCharacters, castOf, applyCast, MAX_CAST, noveltyOn, NOVELTY_THRESHOLD, missingRequired, returnTextOf, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
 })();

@@ -928,7 +928,8 @@ function fieldHtml(f, value, placeholders) {
       ${value ? `<button type="button" class="btn btn-small btn-ghost" data-reset="${f.key}">消す</button>` : ''}</span>`;
   } else if (f.type === 'textarea') {
     // 初期の文がある欄（返品・交換など）は、空欄のときその文を入れた状態で出す
-    const text = (value ?? '') === '' && f.defaultValue ? f.defaultValue : (value ?? '');
+    let text = (value ?? '') === '' && f.defaultValue ? f.defaultValue : (value ?? '');
+    if (f.key === 'return_text') text = E.returnTextOf(value); // 前の初期の文のままなら、新しい初期の文で出す
     input = `<textarea id="${id}" data-key="${f.key}" maxlength="300" rows="${f.defaultValue ? 4 : 2}">${esc(text)}</textarea>`;
   } else if (f.type === 'collection') {
     // Shopify のコレクションから選ぶ
