@@ -87,6 +87,8 @@ body.world-fs .world {
 /* 全画面：ほかのボタンより目立つよう、テーマのボタンの色（入口の「お店に入る」と同じ）＋アイコン */
 .hud-fs { display: inline-flex; align-items: center; gap: 5px; background: var(--theme-btn, var(--primary)); color: var(--theme-btn-ink, var(--primary-ink)); box-shadow: 0 2px 10px rgba(0, 0, 0, .2); }
 .hud-fs:hover { background: color-mix(in srgb, var(--theme-btn, var(--primary)) 88%, #000); }
+.hud-fs.is-on { background: rgba(255, 255, 255, .9); color: var(--theme-ink, #3a3346); box-shadow: 0 2px 8px rgba(0, 0, 0, .15); }
+.hud-fs.is-on:hover { background: #fff; }
 .hud-fs .fs-icon { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .hud-cart { position: relative; }
 .hud-cart-count {
