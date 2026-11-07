@@ -23,6 +23,7 @@ const path = require('path');
 const auth = require('./auth');
 const { InputError, missingRequired } = require('./fields');
 const local = require('./store-local');
+const ev = require('./events');
 const shopify = require('./store-shopify');
 
 const store = shopify.enabled ? shopify : local;
@@ -160,6 +161,13 @@ async function handle(req, res, urlPath) {
     if (route === 'state' && req.method === 'GET') return json(res, 200, await store.getState(id));
     if (route === 'draft' && req.method === 'PUT') {
       const body = await readJson(req);
+      // 会期を変えたときは、ほかのイベントの会期と重ならないこと（1つの期間に開けるイベントは1つ）
+      const next = body?.event || {};
+      const prev = (await store.getState(id)).draft.event || {};
+      if (next.open_at !== prev.open_at || next.close_at !== prev.close_at) {
+        const o = ev.findOverlap(await store.listEvents(), id, next.open_at, next.close_at);
+        if (o) return json(res, 409, { error: ev.overlapMessage(o) });
+      }
       return json(res, 200, await store.saveDraft(id, body, user));
     }
     if (route === 'publish' && req.method === 'POST') {
@@ -167,6 +175,9 @@ async function handle(req, res, urlPath) {
       // 必須項目が空欄なら公開しない
       const missing = missingFor((await store.getState(id)).draft.event);
       if (missing.length) return json(res, 400, { error: `必須項目が未入力です：${missing.join('・')}` });
+      const d = (await store.getState(id)).draft.event || {};
+      const o = ev.findOverlap(await store.listEvents(), id, d.open_at, d.close_at);
+      if (o) return json(res, 409, { error: ev.overlapMessage(o) });
       const pub = await store.publish(id, user, rev);
       // 会期・営業時間をすぐ入店管理に反映（お客さんに出すイベントが変わることもある）
       try { require('../visit').setSchedule((await store.getPublished()).event || {}); } catch (e) { console.error(e); }

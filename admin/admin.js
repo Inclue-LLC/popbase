@@ -895,6 +895,20 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.classList?.contains('hex-input')) { e.preventDefault(); e.target.blur(); }
 });
 
+/** この会期と重なる、ほかのイベント（イベント一覧の会期で比べる）。なければ null */
+function overlapWith(ev) {
+  const HS = window.HaneulSchedule;
+  const a0 = HS.parseDateTime(ev.open_at);
+  const a1 = HS.parseDateTime(ev.close_at);
+  if (a0 == null || a1 == null) return null;
+  return (state.events || []).find((x) => {
+    if (x.id === state.eventId) return false;
+    const b0 = HS.parseDateTime(x.open_at);
+    const b1 = HS.parseDateTime(x.close_at);
+    return b0 != null && b1 != null && a0 < b1 && b0 < a1;
+  }) || null;
+}
+
 function fieldHtml(f, value, placeholders) {
   const id = `f_${f.key}`;
   const label = `<label for="${id}">${esc(f.label)}${needBadge(f)}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`;
@@ -964,6 +978,15 @@ for (const sel of Object.values(FORMS)) {
     if (f.maxUnits) {
       const c = e.target.parentElement.querySelector(`[data-count-for="${key}"]`);
       if (c) c.textContent = unitLabel(v, f.maxUnits);
+    }
+    // 会期は、ほかのイベントの会期と重ならないこと（1つの期間に開けるイベントは1つ）。重なるときは入れた日時を元に戻す
+    if (key === 'open_at' || key === 'close_at') {
+      const o = overlapWith({ ...state.draft.event, [key]: v });
+      if (o) {
+        e.target.value = state.draft.event[key] || '';
+        toast(`この会期は、イベント「${o.title || '（名前なし）'}」（${window.HaneulSchedule.periodText(o) || '会期'}）と重なっています。1つの期間に開けるイベントは1つです`, { error: true });
+        return;
+      }
     }
     state.draft.event[key] = v;
     if (f.need === 'required') markMissing();
