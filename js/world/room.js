@@ -261,7 +261,7 @@ export async function buildRoom(theme) {
   register.position.set(rX, rH / 2, rZ);
   group.add(register);
   const regSign = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: T.signTexture([{ text: 'お会計', size: 0.5, weight: 600 }, { text: 'カートを見る', size: 0.26, weight: 600, color: theme.sign.sub }], theme.sign, 1.0, 0.5),
+    map: T.signTexture([{ text: 'カートを見る', size: 0.2, weight: 600, color: theme.sign.sub }, { text: 'お会計', size: 0.46, weight: 600 }], theme.sign, 1.0, 0.5),
     transparent: true,
   }));
   regSign.center.set(0.5, 0);
