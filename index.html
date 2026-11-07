@@ -25,7 +25,7 @@
         <p class="ei-tag">オンラインポップアップショップ</p>
         <p class="ei-text">次のポップアップを準備中です。<br>オープンまで、もうしばらくお待ちください。</p>
         <!-- イベントのない期間も、お問い合わせはできるように -->
-        <nav class="ei-links" id="entIdleLinks" aria-label="お問い合わせ"><a data-policy="contact-information">お問い合わせ</a></nav>
+        <nav class="ei-links" id="entIdleLinks" aria-label="お問い合わせ"><a href="#contact" data-contact>お問い合わせ</a></nav>
       </div>
       <div class="entrance-brand" id="entBrand">
         <img src="images/popbase-mark.svg" alt="" width="72" height="77">
@@ -191,7 +191,7 @@
       <a data-policy="refund-policy">返金ポリシー</a>
       <a data-policy="shipping-policy">配送ポリシー</a>
       <a data-policy="terms-of-service">利用規約</a>
-      <a data-policy="contact-information">お問い合わせ</a>
+      <a href="#contact" data-contact>お問い合わせ</a>
     </nav>
     <p>&copy; <span data-bind="title"></span></p>
     <p class="demo-note" id="demoNote">※ このサイトはデモです。決済は接続されていません。</p>
@@ -232,6 +232,43 @@
       <button class="icon-btn modal-close" data-close aria-label="閉じる">&times;</button>
       <h3 id="infoModalTitle">ご利用案内</h3>
       <div id="infoModalBody"></div>
+    </div>
+  </div>
+
+  <!-- お問い合わせフォーム（js/app.js → server/contact.js がメールで届ける） -->
+  <div class="modal" id="contactModal" role="dialog" aria-modal="true" aria-labelledby="contactTitle" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card policy-card contact-card">
+      <button class="icon-btn modal-close" data-close aria-label="閉じる">&times;</button>
+      <h3 id="contactTitle">お問い合わせ</h3>
+      <form id="contactForm" novalidate>
+        <fieldset class="cf-field cf-kinds">
+          <legend>お問い合わせの種類<span class="cf-req">必須</span></legend>
+          <label><input type="radio" name="category" value="product" checked> 商品・ご注文について</label>
+          <label><input type="radio" name="category" value="shop"> 出店について</label>
+          <label><input type="radio" name="category" value="other"> その他</label>
+        </fieldset>
+        <label class="cf-field"><span class="cf-label">お名前<span class="cf-req">必須</span></span>
+          <input type="text" name="name" maxlength="60" autocomplete="name" required></label>
+        <label class="cf-field"><span class="cf-label">メールアドレス<span class="cf-req">必須</span></span>
+          <input type="email" name="email" maxlength="254" autocomplete="email" inputmode="email" required></label>
+        <label class="cf-field" data-for="product"><span class="cf-label">ご注文番号<span class="cf-opt">任意</span></span>
+          <input type="text" name="order" maxlength="40" placeholder="例：#1001"></label>
+        <label class="cf-field" data-for="shop" hidden><span class="cf-label">会社名・ブランド名<span class="cf-opt">任意</span></span>
+          <input type="text" name="company" maxlength="80" autocomplete="organization"></label>
+        <label class="cf-field"><span class="cf-label">お問い合わせ内容<span class="cf-req">必須</span></span>
+          <textarea name="message" rows="6" maxlength="2000" required></textarea></label>
+        <!-- 人には見えない欄（自動入力ロボット対策） -->
+        <label class="cf-hp" aria-hidden="true">ウェブサイト<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+        <label class="cf-agree"><input type="checkbox" name="agree" required> <span><a data-policy="privacy-policy">プライバシーポリシー</a>に同意する</span></label>
+        <p class="cf-error" id="contactError" role="alert" hidden></p>
+        <button class="btn btn-primary cf-submit" type="submit">送信する</button>
+      </form>
+      <div class="cf-done" id="contactDone" hidden role="status">
+        <p class="cf-done-title">送信しました</p>
+        <p>お問い合わせありがとうございます。内容を確認のうえ、ご入力いただいたメールアドレスへご連絡いたします。</p>
+        <button class="btn" type="button" data-close>閉じる</button>
+      </div>
     </div>
   </div>
 

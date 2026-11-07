@@ -85,3 +85,21 @@ Render の「Environment」で `CLIENT_IP_HEADER` か `TRUST_PROXY_HOPS` を設�
 Render の「Environment」に `SHOPIFY_STORE_DOMAIN` と `SHOPIFY_ADMIN_TOKEN` を足し、
 `js/data.js` の `SHOPIFY_CONFIG` に Storefront API の公開トークンを書きます（手順: [shopify-setup.md](shopify-setup.md)）。
 Admin API のトークンは、Render の「Environment」以外（ファイル・チャットなど）には書かないでください。
+
+## お問い合わせフォームのメール
+
+サイトの「お問い合わせ」から送られた内容は、サーバーがメールで届けます（`server/contact.js`）。
+Render の「Environment」に次を足してください（パスワードは Render 以外に書かないでください）。
+
+| 名前 | 値の例 | 内容 |
+| --- | --- | --- |
+| `CONTACT_TO` | 担当者のメールアドレス | 届け先（カンマ区切りで複数可） |
+| `SMTP_HOST` | `sv●●●●.xserver.jp` | 送信に使うメールサーバー（Xserver なら「サーバー情報」のホスト名） |
+| `SMTP_PORT` | `465` | ポート（465 = SSL。587 なら STARTTLS） |
+| `SMTP_USER` | `info@popbase.jp` | 送信に使うメールアカウント |
+| `SMTP_PASS` | （そのパスワード） | メールアカウントのパスワード |
+| `CONTACT_FROM` | `POP BASE <info@popbase.jp>` | 差出人の表示（省略すると `SMTP_USER`） |
+
+- お客さんのメールアドレスは「返信先」に入るので、届いたメールにそのまま返信できます
+- 未設定のあいだは、フォームで送信すると「送信できませんでした」と表示されます
+- 同じ接続元からは 1 時間に 5 回まで、全体で 1 時間に 100 回まで受け付けます
