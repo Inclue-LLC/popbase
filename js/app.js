@@ -522,7 +522,7 @@ window.AppReady = (async function () {
     const p = current;
     const c = charOf(p);
     qty = 1;
-    renderGallery(p);
+    $('#pmImage').innerHTML = Art.productSVG(p);
     $('#pmImage').style.setProperty('--c', c.color);
     // 管理画面で背景色を指定していれば、その色にする
     $('#pmImage').style.background = SHOP.productBg || window.THEMES[SHOP.theme]?.productBg || '';
@@ -533,39 +533,6 @@ window.AppReady = (async function () {
     $('#pmSpec').textContent = p.spec;
     syncDetail();
     openLayer($('#productModal'));
-  }
-  /*
-   * 商品の画像：2枚以上あれば、切り替えて見られるようにする
-   * （スマホは横にスワイプ＋下の点、PC は下の小さな画像と左右の矢印。店内の棚とカートは1枚目だけ）
-   */
-  function renderGallery(p) {
-    const box = $('#pmImage');
-    const pics = (p.images || []).filter(Boolean);
-    box.classList.toggle('has-gallery', pics.length > 1);
-    if (pics.length < 2) { box.innerHTML = Art.productSVG(p); return; }
-    const alt = (i) => `${p.name}（${i + 1}/${pics.length}）`;
-    box.innerHTML = `
-      <div class="pd-track" tabindex="0" aria-label="商品の画像（左右にスワイプで切り替え）">${pics.map((u, i) => `<div class="pd-slide"><img src="${esc(u)}" alt="${esc(alt(i))}" ${i ? 'loading="lazy"' : ''} draggable="false"></div>`).join('')}</div>
-      <button class="pd-nav pd-prev" type="button" aria-label="前の画像">‹</button>
-      <button class="pd-nav pd-next" type="button" aria-label="次の画像">›</button>
-      <div class="pd-thumbs" role="tablist" aria-label="画像を選ぶ">${pics.map((u, i) => `<button type="button" role="tab" data-i="${i}" aria-label="${i + 1}枚目" aria-selected="${i === 0}"><img src="${esc(u)}" alt="" loading="lazy" draggable="false"></button>`).join('')}</div>`;
-    const track = box.querySelector('.pd-track');
-    const n = pics.length;
-    const index = () => Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
-    const go = (i) => track.scrollTo({ left: ((i + n) % n) * track.clientWidth, behavior: 'smooth' });
-    const sync = () => {
-      const i = index();
-      box.querySelectorAll('.pd-thumbs button').forEach((b, k) => b.setAttribute('aria-selected', String(k === i)));
-    };
-    track.addEventListener('scroll', () => requestAnimationFrame(sync), { passive: true });
-    box.querySelector('.pd-prev').addEventListener('click', () => go(index() - 1));
-    box.querySelector('.pd-next').addEventListener('click', () => go(index() + 1));
-    box.querySelector('.pd-thumbs').addEventListener('click', (e) => { const b = e.target.closest('[data-i]'); if (b) go(Number(b.dataset.i)); });
-    track.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight') { e.preventDefault(); go(index() + 1); }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); go(index() - 1); }
-    });
-    track.scrollLeft = 0;
   }
   function syncDetail() {
     const p = current;
