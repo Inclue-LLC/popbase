@@ -342,7 +342,7 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 /* 「カートに入れる」は目立つように、テーマのアクセントの色（白い文字が読めるよう少しだけ濃く） */
 #pmAdd { --add: color-mix(in srgb, var(--theme-accent, #9b80e0) 88%, #000);
   background: var(--add); color: #fff;
-  box-shadow: 0 8px 22px color-mix(in srgb, var(--add) 40%, transparent); }
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--add) 18%, transparent); } /* 下の光（影）は控えめに */
 #pmAdd:hover:not(:disabled) { background: color-mix(in srgb, var(--add) 90%, #000); }
 .pd-note { font-size: .82rem; color: var(--pink); font-weight: 700; min-height: 1.4em; }
 .qty { display: inline-flex; align-items: center; gap: 10px; }
