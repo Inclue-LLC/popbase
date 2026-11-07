@@ -48,22 +48,27 @@ window.AppReady = (async function () {
   {
     const domain = window.SHOPIFY_CONFIG?.domain;
     const links = $('#footerLinks');
-    if (shopify && domain && links) {
-      links.querySelectorAll('[data-policy]').forEach((a) => {
+    // ページ下のリンクと、イベントのない期間の画面の「お問い合わせ」
+    const policyLinks = document.querySelectorAll('[data-policy]');
+    if (shopify && domain) {
+      policyLinks.forEach((a) => {
         a.href = `https://${domain}/policies/${a.dataset.policy}`;
         a.target = '_blank';
         a.rel = 'noopener';
       });
-    } else if (links) links.hidden = true;
+    } else {
+      if (links) links.hidden = true;
+      $('#entIdleLinks')?.setAttribute('hidden', '');
+    }
     const demo = $('#demoNote');
     if (demo) demo.hidden = !!shopify;
 
     // サーバーが Shopify からポリシーの文章を読めたら、リンクを押したときに POP BASE の中で開く
     // （読めないとき＝権限がない・未入力などは、上の Shopify のページへのリンクのまま）
-    if (shopify && links && /^https?:$/.test(location.protocol)) {
+    if (shopify && /^https?:$/.test(location.protocol)) {
       fetch('/api/policies').then((r) => r.json()).then(({ policies = [] }) => {
         const byType = Object.fromEntries(policies.map((p) => [p.type, p]));
-        links.addEventListener('click', (e) => {
+        document.addEventListener('click', (e) => {
           const a = e.target.closest('[data-policy]');
           const p = a && byType[a.dataset.policy];
           if (!p) return;
