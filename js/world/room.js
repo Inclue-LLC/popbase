@@ -148,7 +148,9 @@ export async function buildRoom(theme) {
       lay.label && { text: lay.label, size: lay.title ? 0.3 : 0.44, color: lay.title ? theme.sign.sub : theme.sign.ink },
     ].filter(Boolean);
     if (signLines.length) {
-      const zs = plane(2.8, 0.7, basic(T.signTexture(signLines, theme.sign, 2.8, 0.7), { transparent: true }));
+      // 看板の幅は文字の長さに合わせる（短い文字でも横に広がりすぎない。最大は棚の幅に合わせた 2.8m）
+      const zw = Math.min(2.8, Math.max(1.3, T.signTextWidth(signLines, 0.7) + 0.5));
+      const zs = plane(zw, 0.7, basic(T.signTexture(signLines, theme.sign, zw, 0.7), { transparent: true }));
       zs.position.set(0, shelfH + 0.55, -shelfDepth / 2 + 0.03);
       unit.add(zs);
     }
