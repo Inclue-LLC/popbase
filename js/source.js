@@ -20,9 +20,16 @@
   }
 
   // 見本のお店（/demo）の内容。本番のイベントは読み込まない
+  // 会期：見た日の前後1週間ずつ（日本時間 10:00 開始〜20:00 終了）。いつ見ても開催中になる
+  const jstDay = (offsetDays, hm) => {
+    const d = new Date(Date.now() + 9 * 3600e3 + offsetDays * 86400e3);
+    const p = (n) => String(n).padStart(2, '0');
+    return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}T${hm}`;
+  };
   const DEMO_EVENT = {
-    brand: 'SAMPLE SHOP', title: '見本のお店', period: 'いつでもご覧いただけます',
-    left_label: 'ぬいぐるみ', left_title: 'PLUSH', right_label: '文具・雑貨', right_title: 'STATIONERY & GOODS',
+    brand: 'SAMPLE SHOP', title: '見本のお店',
+    open_at: jstDay(-7, '10:00'), close_at: jstDay(7, '20:00'),
+    left_label: 'ぬいぐるみ・キーホルダー', left_title: 'PLUSH & KEY HOLDER', right_label: '文具・雑貨', right_title: 'STATIONERY & GOODS',
     island_label: 'おすすめ', island_title: 'PICK UP',
   };
   function showDemoBanner() {
