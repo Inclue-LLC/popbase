@@ -204,8 +204,8 @@ export async function buildRoom(theme) {
   const tW = 3.6; const tH = 0.9; const tD = 1.4; const tZ = -1.6;
   const isl = window.STORE_LAYOUT.island || {};
   const tableSign = T.signTexture([
-    isl.title && { text: isl.title, size: isl.label ? 0.42 : 0.46, spacing: 16 },
-    isl.label && { text: isl.label, size: isl.title ? 0.26 : 0.4, color: isl.title ? theme.sign.sub : theme.sign.ink },
+    isl.title && { text: isl.title, size: isl.label ? 0.32 : 0.36, spacing: 12 },
+    isl.label && { text: isl.label, size: isl.title ? 0.2 : 0.3, color: isl.title ? theme.sign.sub : theme.sign.ink },
   ].filter(Boolean), { ...theme.sign, style: 'board' }, tW, tH, { full: true });
   const sideM = lambert(theme.shelf.edge);
   const table = new THREE.Mesh(new THREE.BoxGeometry(tW, tH, tD), [
