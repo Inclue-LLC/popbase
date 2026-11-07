@@ -272,8 +272,9 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 /* PC：写真（左）と、商品名・値段・説明（右）は 1:1。写真は正方形で固定し、右側だけスクロール */
 .product-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 @media (min-width: 681px) {
-  .product-detail { width: min(920px, 100%); overflow: hidden; }
-  .product-detail .pd-image { aspect-ratio: 1; max-height: calc(100dvh - 32px); }
+  /* 画面の高さが低いときはポップごと幅を縮めて、写真を正方形のまま収める */
+  .product-detail { width: min(920px, 100%, calc((100dvh - 32px) * 2)); overflow: hidden; }
+  .product-detail .pd-image { aspect-ratio: 1; }
   /* 右の文は行の高さ（＝写真の高さ）に収め、はみ出た分はこの中でスクロール */
   .product-detail .pd-body { contain: size; overflow-y: auto; overscroll-behavior: contain; padding: 36px 36px 32px; gap: 8px; }
   .product-detail .pd-body h3 { font-size: 1.45rem; }
@@ -292,9 +293,9 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .pd-body #pmDesc { white-space: pre-line; } /* Shopify の商品説明の改行をそのまま表示 */
 .pd-body .pd-desc { margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
 .pd-body .pd-desc:empty { display: none; }
-/* スマホ：写真を少し低くして、金額とカートに入れるボタンが最初の画面に入るようにする */
+/* スマホ：写真は正方形（上）、商品名・値段・ボタン・説明は下 */
 @media (max-width: 680px) {
-  .pd-image { aspect-ratio: auto; height: min(40vh, 92vw); }
+  .pd-image { aspect-ratio: 1; }
   .pd-body { padding: 20px 22px 26px; }
 }
 .pd-price { font-size: 1.5rem; font-weight: 800; }
