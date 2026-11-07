@@ -17,13 +17,14 @@ window.AppReady = (async function () {
   const productById = Object.fromEntries(PRODUCTS.map((p) => [p.id, p]));
 
   /* ---------- 保存（localStorage は使えない環境もあるので必ず try/catch） ---------- */
+  const PREFIX = window.DEMO ? 'haneul-demo:' : 'haneul:'; // 見本のお店（/demo）のカートは、本番のカートと混ぜない
   const store = {
     get(key, fallback) {
-      try { const v = localStorage.getItem(`haneul:${key}`); return v ? JSON.parse(v) : fallback; }
+      try { const v = localStorage.getItem(`${PREFIX}${key}`); return v ? JSON.parse(v) : fallback; }
       catch { return fallback; }
     },
     set(key, value) {
-      try { localStorage.setItem(`haneul:${key}`, JSON.stringify(value)); } catch { /* noop */ }
+      try { localStorage.setItem(`${PREFIX}${key}`, JSON.stringify(value)); } catch { /* noop */ }
     },
   };
 
@@ -666,6 +667,7 @@ window.AppReady = (async function () {
   $('#checkoutBtn').addEventListener('click', async () => {
     const t = totals();
     if (!t.lines.length) return;
+    if (window.DEMO) { toast('見本のお店のため、購入はできません'); return; }
     if (shopify) {
       const btn = $('#checkoutBtn');
       btn.disabled = true;

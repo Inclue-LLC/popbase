@@ -45,6 +45,7 @@
 
     /** 入店を申し込む（入店券があれば、その続きから） */
     start() {
+      if (window.DEMO) return V.startDemo();
       V.wanted = true;
       if (V.state === 'ended' || V.state === 'closed') V.state = 'idle';
       const url = resolveUrl();
@@ -84,6 +85,44 @@
       if (V.failures > 8) { emit('status', 'offline'); return; }
       emit('status', 'connecting');
       setTimeout(() => { if (V.wanted && !V.ws) V.connect(url); }, Math.min(8000, 600 * 2 ** V.failures));
+    },
+
+    /*
+     * 見本のお店（/demo）：サーバーにはつながず、すぐ入店。店内のにぎわいは、このブラウザの中だけの見本のお客さんで出す
+     * （本番の店内の人数・順番待ちには影響しない）
+     */
+    startDemo() {
+      V.state = 'inside';
+      emit('status', 'online');
+      emit('admitted', { crowded: false, demo: true });
+      if (V.demoTimer) return;
+      const SPOTS = [[-5.6, 2.2], [-5.6, 0.6], [-5.6, -1.0], [-5.6, -2.6], [5.6, 2.2], [5.6, 0.6], [5.6, -1.0], [5.6, -2.6],
+        [-1.3, -0.3], [1.3, -0.3], [-2.5, -1.6], [2.5, -1.6], [-1.3, -2.9], [1.3, -2.9], [0, 2.5], [-2, 4], [2, 4], [-3, 1.5], [3, 1.5]];
+      const rnd = (a, b) => a + Math.random() * (b - a);
+      const pick = () => { const s = SPOTS[Math.floor(Math.random() * SPOTS.length)]; return [s[0] + rnd(-0.5, 0.5), s[1] + rnd(-0.4, 0.4)]; };
+      const ids = (window.AVATARS || []).map((a) => a.id);
+      const bots = Array.from({ length: 5 }, (_, i) => {
+        const [x, z] = pick();
+        const [tx, tz] = pick();
+        return { id: 9000 + i, avatar: ids[i % Math.max(1, ids.length)] || 'haru', x, z, tx, tz, wait: rnd(0, 4) };
+      });
+      emit('message', { t: 'welcome', peers: bots.map((b) => ({ id: b.id, avatar: b.avatar, x: b.x, z: b.z, ry: 0, m: false })) });
+      let last = Date.now();
+      V.demoTimer = setInterval(() => {
+        const now = Date.now();
+        const dt = Math.min(0.5, (now - last) / 1000);
+        last = now;
+        for (const b of bots) {
+          let moving = false;
+          if (b.wait > 0) b.wait -= dt;
+          else {
+            const dx = b.tx - b.x; const dz = b.tz - b.z; const d = Math.hypot(dx, dz);
+            if (d < 0.1) { b.wait = rnd(3, 9); [b.tx, b.tz] = pick(); } else { const s = Math.min(d, 1.3 * dt); b.x += (dx / d) * s; b.z += (dz / d) * s; moving = true; }
+          }
+          emit('message', { t: 'move', id: b.id, x: b.x, z: b.z, ry: 0, m: moving });
+          if (Math.random() < 0.003) emit('message', { t: 'emote', id: b.id, e: Math.floor(Math.random() * 6) });
+        }
+      }, 120);
     },
 
     goOffline() {
@@ -142,6 +181,7 @@
 
     /** 自分から退店（席をすぐ空ける） */
     leave() {
+      if (V.demoTimer) { clearInterval(V.demoTimer); V.demoTimer = null; emit('message', { t: 'reset' }); }
       if (V.ws?.readyState === WebSocket.OPEN) V.ws.send(JSON.stringify({ t: 'bye' }));
       store.set(null);
       V.state = 'ended';

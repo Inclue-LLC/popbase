@@ -50,6 +50,9 @@ function serveStatic(req, res) {
   // 出品のご案内（企業・ブランド・クリエイター向け）。以前のアドレス（/creators・/partners）は /about へ移す
   if (/^\/(creators|partners)(\/|\.html)?$/.test(urlPath)) { res.writeHead(301, { location: '/about' }); return res.end(); }
   if (urlPath === '/about' || urlPath === '/about/') urlPath = '/about.html';
+  // 見本のお店（いつでも入れる見本の店内。js/data.js の DEMO）
+  if (urlPath === '/demo/') { res.writeHead(301, { location: '/demo' }); return res.end(); }
+  if (urlPath === '/demo') urlPath = '/index.html';
   if (urlPath === '/healthz') { res.writeHead(200, { 'content-type': 'application/json' }); return res.end(JSON.stringify(stats())); }
 
   const filePath = path.resolve(ROOT, `.${urlPath}`);

@@ -6,6 +6,18 @@
  * 実際のキャラクター画像に置き換える場合は、商品の `image` に画像パスを指定してください。
  */
 
+/*
+ * 見本のお店（/demo）：出品のご案内から「見本のお店を見てみる」で開く。
+ * 開催中のイベントや Shopify・本番の店内（入店の人数）とは関係なく、このファイルの見本の商品でいつでも入れる。購入はできない
+ */
+window.DEMO = /^\/demo\/?$/.test(location.pathname);
+if (window.DEMO) {
+  const m = document.createElement('meta');
+  m.name = 'robots';
+  m.content = 'noindex';
+  document.head.appendChild(m);
+}
+
 window.SHOP = {
   brand: 'STUDIO HANEUL',
   // お店の名前（入れ替わる各ポップアップに共通。ページ上部・入口の上の小さい文字・ブラウザのタブに出る）

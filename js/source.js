@@ -19,8 +19,28 @@
     document.body.appendChild(el);
   }
 
+  // 見本のお店（/demo）の内容。本番のイベントは読み込まない
+  const DEMO_EVENT = {
+    brand: 'SAMPLE SHOP', title: '見本のお店', period: 'いつでもご覧いただけます',
+    left_label: 'ぬいぐるみ', left_title: 'PLUSH', right_label: '文具・雑貨', right_title: 'STATIONERY & GOODS',
+    island_label: 'おすすめ', island_title: 'PICK UP',
+  };
+  function showDemoBanner() {
+    const el = document.createElement('div');
+    el.className = 'demo-bar';
+    el.innerHTML = '<span class="db-long">これは見本のお店です。実際の商品の購入はできません。</span><span class="db-short">見本のお店です（購入はできません）</span><a href="/about">出品のご案内へ</a>';
+    document.body.prepend(el);
+    document.body.classList.add('is-demo');
+  }
+
   async function load() {
     const E = window.HaneulEvent;
+    if (window.DEMO) {
+      showDemoBanner();
+      E.applyEvent(DEMO_EVENT);
+      E.applyLayout(null);
+      return;
+    }
     const onServer = /^https?:$/.test(location.protocol);
     const params = new URLSearchParams(location.search);
     const previewId = params.get('preview') === 'draft' ? params.get('event') || '' : '';
