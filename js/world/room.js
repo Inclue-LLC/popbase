@@ -15,10 +15,9 @@ export const ROOM = { w: 14, d: 14, h: 4.2 };
 const HALF_W = ROOM.w / 2;
 const HALF_D = ROOM.d / 2;
 
-// 看板の文字の高さ（m）をそろえる：棚・中央のテーブル・レジとも、英字 約27cm・日本語 約17cm
+// 看板の文字の高さ（m）をそろえる：棚・中央のテーブル・レジとも、英字（日本語だけの看板の日本語も）約27cm、英字と2行のときの日本語 約14cm
 const SIGN_EN_M = 0.27;
-const SIGN_JA_M = 0.17; // 日本語だけのとき
-const SIGN_JA_SUB_M = 0.12; // 英字と2行のとき（正面の看板のブランド名：イベント名 ≒ 0.43 と同じくらいの比率）
+const SIGN_JA_SUB_M = 0.14; // 英字と2行のときの日本語（英字より小さく）。日本語だけのときは英字と同じ大きさ・色
 const sizeFor = (m, boardH) => m / (boardH * 0.8); // signTexture の文字は size × 看板の高さ × 0.8
 const ITEM_HEIGHT = { plush: 0.78, mug: 0.6, tote: 0.66, pouch: 0.56, note: 0.6, keychain: 0.56, sticker: 0.56 };
 
@@ -150,7 +149,7 @@ export async function buildRoom(theme) {
     // 棚の看板：上に日本語、下に英字（正面の看板の「ブランド名→イベント名」と同じ並び）。
     // 入っているものだけ出し、どちらも空なら看板を出さない
     const signLines = [
-      lay.label && { text: lay.label, size: sizeFor(lay.title ? SIGN_JA_SUB_M : SIGN_JA_M, 0.7), color: lay.title ? theme.sign.sub : theme.sign.ink },
+      lay.label && { text: lay.label, size: sizeFor(lay.title ? SIGN_JA_SUB_M : SIGN_EN_M, 0.7), color: lay.title ? theme.sign.sub : theme.sign.ink },
       lay.title && { text: lay.title, size: sizeFor(SIGN_EN_M, 0.7), spacing: 4 },
     ].filter(Boolean);
     if (signLines.length) {
@@ -211,7 +210,7 @@ export async function buildRoom(theme) {
   const isl = window.STORE_LAYOUT.island || {};
   const tableSign = T.signTexture([
     // 上に日本語、下に英字
-    isl.label && { text: isl.label, size: sizeFor(isl.title ? SIGN_JA_SUB_M : SIGN_JA_M, tH), color: isl.title ? theme.sign.sub : theme.sign.ink },
+    isl.label && { text: isl.label, size: sizeFor(isl.title ? SIGN_JA_SUB_M : SIGN_EN_M, tH), color: isl.title ? theme.sign.sub : theme.sign.ink },
     isl.title && { text: isl.title, size: sizeFor(SIGN_EN_M, tH), spacing: 6, gap: isl.label ? 0.07 : 0 },
   ].filter(Boolean), { ...theme.sign, style: 'board' }, tW, tH, { full: true, shiftY: 0.07 });
   const sideM = lambert(theme.shelf.edge);
@@ -261,7 +260,7 @@ export async function buildRoom(theme) {
   register.position.set(rX, rH / 2, rZ);
   group.add(register);
   const regSign = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: T.signTexture([{ text: 'カートを見る', size: 0.2, color: theme.sign.sub }, { text: 'お会計', size: 0.46 }], theme.sign, 1.0, 0.5),
+    map: T.signTexture([{ text: 'カートを見る', size: 0.24, color: theme.sign.sub }, { text: 'お会計', size: 0.46 }], theme.sign, 1.0, 0.5),
     transparent: true,
   }));
   regSign.center.set(0.5, 0);
