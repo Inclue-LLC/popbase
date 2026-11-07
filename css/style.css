@@ -399,6 +399,11 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .ew-est { font-weight: 700; color: #6f6880; min-height: 1.5em; }
 .ew-note { font-size: .85rem; margin-top: 8px !important; }
 .ew-small { font-size: .74rem; color: #6f6880; margin-top: 6px !important; }
+/* 「ページを閉じたり…」は1行で（カードを文の幅まで広げる）。狭いスマホでは「、」のあとで改行 */
+.entrance-wait { max-width: min(480px, 100%); }
+.ew-small { white-space: nowrap; }
+.ew-small .ew-br { display: none; }
+@media (max-width: 480px) { .ew-small { white-space: normal; } .ew-small .ew-br { display: inline; } }
 .entrance-ended { margin-bottom: 18px; }
 .entrance.is-waiting #enterBtn, .entrance.is-waiting #entNotice { display: none; }
 /* 順番待ちの画面は、キャラクターを出さずに詰める（小さいスマホでも画面に収まるように） */
