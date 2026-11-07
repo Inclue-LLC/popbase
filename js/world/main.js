@@ -457,6 +457,11 @@ async function main() {
   window.addEventListener('orientationchange', () => setTimeout(fitFs, 300));
   window.addEventListener('resize', fitFs);
 
+  /** 全画面ボタンの文字とアイコン：広げる（四隅が外向き）／戻す（四隅が内向き） */
+  function setFsLabel(on) {
+    fsBtn.querySelector('.fs-label').textContent = on ? '全画面をやめる' : '全画面';
+    fsBtn.querySelector('.fs-icon path').setAttribute('d', on ? 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5' : 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5');
+  }
   let scrollBeforeFs = null; // 全画面にする前のページの位置（やめたら、そこに戻す）
   function setFs(on) {
     if (on && !document.body.classList.contains('world-fs')) scrollBeforeFs = window.scrollY;
@@ -467,7 +472,7 @@ async function main() {
     fitFs();
     setTimeout(fitFs, 350);
     setTimeout(fitFs, 900);
-    fsBtn.textContent = on ? '全画面をやめる' : '全画面';
+    setFsLabel(on);
     if (on) root.focus({ preventScroll: true });
     else restoreScroll();
   }
@@ -495,8 +500,8 @@ async function main() {
   new MutationObserver(() => {
     const on = document.body.classList.contains('world-fs');
     if (!on) document.documentElement.classList.remove('fs-lock');
-    if (!on && fsBtn.textContent !== '全画面') {
-      fsBtn.textContent = '全画面';
+    if (!on && fsBtn.querySelector('.fs-label').textContent !== '全画面') {
+      setFsLabel(false);
       fitFs();
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     }
