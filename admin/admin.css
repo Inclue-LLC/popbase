@@ -487,3 +487,10 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .sub-grid .need { flex: none; }
 .sub-grid .sub-flags label { display: inline-flex; flex-wrap: nowrap; gap: 6px; }
 .sub-grid .sub-flags label > input { flex: none; }
+
+/* 注文：発送済みにする */
+.order-fulfill { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin-top: 8px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.order-fulfill select, .order-fulfill input[name=number] { padding: .4em .6em; border: 1.5px solid var(--line); border-radius: 8px; font: inherit; font-size: .85rem; background: var(--surface); color: inherit; }
+.order-fulfill input[name=number] { width: 13em; }
+.order-fulfill .check { display: inline-flex; gap: 6px; align-items: center; font-size: .85rem; }
+.order-track { grid-column: 1 / -1; margin: 4px 0 0; font-size: .85rem; }

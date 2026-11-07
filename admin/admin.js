@@ -1642,7 +1642,9 @@ const ORD = { list: [] };
 const FIN = { PAID: '支払い済み', PENDING: '支払い待ち', AUTHORIZED: '承認済み', PARTIALLY_PAID: '一部支払い', REFUNDED: '返金済み', PARTIALLY_REFUNDED: '一部返金', VOIDED: '取消', EXPIRED: '期限切れ' };
 const FUL = { UNFULFILLED: '未発送', FULFILLED: '発送済み', PARTIALLY_FULFILLED: '一部発送', IN_PROGRESS: '準備中', ON_HOLD: '保留', SCHEDULED: '予定', RESTOCKED: '返品・在庫戻し', PENDING_FULFILLMENT: '発送待ち', OPEN: '未発送' };
 const shipText = (o) => [o.ship.zip && `〒${o.ship.zip}`, `${o.ship.province}${o.ship.city}${o.ship.address1}${o.ship.address2 ? ` ${o.ship.address2}` : ''}`].filter(Boolean).join(' ');
-const needsShipping = (o) => !o.cancelled && !['FULFILLED', 'RESTOCKED'].includes(o.fulfillment);
+// このイベントの商品で、まだ発送していないものがある注文（同じ注文のほかのイベントの商品は見ない）
+const needsShipping = (o) => !o.cancelled && (o.shipped === undefined ? !['FULFILLED', 'RESTOCKED'].includes(o.fulfillment) : !o.shipped);
+const CARRIER_NAMES = { yamato: 'ヤマト運輸', sagawa: '佐川急便', japanpost: '日本郵便', other: 'その他' };
 async function loadOrders() {
   const body = $('#ordersBody');
   body.innerHTML = '<p class="hint">注文を読み込んでいます…</p>';
@@ -1672,21 +1674,51 @@ function renderOrders() {
     <li class="order ${o.cancelled ? 'is-cancelled' : ''}">
       <div class="order-head"><b>${esc(o.name)}</b><span class="hint">${fmtTime(o.createdAt)}</span>
         ${o.cancelled ? '<span class="pill pill-ended">キャンセル</span>' : ''}
-        <span class="pill ${o.fulfillment === 'FULFILLED' ? 'pill-clean' : 'pill-dirty'}">${esc(FUL[o.fulfillment] || o.fulfillment || '')}</span>
+        <span class="pill ${needsShipping(o) ? 'pill-dirty' : 'pill-clean'}">${o.shipped === undefined ? esc(FUL[o.fulfillment] || o.fulfillment || '') : o.shipped ? '発送済み' : '未発送'}</span>
         <span class="pill">${esc(FIN[o.financial] || o.financial || '')}</span></div>
       <ul class="order-items">${o.items.map((i) => `<li>${esc(i.title)}${i.variant && i.variant !== 'Default Title' ? `（${esc(i.variant)}）` : ''} × <b>${i.quantity}</b></li>`).join('')}</ul>
       <div class="order-ship"><b>お届け先</b><p>${esc(o.ship.name)}${o.ship.company ? `（${esc(o.ship.company)}）` : ''} 様<br>${esc(shipText(o))}${o.ship.phone || o.phone ? `<br>TEL ${esc(o.ship.phone || o.phone)}` : ''}${o.email ? `<br>${esc(o.email)}` : ''}</p>
         ${o.note ? `<p class="hint">備考：${esc(o.note)}</p>` : ''}</div>
+      ${(o.tracking || []).length ? `<p class="order-track">追跡番号：${o.tracking.map((t) => (t.url ? `<a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.number)}</a>` : esc(t.number))).join('、')}</p>` : ''}
+      ${needsShipping(o) && o.shipped !== undefined ? `<form class="order-fulfill" data-order="${esc(o.id)}">
+        <select name="carrier" aria-label="配送会社">${Object.entries(CARRIER_NAMES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
+        <input name="number" maxlength="60" placeholder="追跡番号（任意）" aria-label="追跡番号" inputmode="text">
+        <label class="check"><input type="checkbox" name="notify" checked> お客さまに発送通知メールを送る</label>
+        <button class="btn btn-primary btn-small" type="submit">発送済みにする</button>
+      </form>` : ''}
     </li>`).join('')}</ul>` : '<p class="note-box">表示する注文はありません。</p>');
 }
 $('#ordersReload').addEventListener('click', loadOrders);
+// 発送済みにする（Shopify の発送を作る。チェックがあれば Shopify から発送通知メール）
+$('#ordersBody').addEventListener('submit', async (e) => {
+  const form = e.target.closest('.order-fulfill');
+  if (!form) return;
+  e.preventDefault();
+  const o = ORD.list.find((x) => x.id === form.dataset.order);
+  const f = form.elements;
+  const notify = f.notify.checked;
+  const msg = `${o.name}（${o.ship.name} 様）の、このイベントの商品を発送済みにします。${notify ? '\nお客さまに発送通知メールが届きます。' : '\n発送通知メールは送りません。'}${f.number.value.trim() ? `\n追跡番号：${CARRIER_NAMES[f.carrier.value]} ${f.number.value.trim()}` : ''}\nよろしいですか？`;
+  if (!confirm(msg)) return;
+  const btn = form.querySelector('button');
+  btn.disabled = true;
+  btn.textContent = '記録しています…';
+  try {
+    await evApi('fulfill', { method: 'POST', body: { orderId: o.id, carrier: f.carrier.value, number: f.number.value.trim(), notify } });
+    toast(notify ? '発送済みにしました。お客さまに発送通知メールを送りました' : '発送済みにしました');
+    loadOrders();
+  } catch (err) {
+    toast(err.message, { error: true });
+    btn.disabled = false;
+    btn.textContent = '発送済みにする';
+  }
+});
 $('#ordersUnfulfilled').addEventListener('change', renderOrders);
 $('#ordersCsv').addEventListener('click', () => {
   const only = $('#ordersUnfulfilled').checked;
   const rows = [['注文番号', '注文日時', '支払い', '発送', 'キャンセル', '商品', '数量', 'お届け先の名前', '会社名', '郵便番号', '住所', '電話番号', 'メール', '備考']];
   for (const o of ORD.list.filter((x) => !only || needsShipping(x))) {
     for (const i of o.items) {
-      rows.push([o.name, new Date(o.createdAt).toLocaleString('ja-JP'), FIN[o.financial] || o.financial, FUL[o.fulfillment] || o.fulfillment, o.cancelled ? 'キャンセル' : '',
+      rows.push([o.name, new Date(o.createdAt).toLocaleString('ja-JP'), FIN[o.financial] || o.financial, o.shipped === undefined ? (FUL[o.fulfillment] || o.fulfillment) : (i.unfulfilled === 0 ? '発送済み' : '未発送'), o.cancelled ? 'キャンセル' : '',
         `${i.title}${i.variant && i.variant !== 'Default Title' ? `（${i.variant}）` : ''}`, i.quantity, o.ship.name, o.ship.company, o.ship.zip,
         `${o.ship.province}${o.ship.city}${o.ship.address1}${o.ship.address2 ? ` ${o.ship.address2}` : ''}`, o.ship.phone || o.phone, o.email, o.note]);
     }

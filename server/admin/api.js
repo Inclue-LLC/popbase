@@ -24,6 +24,7 @@
  *   POST /admin/api/password             自分のパスワードを変える { current, password }
  *   DELETE /admin/api/users?name=NAME    運営：アカウントを削除
  *   GET  /admin/api/orders?event=ID      このイベントの商品が入った注文（Shopify）
+ *   POST /admin/api/fulfill?event=ID     このイベントの商品を発送済みにする（Shopify）{ orderId, carrier, number, notify }
  *   POST /admin/api/product-tags         運営：商品の NEW・会場限定（Shopify のタグ new / limited）{ handle, isNew?, limited? }
  *   GET  /admin/api/submissions?event=ID 商品の申請の一覧
  *   POST /admin/api/submissions?event=ID 商品を申請 { name, price, stock, description, spec, size, limit, images }
@@ -177,7 +178,7 @@ async function handle(req, res, urlPath) {
     // 出品者は担当のイベントだけ。運営だけができる操作は断る
     const own = (eventId) => isAdmin || me.events.includes(eventId);
     const SELLER_ROUTES = new Set(['password:POST', 'events:GET', 'state:GET', 'draft:PUT', 'preview:GET', 'upload:POST', 'products:GET', 'collections:GET',
-      'review:POST', 'orders:GET', 'submissions:GET', 'submissions:POST', 'submissions:PUT', 'submissions:DELETE', 'submission-image:GET', 'submission-image:POST', 'discard:POST']);
+      'review:POST', 'orders:GET', 'fulfill:POST', 'submissions:GET', 'submissions:POST', 'submissions:PUT', 'submissions:DELETE', 'submission-image:GET', 'submission-image:POST', 'discard:POST']);
     if (!isAdmin) {
       if (!SELLER_ROUTES.has(`${route}:${req.method}`)) return json(res, 403, { error: 'この操作は運営のアカウントでのみできます' });
       if (id && !own(id)) return json(res, 403, { error: '担当していないイベントです' });
@@ -329,6 +330,23 @@ async function handle(req, res, urlPath) {
       const r = await store.setProductTags(handle, { isNew: typeof isNew === 'boolean' ? isNew : undefined, limited: typeof limited === 'boolean' ? limited : undefined });
       console.log(`[admin] ${user} が商品 ${handle} のタグを変更しました（NEW: ${r.isNew} / 会場限定: ${r.limited}）`);
       return json(res, 200, r);
+    }
+    if (route === 'fulfill' && req.method === 'POST') {
+      if (!store.fulfill) return json(res, 400, { error: '発送の記録は、Shopify につないでいるときにできます' });
+      const st = await store.getState(id);
+      const col = st.published?.event?.collection || st.draft.event?.collection;
+      if (!col) return json(res, 400, { error: 'このイベントに Shopify のコレクションが設定されていません' });
+      const { orderId, carrier, number, notify } = await readJson(req);
+      try {
+        const r = await store.fulfill(col, orderId, { carrier, number, notify: notify !== false });
+        console.log(`[admin] ${user} が ${orderId} を発送済みにしました（イベント ${id}・通知 ${notify !== false ? 'あり' : 'なし'}）`);
+        return json(res, 200, r);
+      } catch (e) {
+        if (e instanceof InputError) throw e;
+        const denied = /access|scope|denied/i.test(e.message);
+        console.error('[fulfill]', e.message);
+        return json(res, 502, { error: denied ? 'Shopify のアプリに、発送を記録する権限（read/write_merchant_managed_fulfillment_orders）がありません。運営に設定を依頼してください' : `発送済みにできませんでした（${e.message}）` });
+      }
     }
     if (route === 'orders' && req.method === 'GET') {
       const d = (await store.getState(id)).draft.event || {};
