@@ -115,6 +115,7 @@ async function loadState() {
   state.products = window.PRODUCTS;
   state.draft = st.draft;
   state.draft.event ||= {};
+  const filled = fillDefaults(state.draft.event);
   state.published = st.published;
   state.history = st.history || [];
   state.dirtyLocal = false;
@@ -124,6 +125,17 @@ async function loadState() {
     }
   }
   renderAll();
+  if (filled) changed(); // 初期の文を入れたので保存する
+}
+
+/** 初期の文がある必須の欄（お支払い方法・返品など）：空欄なら初期の文を入れる。前の初期の文のままなら新しい文にする */
+function fillDefaults(ev) {
+  let filled = false;
+  for (const f of E.FIELDS.filter((x) => x.defaultValue)) {
+    const v = f.key === 'return_text' ? E.returnTextOf(ev[f.key]) : (String(ev[f.key] ?? '').trim() ? ev[f.key] : f.defaultValue);
+    if (v !== ev[f.key]) { ev[f.key] = v; filled = true; }
+  }
+  return filled;
 }
 
 /* ---------- イベント ---------- */
@@ -928,8 +940,7 @@ function fieldHtml(f, value, placeholders) {
       ${value ? `<button type="button" class="btn btn-small btn-ghost" data-reset="${f.key}">消す</button>` : ''}</span>`;
   } else if (f.type === 'textarea') {
     // 初期の文がある欄（返品・交換など）は、空欄のときその文を入れた状態で出す
-    let text = (value ?? '') === '' && f.defaultValue ? f.defaultValue : (value ?? '');
-    if (f.key === 'return_text') text = E.returnTextOf(value); // 前の初期の文のままなら、新しい初期の文で出す
+    const text = value ?? '';
     input = `<textarea id="${id}" data-key="${f.key}" maxlength="300" rows="${f.defaultValue ? 4 : 2}">${esc(text)}</textarea>`;
   } else if (f.type === 'collection') {
     // Shopify のコレクションから選ぶ
