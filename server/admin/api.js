@@ -145,12 +145,14 @@ async function handle(req, res, urlPath) {
     // パスワード設定用のリンク（ログイン前）
     if (route === 'setup' && req.method === 'GET') {
       const u = auth.findSetup(new URL(req.url, 'http://x').searchParams.get('token'));
-      return u ? json(res, 200, { name: u.name }) : json(res, 404, { error: 'このリンクは使えません（有効期限切れ、または設定済み）。運営に新しいリンクの発行を依頼してください' });
+      return u ? json(res, 200, { name: u.name, minLength: auth.minPasswordLength(auth.getUser(u.name).role) }) : json(res, 404, { error: 'このリンクは使えません（有効期限切れ、または設定済み）。運営に新しいリンクの発行を依頼してください' });
     }
     if (route === 'setup' && req.method === 'POST') {
       if (!loginAllowedOrTell(res, ip)) return true;
       const { token, password } = await readJson(req);
-      if (typeof password !== 'string' || password.length < 10 || password.length > 200) throw new InputError('パスワードは10文字以上にしてください');
+      const who = auth.findSetup(token);
+      const min = auth.minPasswordLength(who ? auth.getUser(who.name).role : 'admin');
+      if (typeof password !== 'string' || password.length < min || password.length > 200) throw new InputError(`パスワードは${min}文字以上にしてください`);
       const name = auth.completeSetup(token, password);
       if (!name) { auth.loginFailed(ip); return json(res, 404, { error: 'このリンクは使えません（有効期限切れ、または設定済み）。運営に新しいリンクの発行を依頼してください' }); }
       auth.loginSucceeded(ip);
@@ -166,7 +168,7 @@ async function handle(req, res, urlPath) {
 
     const me = auth.getUser(user);
     const isAdmin = me.role === 'admin';
-    if (route === 'session' && req.method === 'GET') return json(res, 200, { user, role: me.role, events: me.events, mode: store.mode, storage: store.label });
+    if (route === 'session' && req.method === 'GET') return json(res, 200, { user, role: me.role, minPassword: auth.minPasswordLength(me.role), events: me.events, mode: store.mode, storage: store.label });
     const q = new URL(req.url, 'http://x').searchParams;
     const id = q.get('event') || '';
     // 出品者は担当のイベントだけ。運営だけができる操作は断る
@@ -264,7 +266,8 @@ async function handle(req, res, urlPath) {
       const { current, password } = await readJson(req);
       if (!loginAllowedOrTell(res, ip)) return true;
       if (!auth.verify(user, current)) { auth.loginFailed(ip); return json(res, 400, { error: 'いまのパスワードが違います' }); }
-      if (typeof password !== 'string' || password.length < 10 || password.length > 200) throw new InputError('新しいパスワードは10文字以上にしてください');
+      const min = auth.minPasswordLength(me.role);
+      if (typeof password !== 'string' || password.length < min || password.length > 200) throw new InputError(`新しいパスワードは${min}文字以上にしてください`);
       auth.setUser(user, password, {});
       console.log(`[admin] ${user} がパスワードを変更しました`);
       return json(res, 200, { ok: true });

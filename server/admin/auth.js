@@ -36,6 +36,8 @@ function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
 }
 
 const ROLES = ['admin', 'seller'];
+// パスワードの最低文字数：出品者は 6 文字、運営（すべてを扱える）は 10 文字
+const minPasswordLength = (role) => (role === 'seller' ? 6 : 10);
 const roleOf = (u) => (u?.role === 'seller' ? 'seller' : 'admin');
 
 /** アカウントを作る・変える。password を省くとパスワードはそのまま（role・events だけ変える） */
@@ -159,6 +161,6 @@ function loginFailed(ip) {
 function loginSucceeded(ip) { attempts.delete(ip); }
 
 module.exports = {
-  DATA_DIR, ROLES, readUsers, setUser, getUser, listUsers, deleteUser, verify, issueSetup, findSetup, completeSetup, sessionCookie, clearCookie, currentUser,
+  DATA_DIR, ROLES, minPasswordLength, readUsers, setUser, getUser, listUsers, deleteUser, verify, issueSetup, findSetup, completeSetup, sessionCookie, clearCookie, currentUser,
   loginAllowed, loginFailed, loginSucceeded,
 };

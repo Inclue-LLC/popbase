@@ -481,3 +481,9 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .pw-dialog h2 { margin: 0; font-size: 1.1rem; }
 .pw-dialog label { display: grid; gap: 4px; font-weight: 700; font-size: .85rem; }
 .pw-dialog input { padding: .55em .75em; border: 1.5px solid var(--line); border-radius: 8px; font: inherit; }
+/* 商品の申請：「必須」「任意」は項目名のすぐ横に（横に伸ばさない） */
+.sub-grid label { display: flex; flex-wrap: wrap; align-items: center; align-content: start; gap: 4px 0; }
+.sub-grid label > input, .sub-grid label > select, .sub-grid label > textarea { flex: 1 1 100%; min-width: 0; }
+.sub-grid .need { flex: none; }
+.sub-grid .sub-flags label { display: inline-flex; flex-wrap: nowrap; gap: 6px; }
+.sub-grid .sub-flags label > input { flex: none; }
