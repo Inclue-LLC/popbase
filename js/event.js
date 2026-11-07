@@ -9,13 +9,13 @@
  *   画像は URL 文字列、または管理画面では { id, url }。
  *
  * 棚の配置 layout … {
- *   left:   [[id|null ×5], [..], [..]],   // 左の棚。行は下の段から順に3段、1段5枠
- *   right:  [[..], [..], [..]],           // 右の棚
+ *   left:   [[id|null ×5], [..]],   // 左の棚。行は下の段から順に2段、1段5枠
+ *   right:  [[..], [..]],           // 右の棚
  *   island: [id|null ×5],                 // 会場限定テーブル
  * }
  */
 (function () {
-  const ROWS = 3;
+  const ROWS = 2; // 棚は2段（以前は3段。3段目に置いていた商品は、空いている枠へ詰める）
   const SLOTS = 5;
   const TABLE_SLOTS = 5;
 
@@ -375,7 +375,19 @@
       used.set(v, (used.get(v) || 0) + 1);
       return v;
     };
-    const rows = (src) => Array.from({ length: ROWS }, (_, r) => Array.from({ length: SLOTS }, (_, i) => clean(src?.[r]?.[i])));
+    const rows = (src) => {
+      const out = Array.from({ length: ROWS }, (_, r) => Array.from({ length: SLOTS }, (_, i) => clean(src?.[r]?.[i])));
+      // 以前の3段の配置：はみ出した段の商品を、下の段から空いている枠へ入れる（入りきらない分は外す）
+      for (const row of (Array.isArray(src) ? src.slice(ROWS) : [])) {
+        for (const v of Array.isArray(row) ? row : []) {
+          if (!v || !limit.has(v) || (used.get(v) || 0) >= limit.get(v)) continue;
+          const at = out.flat().indexOf(null);
+          if (at < 0) break;
+          out[Math.floor(at / SLOTS)][at % SLOTS] = clean(v);
+        }
+      }
+      return out;
+    };
     return {
       left: rows(layout?.left),
       right: rows(layout?.right),

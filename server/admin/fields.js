@@ -28,7 +28,7 @@ const KEYS = [...TEXT, ...MULTILINE, ...COLOR, ...IMAGE, ...Object.keys(SELECT),
 const schedule = require('../../js/schedule.js');
 // キャラクターの ID（js/data.js の CHARACTERS と同じ。追加はできず、編集のみ）
 const CHARACTER_IDS = ['haru', 'byeol', 'dalbit', 'gomi'];
-const ROWS = 3;
+const ROWS = 2; // 棚は2段（js/event.js と同じ）
 const SLOTS = 5;
 const TABLE_SLOTS = 5;
 
@@ -224,7 +224,18 @@ function cleanLayout(layout) {
     if (typeof v !== 'string' || v.length > 120 || /[\u0000-\u001f]/.test(v)) throw new InputError('layout');
     return v;
   };
-  const rows = (src) => Array.from({ length: ROWS }, (_, r) => Array.from({ length: SLOTS }, (_, i) => id(src?.[r]?.[i])));
+  const rows = (src) => {
+    const out = Array.from({ length: ROWS }, (_, r) => Array.from({ length: SLOTS }, (_, i) => id(src?.[r]?.[i])));
+    // 以前の3段の配置：はみ出した段の商品は、空いている枠へ詰める（入りきらない分は外す）
+    for (const row of (Array.isArray(src) ? src.slice(ROWS) : [])) {
+      for (const v of Array.isArray(row) ? row : []) {
+        const x = id(v);
+        const at = out.flat().indexOf(null);
+        if (x && at >= 0) out[Math.floor(at / SLOTS)][at % SLOTS] = x;
+      }
+    }
+    return out;
+  };
   return {
     left: rows(layout.left),
     right: rows(layout.right),
