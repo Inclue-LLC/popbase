@@ -93,13 +93,14 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 /* ---------- 入口 ---------- */
 .entrance {
   position: fixed; inset: 0; z-index: 100;
-  display: grid; place-items: center;
+  /* 中身が画面より高いとき（小さいスマホの順番待ちなど）は、切れずに縦にスクロールできるように */
+  display: grid; justify-items: center; align-items: start;
+  overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch;
   /* テーマの2色のグラデーション＋（POP BASE テーマでは）ロゴのようなピンクのにじみ */
   background:
     radial-gradient(60% 50% at 85% 15%, var(--theme-glow, transparent), transparent 70%),
     radial-gradient(55% 45% at 10% 90%, var(--theme-glow, transparent), transparent 70%),
     linear-gradient(160deg, var(--theme-top, var(--sky-top)), var(--theme-bottom, var(--sky-bottom)));
-  overflow: hidden;
   text-align: center;
   padding: 24px 16px;
 }
@@ -107,8 +108,8 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 /* 入口のボタンは内装のテーマの色 */
 .entrance .btn-primary { background: var(--theme-btn, var(--primary)); color: var(--theme-btn-ink, var(--primary-ink));
   box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-btn, #6b5a8e) 28%, transparent); }
-.entrance-bg { position: absolute; inset: 0; z-index: 0; background: center / cover no-repeat; }
-.entrance-inner { position: relative; z-index: 2; transition: opacity .5s, transform .6s; }
+.entrance-bg { position: fixed; inset: 0; z-index: 0; background: center / cover no-repeat; }
+.entrance-inner { position: relative; z-index: 2; margin-block: auto; transition: opacity .5s, transform .6s; } /* 画面に収まるときは上下の真ん中 */
 /* 設定を読み込むまで中身を出さない（初期値が一瞬見えるのを防ぐ） */
 .entrance:not(.is-ready) .entrance-inner { opacity: 0; }
 .entrance-kicker { letter-spacing: .3em; font-weight: 700; color: var(--ent-ink, var(--theme-ink, var(--ink-soft))); margin: 0; font-size: .85rem; }
@@ -390,6 +391,8 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .ew-small { font-size: .74rem; color: #6f6880; margin-top: 6px !important; }
 .entrance-ended { margin-bottom: 18px; }
 .entrance.is-waiting #enterBtn, .entrance.is-waiting #entNotice { display: none; }
+/* 順番待ちの画面は、キャラクターを出さずに詰める（小さいスマホでも画面に収まるように） */
+.entrance.is-waiting #entranceCast { display: none; }
 #enterBtn:disabled { opacity: .7; }
 
 .visit-timer {

@@ -247,7 +247,8 @@ window.AppReady = (async function () {
       entrance.classList.remove('is-hidden', 'open');
       entrance.classList.add('is-waiting');
       $('#entWait').hidden = false;
-      $('#ewAhead').textContent = q.ahead;
+      // 「入店まで あと ○ 人」：自分の順番（満員で先頭に並んでいるときも「あと1人」）
+      $('#ewAhead').textContent = q.pos;
       $('#ewEst').textContent = q.estimateMinutes ? `目安：約 ${q.estimateMinutes} 分` : 'まもなく入店できます';
     });
     Visit.on('admitted', (info) => {
