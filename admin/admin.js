@@ -1402,7 +1402,6 @@ function resetAccForm() {
   const f = $('#accForm');
   f.reset();
   f.name.readOnly = false;
-  f.password.placeholder = '10文字以上';
   $('#accFormTitle').textContent = 'アカウントを追加';
   $('#accSubmit').textContent = '追加する';
   $('#accCancel').hidden = true;
@@ -1412,6 +1411,18 @@ function resetAccForm() {
 function syncAccRole() { $('#accEvents').hidden = $('#accForm').role.value !== 'seller'; }
 $('#accForm').role.addEventListener('change', syncAccRole);
 $('#accCancel').addEventListener('click', resetAccForm);
+function showAccLink(name, url, expiresAt) {
+  $('#accLink').hidden = false;
+  $('#accLinkTitle').textContent = `「${name}」のパスワード設定用リンク`;
+  $('#accLinkUrl').value = url;
+  $('#accLinkNote').textContent = `このリンクをご本人に送ってください。${fmtTime(expiresAt)} まで有効・1回限りです（この画面を閉じると、もう表示できません。必要なら発行し直せます）。`;
+  $('#accLink').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+$('#accLinkCopy').addEventListener('click', async () => {
+  const el = $('#accLinkUrl');
+  try { await navigator.clipboard.writeText(el.value); } catch { el.select(); document.execCommand('copy'); }
+  toast('リンクをコピーしました');
+});
 async function renderAccounts() {
   try {
     const { users } = await api('users');
@@ -1419,9 +1430,11 @@ async function renderAccounts() {
     $('#accList').innerHTML = users.sort((a, b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name)).map((u) => `
       <li class="acc-item" data-name="${esc(u.name)}">
         <div><b>${esc(u.name)}</b> <span class="pill ${u.role === 'admin' ? 'pill-active' : 'pill-sub'}">${u.role === 'admin' ? '運営' : '出品者'}</span>${u.name === state.user ? ' <small>（あなた）</small>' : ''}
+          ${!u.hasPassword ? ` <span class="pill pill-review">${u.setupPending ? `パスワード未設定（リンク ${esc(fmtTime(u.setupExpiresAt))} まで）` : 'パスワード未設定（リンクの期限切れ）'}</span>` : ''}
           <p class="hint">${u.role === 'admin' ? 'すべてのイベント' : u.events.length ? `担当：${u.events.map((id) => esc(title(id))).join('、')}` : '<span class="warn">担当のイベントがありません</span>'}</p></div>
         <div class="acc-item-actions">
           <button class="btn btn-small" data-edit type="button">変更</button>
+          <button class="btn btn-small" data-link type="button" title="パスワードを忘れたときも、これで再設定できます">${u.hasPassword ? 'パスワード再設定リンク' : 'リンクを発行し直す'}</button>
           <button class="btn btn-small btn-ghost btn-danger" data-del type="button" ${u.name === state.user ? 'disabled title="自分のアカウントは削除できません"' : ''}>削除</button>
         </div>
       </li>`).join('');
@@ -1437,8 +1450,6 @@ $('#accList').addEventListener('click', async (e) => {
     const f = $('#accForm');
     f.name.value = u.name;
     f.name.readOnly = true;
-    f.password.value = '';
-    f.password.placeholder = '変えるときだけ入力（10文字以上）';
     f.role.value = u.role;
     accEventChecks(u.events);
     syncAccRole();
@@ -1446,6 +1457,15 @@ $('#accList').addEventListener('click', async (e) => {
     $('#accSubmit').textContent = '変更を保存';
     $('#accCancel').hidden = false;
     f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  if (e.target.closest('[data-link]')) {
+    if (u.hasPassword && !confirm(`「${u.name}」のパスワード再設定用リンクを発行します。リンクからパスワードを設定し直すまでは、いまのパスワードでもログインできます。よろしいですか？`)) return;
+    try {
+      const r = await api(`setup-link?name=${encodeURIComponent(u.name)}`, { method: 'POST' });
+      showAccLink(u.name, r.url, r.expiresAt);
+      renderAccounts();
+    } catch (err) { toast(err.message, { error: true }); }
+    return;
   }
   if (e.target.closest('[data-del]')) {
     if (!confirm(`アカウント「${u.name}」を削除します。このアカウントではログインできなくなります。よろしいですか？`)) return;
@@ -1462,11 +1482,11 @@ $('#accForm').addEventListener('submit', async (e) => {
   const f = e.currentTarget;
   const role = f.role.value;
   const events = [...document.querySelectorAll('#accEventList input:checked')].map((x) => x.value);
-  if (!accEditing && f.password.value.length < 10) { toast('パスワードは10文字以上にしてください', { error: true }); f.password.focus(); return; }
   if (role === 'seller' && !events.length && !confirm('担当のイベントが選ばれていません。このまま保存しますか？（ログインしても、何も表示されません）')) return;
   try {
-    await api('users', { method: 'POST', body: { name: f.name.value.trim(), password: f.password.value || undefined, role, events } });
-    toast(accEditing ? 'アカウントを変更しました' : 'アカウントを追加しました。ID とパスワードをご本人にお伝えください');
+    const r = await api('users', { method: 'POST', body: { name: f.name.value.trim(), role, events } });
+    toast(accEditing ? 'アカウントを変更しました' : 'アカウントを追加しました。パスワード設定用のリンクをご本人に送ってください');
+    if (r.url) showAccLink(r.user.name, r.url, r.expiresAt);
     resetAccForm();
     renderAccounts();
   } catch (err) { toast(err.message, { error: true }); }
@@ -1672,7 +1692,60 @@ window.addEventListener('beforeunload', (e) => {
   if (state.dirtyLocal || state.saving) { e.preventDefault(); e.returnValue = ''; }
 });
 
-start();
+/* ---------- パスワードの設定（運営が発行したリンク #/setup/TOKEN） ---------- */
+async function showSetup(token) {
+  $('#app').hidden = true;
+  $('#login').hidden = true;
+  $('#setup').hidden = false;
+  try {
+    const r = await fetch(`/admin/api/setup?token=${encodeURIComponent(token)}`, { headers: { 'x-haneul-admin': '1' } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'このリンクは使えません');
+    $('#setupId').textContent = `ID：${j.name}`;
+    $('#setupForm [name=password]').focus();
+  } catch (e) {
+    $('#setupId').textContent = '';
+    $('#setupError').textContent = e.message;
+    $('#setupForm button').disabled = true;
+  }
+  $('#setupForm').onsubmit = async (ev) => {
+    ev.preventDefault();
+    const f = ev.currentTarget.elements;
+    $('#setupError').textContent = '';
+    if (f.password.value.length < 10) { $('#setupError').textContent = 'パスワードは10文字以上にしてください'; return; }
+    if (f.password.value !== f.again.value) { $('#setupError').textContent = '2つのパスワードが一致しません'; return; }
+    try {
+      await api('setup', { method: 'POST', body: { token, password: f.password.value } });
+      history.replaceState(null, '', '/admin/#/');
+      $('#setup').hidden = true;
+      toast('パスワードを設定しました');
+      start();
+    } catch (e) { $('#setupError').textContent = e.message; }
+  };
+}
+
+/* ---------- パスワード変更（自分） ---------- */
+$('#pwBtn').addEventListener('click', () => { $('#pwForm').reset(); $('#pwError').textContent = ''; $('#pwDialog').showModal(); });
+$('#pwCancel').addEventListener('click', () => $('#pwDialog').close());
+$('#pwForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const f = ev.currentTarget.elements;
+  $('#pwError').textContent = '';
+  if (f.password.value.length < 10) { $('#pwError').textContent = '新しいパスワードは10文字以上にしてください'; return; }
+  if (f.password.value !== f.again.value) { $('#pwError').textContent = '新しいパスワードが一致しません'; return; }
+  try {
+    await api('password', { method: 'POST', body: { current: f.current.value, password: f.password.value } });
+    $('#pwDialog').close();
+    toast('パスワードを変更しました');
+  } catch (e) { $('#pwError').textContent = e.message; }
+});
+
+{
+  const setupToken = () => /^#\/setup\/([\w-]+)$/.exec(location.hash)?.[1];
+  // ページを開いたまま、リンクを貼り付けて開いたときも
+  window.addEventListener('hashchange', () => { const t = setupToken(); if (t) showSetup(t); });
+  if (setupToken()) showSetup(setupToken()); else start();
+}
 
 /* 上の帯（保存・公開ボタン）の高さを CSS に知らせて、タブをそのすぐ下に固定する（狭い画面では帯が折り返して高くなる） */
 (() => {

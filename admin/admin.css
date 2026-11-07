@@ -467,3 +467,17 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .sub-flags { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-weight: 700; font-size: .85rem; }
 .sub-flags .check { display: inline-flex; gap: 6px; align-items: center; font-weight: 500; }
 .sub-grid .need, .sub-images .need { justify-self: start; }
+
+/* パスワード設定用リンク・パスワード変更 */
+.setup-id { margin: 0; font-weight: 700; }
+.acc-link { background: #fff7e3; border: 1.5px solid #f3d58a; border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; display: grid; gap: 8px; }
+.acc-link[hidden] { display: none; }
+.acc-link p { margin: 0; }
+.acc-link-row { display: flex; gap: 8px; }
+.acc-link-row input { flex: 1; min-width: 0; padding: .5em .7em; border: 1.5px solid var(--line); border-radius: 8px; font: inherit; font-size: .85rem; background: var(--surface); color: inherit; }
+.pw-dialog { border: 0; border-radius: 18px; padding: 22px; width: min(420px, calc(100vw - 32px)); box-shadow: 0 20px 60px rgba(0, 0, 0, .25); }
+.pw-dialog::backdrop { background: rgba(30, 26, 45, .45); }
+.pw-dialog form { display: grid; gap: 12px; }
+.pw-dialog h2 { margin: 0; font-size: 1.1rem; }
+.pw-dialog label { display: grid; gap: 4px; font-weight: 700; font-size: .85rem; }
+.pw-dialog input { padding: .55em .75em; border: 1.5px solid var(--line); border-radius: 8px; font: inherit; }
