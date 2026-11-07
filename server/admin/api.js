@@ -17,7 +17,11 @@
  * 出品者まわり（運営 admin と 出品者 seller。出品者は担当のイベントだけ。server/admin/seller.js）
  *   POST /admin/api/review?event=ID      出品者：運営に「サイトへの反映」の確認を依頼 { note }
  *   GET  /admin/api/users                運営：アカウントの一覧
- *   POST /admin/api/users                運営：アカウントを作る・変える { name, password?, role, events }
+ *   POST /admin/api/users                運営：アカウントを作る・変える { name, role, events }（新しいアカウントには、パスワード設定用のリンクを発行して返す）
+ *   POST /admin/api/setup-link?name=NAME 運営：パスワード設定（再設定）用のリンクを発行
+ *   GET  /admin/api/setup?token=TOKEN    パスワード設定用のリンクの確認（ログイン不要）→ { name }
+ *   POST /admin/api/setup                リンクからパスワードを決める（ログイン不要）{ token, password } → ログイン
+ *   POST /admin/api/password             自分のパスワードを変える { current, password }
  *   DELETE /admin/api/users?name=NAME    運営：アカウントを削除
  *   GET  /admin/api/orders?event=ID      このイベントの商品が入った注文（Shopify）
  *   POST /admin/api/product-tags         運営：商品の NEW・会場限定（Shopify のタグ new / limited）{ handle, isNew?, limited? }
@@ -138,6 +142,21 @@ async function handle(req, res, urlPath) {
       auth.loginSucceeded(ip);
       return json(res, 200, { user }, { 'set-cookie': auth.sessionCookie(user, req) });
     }
+    // パスワード設定用のリンク（ログイン前）
+    if (route === 'setup' && req.method === 'GET') {
+      const u = auth.findSetup(new URL(req.url, 'http://x').searchParams.get('token'));
+      return u ? json(res, 200, { name: u.name }) : json(res, 404, { error: 'このリンクは使えません（有効期限切れ、または設定済み）。運営に新しいリンクの発行を依頼してください' });
+    }
+    if (route === 'setup' && req.method === 'POST') {
+      if (!loginAllowedOrTell(res, ip)) return true;
+      const { token, password } = await readJson(req);
+      if (typeof password !== 'string' || password.length < 10 || password.length > 200) throw new InputError('パスワードは10文字以上にしてください');
+      const name = auth.completeSetup(token, password);
+      if (!name) { auth.loginFailed(ip); return json(res, 404, { error: 'このリンクは使えません（有効期限切れ、または設定済み）。運営に新しいリンクの発行を依頼してください' }); }
+      auth.loginSucceeded(ip);
+      console.log(`[admin] ${name} がパスワードを設定しました`);
+      return json(res, 200, { user: name }, { 'set-cookie': auth.sessionCookie(name, req) });
+    }
     if (route === 'logout' && req.method === 'POST') {
       return json(res, 200, { ok: true }, { 'set-cookie': auth.clearCookie() });
     }
@@ -152,7 +171,7 @@ async function handle(req, res, urlPath) {
     const id = q.get('event') || '';
     // 出品者は担当のイベントだけ。運営だけができる操作は断る
     const own = (eventId) => isAdmin || me.events.includes(eventId);
-    const SELLER_ROUTES = new Set(['events:GET', 'state:GET', 'draft:PUT', 'preview:GET', 'upload:POST', 'products:GET', 'collections:GET',
+    const SELLER_ROUTES = new Set(['password:POST', 'events:GET', 'state:GET', 'draft:PUT', 'preview:GET', 'upload:POST', 'products:GET', 'collections:GET',
       'review:POST', 'orders:GET', 'submissions:GET', 'submissions:POST', 'submissions:PUT', 'submissions:DELETE', 'submission-image:GET', 'submission-image:POST', 'discard:POST']);
     if (!isAdmin) {
       if (!SELLER_ROUTES.has(`${route}:${req.method}`)) return json(res, 403, { error: 'この操作は運営のアカウントでのみできます' });
@@ -241,21 +260,42 @@ async function handle(req, res, urlPath) {
       contact.notify(`「${title}」の反映の確認依頼`, `${user} さんから、イベント「${title}」をサイトに反映する確認の依頼がありました。\n\n${r.note ? `メッセージ：\n${r.note}\n\n` : ''}管理画面でイベントを開き、内容を確認して「サイトに反映する」を押してください。`);
       return json(res, 200, { review: r });
     }
+    if (route === 'password' && req.method === 'POST') {
+      const { current, password } = await readJson(req);
+      if (!loginAllowedOrTell(res, ip)) return true;
+      if (!auth.verify(user, current)) { auth.loginFailed(ip); return json(res, 400, { error: 'いまのパスワードが違います' }); }
+      if (typeof password !== 'string' || password.length < 10 || password.length > 200) throw new InputError('新しいパスワードは10文字以上にしてください');
+      auth.setUser(user, password, {});
+      console.log(`[admin] ${user} がパスワードを変更しました`);
+      return json(res, 200, { ok: true });
+    }
+    const setupUrl = (token) => {
+      const proto = req.headers['x-forwarded-proto'] || (req.socket.encrypted ? 'https' : 'http');
+      return `${proto}://${req.headers.host}/admin/#/setup/${token}`;
+    };
+    if (route === 'setup-link' && req.method === 'POST') {
+      const name = q.get('name') || '';
+      const r = auth.issueSetup(name);
+      if (!r) return json(res, 404, { error: 'アカウントが見つかりません' });
+      console.log(`[admin] ${user} が ${name} のパスワード設定用リンクを発行しました`);
+      return json(res, 200, { url: setupUrl(r.token), expiresAt: r.expiresAt, user: auth.getUser(name) });
+    }
     if (route === 'users') {
       if (req.method === 'GET') return json(res, 200, { users: auth.listUsers() });
       if (req.method === 'POST') {
-        const { name, password, role, events } = await readJson(req);
+        const { name, role, events } = await readJson(req);
+        const password = null; // パスワードはご本人がリンクから決める
         if (typeof name !== 'string' || !/^[\w.@-]{2,40}$/.test(name)) throw new InputError('ID は半角英数字・. @ - _ の2〜40文字');
         const exists = !!auth.getUser(name);
-        if (!exists && !password) throw new InputError('パスワードを入れてください');
-        if (password && (typeof password !== 'string' || password.length < 10 || password.length > 200)) throw new InputError('パスワードは10文字以上');
         if (!auth.ROLES.includes(role)) throw new InputError('権限');
         if (name === user && role !== 'admin') throw new InputError('自分のアカウントを出品者にはできません');
         const ids = new Set((await store.listEvents()).map((x) => x.id));
         const evs = Array.isArray(events) ? events.filter((x) => ids.has(x)) : [];
-        auth.setUser(name, password || null, { role, events: evs });
+        auth.setUser(name, password, { role, events: evs });
         console.log(`[admin] ${user} がアカウント ${name} を${exists ? '変更' : '作成'}しました（${role}）`);
-        return json(res, 200, { user: auth.getUser(name) });
+        // 新しいアカウントには、パスワード設定用のリンクを発行する
+        const link = exists ? null : auth.issueSetup(name);
+        return json(res, 200, { user: auth.getUser(name), ...(link ? { url: setupUrl(link.token), expiresAt: link.expiresAt } : {}) });
       }
       if (req.method === 'DELETE') {
         const name = q.get('name') || '';

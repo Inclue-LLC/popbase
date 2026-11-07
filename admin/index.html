@@ -27,6 +27,19 @@
     </form>
   </main>
 
+  <!-- パスワードの設定（運営が発行したリンク #/setup/TOKEN から） -->
+  <main class="login" id="setup" hidden>
+    <form class="login-card" id="setupForm">
+      <p class="login-brand"><img src="/images/popbase-mark.svg" alt="" width="34" height="36">POP BASE</p>
+      <h1>パスワードの設定</h1>
+      <p class="setup-id" id="setupId"></p>
+      <label>新しいパスワード（10文字以上）<input name="password" type="password" autocomplete="new-password" minlength="10" required></label>
+      <label>もう一度<input name="again" type="password" autocomplete="new-password" minlength="10" required></label>
+      <p class="form-error" id="setupError" role="alert"></p>
+      <button class="btn btn-primary" type="submit">設定してログイン</button>
+    </form>
+  </main>
+
   <!-- 管理画面 -->
   <div class="app" id="app" hidden>
     <header class="topbar">
@@ -41,6 +54,7 @@
         <a class="btn" id="previewLink" href="/?preview=draft" target="_blank" rel="noopener" title="下書きの内容で実際のサイトを開く">サイトで確認</a>
         <button class="btn btn-primary" id="publishBtn" disabled>サイトに反映する</button>
         <a class="btn btn-ghost" id="accountsBtn" href="#/accounts" hidden>アカウント</a>
+        <button class="btn btn-ghost" id="pwBtn" type="button">パスワード変更</button>
         <span class="user" id="userName"></span>
         <button class="btn btn-ghost" id="logoutBtn">ログアウト</button>
       </div>
@@ -73,17 +87,21 @@
         <h2 id="accFormTitle">アカウントを追加</h2>
         <div class="acc-grid">
           <label>ID（ログイン名）<input name="name" required pattern="[\w.@\-]{2,40}" maxlength="40" placeholder="半角英数字（例: hanako-shop）"></label>
-          <label>パスワード<input name="password" type="password" minlength="10" maxlength="200" autocomplete="new-password" placeholder="10文字以上"></label>
           <label>権限
             <select name="role"><option value="seller">出品者</option><option value="admin">運営</option></select></label>
         </div>
         <fieldset class="acc-events" id="accEvents"><legend>担当のイベント（出品者のみ）</legend><div id="accEventList"></div></fieldset>
-        <p class="hint" id="accHint">パスワードは、ご本人に別の方法（電話・メッセージなど）でお伝えください。</p>
+        <p class="hint" id="accHint">追加すると、パスワード設定用のリンクを発行します。リンクをご本人に送ってください（7日間有効・1回限り）。ご本人がリンクを開いて、パスワードを決めます。</p>
         <div class="acc-actions">
           <button class="btn btn-primary" type="submit" id="accSubmit">追加する</button>
           <button class="btn btn-ghost" type="button" id="accCancel" hidden>やめる</button>
         </div>
       </form>
+      <div class="acc-link" id="accLink" hidden>
+        <p><b id="accLinkTitle"></b></p>
+        <div class="acc-link-row"><input id="accLinkUrl" readonly><button class="btn btn-primary btn-small" id="accLinkCopy" type="button">コピー</button></div>
+        <p class="hint" id="accLinkNote"></p>
+      </div>
       <ul class="acc-list" id="accList"></ul>
     </section>
 
@@ -269,6 +287,18 @@
       </section>
     </div>
   </div>
+
+  <!-- パスワード変更 -->
+  <dialog class="pw-dialog" id="pwDialog">
+    <form id="pwForm" method="dialog">
+      <h2>パスワード変更</h2>
+      <label>いまのパスワード<input name="current" type="password" autocomplete="current-password" required></label>
+      <label>新しいパスワード（10文字以上）<input name="password" type="password" autocomplete="new-password" minlength="10" required></label>
+      <label>もう一度<input name="again" type="password" autocomplete="new-password" minlength="10" required></label>
+      <p class="form-error" id="pwError" role="alert"></p>
+      <div class="acc-actions"><button class="btn btn-primary" type="submit" value="ok">変更する</button><button class="btn btn-ghost" type="button" id="pwCancel">やめる</button></div>
+    </form>
+  </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

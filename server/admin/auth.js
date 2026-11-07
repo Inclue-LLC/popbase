@@ -48,14 +48,53 @@ function setUser(name, password, { role, events } = {}) {
     role: ROLES.includes(role) ? role : roleOf(old),
     events: Array.isArray(events) ? [...new Set(events.map(String))] : (old?.events || []),
     createdAt: old?.createdAt || new Date().toISOString(),
+    // パスワード設定用のリンク（パスワードを設定したら消す）
+    ...(!password && old?.setupHash ? { setupHash: old.setupHash, setupExp: old.setupExp } : {}),
   };
-  if (!next.hash) throw new Error('password');
   writeUsers([...users.filter((u) => u.name !== name), next]);
+}
+
+/*
+ * パスワード設定用のリンク：運営がアカウントを作ると発行し、ご本人がリンクを開いて自分でパスワードを決める
+ * （パスワードを忘れたときの再設定にも使う）。リンクの合言葉そのものは保存せず、ハッシュだけ保存する。7日間有効・1回限り
+ */
+const SETUP_DAYS = 7;
+const sha = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');
+function issueSetup(name) {
+  const users = readUsers();
+  const u = users.find((x) => x.name === name);
+  if (!u) return null;
+  const token = crypto.randomBytes(24).toString('base64url');
+  u.setupHash = sha(token);
+  u.setupExp = Date.now() + SETUP_DAYS * 86400e3;
+  writeUsers(users);
+  return { token, expiresAt: new Date(u.setupExp).toISOString() };
+}
+function findSetup(token) {
+  if (typeof token !== 'string' || token.length < 20 || token.length > 100) return null;
+  const h = sha(token);
+  const u = readUsers().find((x) => x.setupHash && x.setupHash.length === h.length && crypto.timingSafeEqual(Buffer.from(x.setupHash), Buffer.from(h)));
+  return u && u.setupExp > Date.now() ? u : null;
+}
+/** リンクからパスワードを決める（成功したらアカウント名を返す） */
+function completeSetup(token, password) {
+  const u = findSetup(token);
+  if (!u) return null;
+  const users = readUsers();
+  const x = users.find((y) => y.name === u.name);
+  Object.assign(x, hashPassword(password));
+  delete x.setupHash;
+  delete x.setupExp;
+  writeUsers(users);
+  return x.name;
 }
 /** 画面に出す用（パスワードのハッシュは出さない） */
 function getUser(name) {
   const u = readUsers().find((x) => x.name === name);
-  return u ? { name: u.name, role: roleOf(u), events: u.events || [], createdAt: u.createdAt || null } : null;
+  return u ? {
+    name: u.name, role: roleOf(u), events: u.events || [], createdAt: u.createdAt || null,
+    hasPassword: !!u.hash, setupPending: !!(u.setupHash && u.setupExp > Date.now()), setupExpiresAt: u.setupExp ? new Date(u.setupExp).toISOString() : null,
+  } : null;
 }
 const listUsers = () => readUsers().map((u) => getUser(u.name));
 function deleteUser(name) {
@@ -69,7 +108,7 @@ function verify(name, password) {
   const u = readUsers().find((x) => x.name === name);
   // ユーザーがいなくても同じだけ時間をかける（存在の推測を防ぐ）
   const { hash } = hashPassword(String(password || ''), u?.salt || 'x'.repeat(32));
-  if (!u) return false;
+  if (!u || !u.hash) return false; // パスワード未設定（リンクから設定する前）はログインできない
   return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(u.hash, 'hex'));
 }
 
@@ -120,6 +159,6 @@ function loginFailed(ip) {
 function loginSucceeded(ip) { attempts.delete(ip); }
 
 module.exports = {
-  DATA_DIR, ROLES, readUsers, setUser, getUser, listUsers, deleteUser, verify, sessionCookie, clearCookie, currentUser,
+  DATA_DIR, ROLES, readUsers, setUser, getUser, listUsers, deleteUser, verify, issueSetup, findSetup, completeSetup, sessionCookie, clearCookie, currentUser,
   loginAllowed, loginFailed, loginSucceeded,
 };
