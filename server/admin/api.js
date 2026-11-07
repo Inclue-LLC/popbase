@@ -134,7 +134,10 @@ async function handle(req, res, urlPath) {
   try {
     if (route === 'login' && req.method === 'POST') {
       if (!loginAllowedOrTell(res, ip)) return true;
-      const { user, password } = await readJson(req);
+      const body = await readJson(req);
+      // メールアドレスの ID は大文字・小文字を区別しない（保存は小文字）
+      const user = typeof body.user === 'string' ? (body.user.includes('@') ? body.user.trim().toLowerCase() : body.user.trim()) : null;
+      const { password } = body;
       if (typeof user !== 'string' || !auth.verify(user, password)) {
         auth.loginFailed(ip);
         return json(res, 401, { error: 'IDまたはパスワードが違います' });
@@ -286,10 +289,21 @@ async function handle(req, res, urlPath) {
     if (route === 'users') {
       if (req.method === 'GET') return json(res, 200, { users: auth.listUsers() });
       if (req.method === 'POST') {
-        const { name, role, events } = await readJson(req);
+        const body = await readJson(req);
+        const { role, events } = body;
         const password = null; // パスワードはご本人がリンクから決める
-        if (typeof name !== 'string' || !/^[\w.@-]{2,40}$/.test(name)) throw new InputError('ID は半角英数字・. @ - _ の2〜40文字');
+        let name = typeof body.name === 'string' ? body.name.trim() : '';
+        const isEmail = /^[^\s@<>()",;:]+@[^\s@<>()",;:]+\.[^\s@<>()",;:]+$/.test(name) && name.length <= 254;
+        if (isEmail) name = name.toLowerCase(); // メールアドレスの ID は小文字で保存
         const exists = !!auth.getUser(name);
+        // 「変更」から送られたときだけ、あるアカウントを書き換える（「追加」で同じ ID を入れたら断る）
+        if (exists && body.edit !== true) throw new InputError('この ID はもう使われています');
+        if (!exists && body.edit === true) return json(res, 404, { error: 'アカウントが見つかりません' });
+        // 新しく作るとき：出品者の ID はメールアドレス。運営は、メールアドレスか半角英数字
+        if (!exists) {
+          if (role === 'seller' && !isEmail) throw new InputError('出品者の ID はメールアドレスにしてください');
+          if (!isEmail && !/^[\w.@-]{2,40}$/.test(name)) throw new InputError('ID はメールアドレス、または半角英数字・. @ - _ の2〜40文字');
+        }
         if (!auth.ROLES.includes(role)) throw new InputError('権限');
         if (name === user && role !== 'admin') throw new InputError('自分のアカウントを出品者にはできません');
         const ids = new Set((await store.listEvents()).map((x) => x.id));

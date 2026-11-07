@@ -17,7 +17,7 @@
     <form class="login-card" id="loginForm">
       <p class="login-brand"><img src="/images/popbase-mark.svg" alt="" width="34" height="36">POP BASE</p>
       <h1>店内管理</h1>
-      <label>ID<input name="user" autocomplete="username" required></label>
+      <label>ID・メールアドレス<input name="user" autocomplete="username" required></label>
       <label>パスワード<input name="password" type="password" autocomplete="current-password" required></label>
       <p class="form-error" id="loginError" role="alert"></p>
       <button class="btn btn-primary" type="submit">ログイン</button>
@@ -86,7 +86,7 @@
       <form class="acc-form" id="accForm" autocomplete="off">
         <h2 id="accFormTitle">アカウントを追加</h2>
         <div class="acc-grid">
-          <label>ID（ログイン名）<input name="name" required pattern="[\w.@\-]{2,40}" maxlength="40" placeholder="半角英数字（例: hanako-shop）"></label>
+          <label><span id="accNameLabel">メールアドレス（ID）</span><input name="name" required maxlength="254" autocomplete="off" placeholder="例: shop@example.com"></label>
           <label>権限
             <select name="role"><option value="seller">出品者</option><option value="admin">運営</option></select></label>
         </div>
