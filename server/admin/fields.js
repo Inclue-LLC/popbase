@@ -53,6 +53,8 @@ function missingRequired(event = {}) {
   if (event.novelty === 'on' && blank(event.novelty_threshold)) miss.push('特典の条件金額');
   if (blank(event.shipping_text)) miss.push('送料');
   if (blank(event.shipping_note)) miss.push('発送について');
+  if (blank(event.payment_text)) miss.push('お支払い方法');
+  if (blank(event.return_text)) miss.push('返品・交換・キャンセルについて');
   return miss;
 }
 
