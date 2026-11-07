@@ -22,7 +22,7 @@ const CATEGORIES = {
   shop: '出店について',
   other: 'その他',
 };
-const LIMITS = { name: 60, email: 254, order: 40, company: 80, message: 2000 };
+const LIMITS = { name: 60, email: 254, order: 40, company: 80, links: 300, message: 2000 };
 const PER_IP = 5;
 const TOTAL = 100;
 const HOUR = 3600e3;
@@ -75,6 +75,7 @@ function validate(body) {
     email: oneLine(b.email, LIMITS.email),
     order: oneLine(b.order, LIMITS.order),
     company: oneLine(b.company, LIMITS.company),
+    links: oneLine(b.links, LIMITS.links), // クリエイター向けの出品案内（creators.html）の「作品が見られるURL」
     message: multiLine(b.message, LIMITS.message),
     agree: b.agree === true,
   };
@@ -98,6 +99,7 @@ function mailText(f) {
     `メールアドレス：${f.email}`,
     ...(f.category === 'product' && f.order ? [`ご注文番号：${f.order}`] : []),
     ...(f.category === 'shop' && f.company ? [`会社名・ブランド名：${f.company}`] : []),
+    ...(f.category === 'shop' && f.links ? [`作品が見られるURL：${f.links}`] : []),
     `送信日時：${at}`,
     '',
     '―――― お問い合わせ内容 ――――',
