@@ -332,6 +332,23 @@ export function tagTexture(name, price, { soldOut = false } = {}) {
   return toTexture(c);
 }
 
+/**
+ * 画像の下にある透明な余白の高さ（px）。うっすらした影（ほぼ透明）は余白とみなす。
+ * 背景が透明でない写真や、読み取れない画像（別のサイトの画像で許可がない）は 0
+ */
+function bottomGap(img, w, h, S) {
+  try {
+    const c = makeCanvas(S, S);
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(img, (S - w) / 2, S - h, w, h);
+    const data = g.getImageData(0, 0, S, S).data;
+    for (let y = S - 1; y >= 0; y--) {
+      for (let x = 0; x < S; x += 2) if (data[(y * S + x) * 4 + 3] > 40) return S - 1 - y;
+    }
+  } catch { /* noop */ }
+  return 0;
+}
+
 /** 商品画像（Shopify の写真 or 見本の SVG イラスト）→ [テクスチャ, 縦横比] */
 export async function productTexture(p) {
   const S = 512;
@@ -341,11 +358,13 @@ export async function productTexture(p) {
   if (p.image) img = await loadImage(p.image);
   else img = await svgImage(window.Art.productSVG(p), S, S);
   let aspect = 1;
+  let drop = 0; // 画像の下の透明な余白の分だけ下げる（棚の板・テーブルの上にぴったり置く）
   if (img) {
     aspect = img.width / img.height || 1;
     const w = aspect >= 1 ? S : S * aspect;
     const h = aspect >= 1 ? S / aspect : S;
-    ctx.drawImage(img, (S - w) / 2, S - h, w, h);
+    drop = bottomGap(img, w, h, S);
+    ctx.drawImage(img, (S - w) / 2, S - h + drop, w, h);
   }
   if (p.stock === 0) {
     ctx.globalCompositeOperation = 'saturation';
@@ -356,7 +375,7 @@ export async function productTexture(p) {
       ctx.globalCompositeOperation = 'destination-in';
       const w = aspect >= 1 ? S : S * aspect;
       const h = aspect >= 1 ? S / aspect : S;
-      ctx.drawImage(img, (S - w) / 2, S - h, w, h);
+      ctx.drawImage(img, (S - w) / 2, S - h + drop, w, h);
     }
     ctx.globalCompositeOperation = 'source-over';
   }
