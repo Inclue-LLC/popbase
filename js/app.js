@@ -191,7 +191,7 @@ window.AppReady = (async function () {
     // 送料の文は管理画面で入力（未入力のとき＝お試し表示だけ、初期の送料から作る）
     const free = SHOP.freeShippingThreshold > 0;
     $('#shippingInfo').textContent = SHOP.shippingText || (!SHOP.shippingFee ? '送料無料。'
-      : `全国一律 ${yen(SHOP.shippingFee)}。${free ? `${yen(SHOP.freeShippingThreshold)} 以上で送料無料。` : ''}`);
+      : `全国一律 ${yen(SHOP.shippingFee)}${free ? `。${yen(SHOP.freeShippingThreshold)} 以上で送料無料。` : ''}`);
     $('#shippingNote').textContent = SHOP.shippingNote || '';
     $('#shippingNote').closest('.info-card').hidden = !SHOP.shippingNote;
     $('#paymentInfo').textContent = SHOP.paymentText || '';
