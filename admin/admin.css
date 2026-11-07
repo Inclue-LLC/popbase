@@ -370,13 +370,3 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
   .eventbar .btn-small { padding: .3em .8em; }
 }
 
-/* 会期が重なったときの案内（入力欄のすぐ下） */
-.overlap-alert { margin: 4px 0 14px; padding: 14px 16px; border-radius: 12px; border: 1.5px solid #c0392b;
-  background: color-mix(in srgb, #c0392b 7%, var(--surface)); color: var(--ink); font-size: .88rem; line-height: 1.7; }
-.overlap-alert p { margin: 0 0 6px; }
-.overlap-alert .oa-title { font-weight: 800; color: #c0392b; font-size: .95rem; }
-.overlap-alert dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 8px 0; padding: 8px 12px; border-radius: 8px; background: var(--surface); }
-.overlap-alert dt { color: var(--ink-soft); }
-.overlap-alert dd { margin: 0; }
-.overlap-alert .oa-fix { font-weight: 700; }
-.overlap-alert .btn { margin-top: 4px; }
