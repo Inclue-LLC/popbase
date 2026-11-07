@@ -1485,7 +1485,7 @@ function renderSubmissions() {
   $('#subZipPending').hidden = isSeller() || !list.some((x) => x.status === 'pending');
   $('#subList').innerHTML = list.length ? list.map((x) => `
     <li class="sub-item is-${x.status}" data-id="${esc(x.id)}">
-      <div class="sub-pics">${x.images.map((f, i) => `<a href="${subImg(f, { download: !isSeller() })}" ${isSeller() ? 'target="_blank" rel="noopener"' : 'download'} title="${isSeller() ? '画像を開く' : 'この画像をダウンロード'}"><img src="${subImg(f)}" alt="" loading="lazy">${i === 0 ? '<span>棚</span>' : ''}</a>`).join('')}</div>
+      <div class="sub-pics">${x.images.map((f, i) => `<a href="${subImg(f, { download: !isSeller() })}" ${isSeller() ? 'target="_blank" rel="noopener"' : 'download'} title="${isSeller() ? '画像を開く' : 'この画像をダウンロード'}"><img src="${subImg(f)}" alt="" loading="lazy"></a>`).join('')}</div>
       <div class="sub-info">
         <p class="sub-head"><span class="pill sub-st-${x.status}">${esc(SUB.status[x.status] || x.status)}</span> <b>${esc(x.name)}</b></p>
         <p class="sub-meta">${yen(x.price)}（税込）　在庫 ${x.stock}　大きさ ${esc(x.size)}${x.limit ? `　お一人様 ${x.limit} 点まで` : ''}</p>
@@ -1522,8 +1522,8 @@ function openSubForm(item = null) {
   f.elements.name.focus({ preventScroll: true });
 }
 function renderSubThumbs() {
-  $('#subThumbs').innerHTML = SUB.images.map((f, i) => `<li><img src="${subImg(f)}" alt="">${i === 0 ? '<span>棚</span>' : ''}<button type="button" data-rm="${i}" aria-label="この画像を外す">×</button></li>`).join('');
-  $('#subAddImage').hidden = SUB.images.length >= 5;
+  $('#subThumbs').innerHTML = SUB.images.map((f, i) => `<li><img src="${subImg(f)}" alt=""><button type="button" data-rm="${i}" aria-label="この画像を外す">×</button></li>`).join('');
+  $('#subAddImage').hidden = SUB.images.length >= 1; // 商品の画像は1枚（商品の詳細も1枚だけ表示）
 }
 $('#subNewBtn').addEventListener('click', () => openSubForm());
 $('#subCancel').addEventListener('click', () => { $('#subForm').hidden = true; });
@@ -1534,7 +1534,7 @@ $('#subThumbs').addEventListener('click', (e) => {
   renderSubThumbs();
 });
 $('#subImageInput').addEventListener('change', async (e) => {
-  const files = [...e.target.files].slice(0, 5 - SUB.images.length);
+  const files = [...e.target.files].slice(0, 1 - SUB.images.length);
   e.target.value = '';
   for (const file of files) {
     if (file.size > 8 * 1024 * 1024) { toast(`「${file.name}」は 8MB を超えています`, { error: true }); continue; }
