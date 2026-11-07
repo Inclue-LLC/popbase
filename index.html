@@ -45,6 +45,11 @@
         <p class="es-text" id="entStatusText"></p>
       </div>
       <p class="entrance-notice" id="entNotice" hidden></p>
+      <!-- 閉店30分前から：入店前に閉店までの時間を知らせる（入店は止めない） -->
+      <p class="entrance-closing" id="entClosing" hidden role="status">
+        <b>閉店まで あと <span id="entClosingMin">30</span> 分です</b>
+        <small><span>閉店時刻になると自動で退店となり、</span><span>カートは空になります</span></small>
+      </p>
       <!-- お買い物時間が終わったとき -->
       <div class="entrance-ended" id="entEnded" hidden role="status">
         <p class="ee-title" id="entEndedTitle">お買い物時間が終了しました</p>
@@ -68,7 +73,7 @@
         <p class="ew-title">ただいま満員です</p>
         <p class="ew-pos">入店まで あと <b id="ewAhead">0</b> 人</p>
         <p class="ew-est" id="ewEst"></p>
-        <p class="ew-note">このままお待ちください。順番が来ると自動で入店します。<br>混雑中のお買い物時間は、1人 <span class="ew-min">30</span> 分です。</p>
+        <p class="ew-note">このままお待ちください。<br class="ew-br">順番が来ると自動で入店します。<br>混雑中のお買い物時間は、1人 <span class="ew-min">30</span> 分です。</p>
         <p class="ew-small">ページを閉じたり再読み込みしても、<br class="ew-br">30秒以内なら順番はそのままです。</p>
       </div>
 
