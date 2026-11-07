@@ -180,6 +180,50 @@ async function products(collection = COLLECTION) {
   }));
 }
 
+/**
+ * このイベントの商品（コレクション）が入った注文。出品者が発送するために、管理画面の「注文」に出す
+ * Admin API の権限 read_orders と、お客さまの情報（名前・住所・電話・メール）を読む許可が必要
+ * （read_orders で読めるのは直近60日の注文）
+ */
+async function orders(collection, sinceIso) {
+  const pd = await gql(`
+    query P($q: String!) { collections(first: 1, query: $q) { nodes { products(first: 250) { nodes { id } } } } }`, { q: `handle:${collection}` });
+  const ids = new Set((pd.collections.nodes[0]?.products.nodes || []).map((n) => n.id));
+  if (!ids.size) return [];
+  const out = [];
+  let after = null;
+  const q = sinceIso ? `created_at:>=${sinceIso}` : '';
+  for (let page = 0; page < 10; page++) {
+    const data = await gql(`
+      query O($q: String, $after: String) {
+        orders(first: 100, after: $after, query: $q, sortKey: CREATED_AT, reverse: true) {
+          pageInfo { hasNextPage endCursor }
+          nodes {
+            id name createdAt cancelledAt email phone note
+            displayFinancialStatus displayFulfillmentStatus
+            shippingAddress { name zip province city address1 address2 phone company }
+            lineItems(first: 100) { nodes { title variantTitle sku quantity product { id } } }
+          }
+        }
+      }`, { q, after });
+    for (const o of data.orders.nodes) {
+      const items = o.lineItems.nodes.filter((li) => li.product && ids.has(li.product.id));
+      if (!items.length) continue;
+      const a = o.shippingAddress || {};
+      out.push({
+        id: o.id, name: o.name, createdAt: o.createdAt, cancelled: !!o.cancelledAt,
+        financial: o.displayFinancialStatus, fulfillment: o.displayFulfillmentStatus,
+        email: o.email || '', phone: o.phone || a.phone || '', note: o.note || '',
+        ship: { name: a.name || '', company: a.company || '', zip: a.zip || '', province: a.province || '', city: a.city || '', address1: a.address1 || '', address2: a.address2 || '', phone: a.phone || '' },
+        items: items.map((li) => ({ title: li.title, variant: li.variantTitle || '', sku: li.sku || '', quantity: li.quantity })),
+      });
+    }
+    if (!data.orders.pageInfo.hasNextPage) break;
+    after = data.orders.pageInfo.endCursor;
+  }
+  return out;
+}
+
 // 画像の値（{ id: MediaImage の GID, url: Shopify CDN }）
 const imageOk = (v) => v && typeof v === 'object' &&
   /^gid:\/\/shopify\/MediaImage\/\d+$/.test(v.id) && /^https:\/\/cdn\.shopify\.com\//.test(v.url);
@@ -192,6 +236,7 @@ module.exports = {
   label: `Shopify（${DOMAIN}）`,
   enabled: auth.configured,
   defaultCollection: COLLECTION,
+  orders,
 
   /**
    * 規約・ポリシー（Shopify 管理画面「設定 → ポリシー」）。お客さんのサイトのページ下から、POP BASE の中で開く

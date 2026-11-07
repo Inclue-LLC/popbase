@@ -40,6 +40,7 @@
         <button class="btn" id="saveBtn" type="button" title="下書きを保存（変更は自動でも保存されます）。Ctrl+S / ⌘+S でも保存できます">保存</button>
         <a class="btn" id="previewLink" href="/?preview=draft" target="_blank" rel="noopener" title="下書きの内容で実際のサイトを開く">サイトで確認</a>
         <button class="btn btn-primary" id="publishBtn" disabled>サイトに反映する</button>
+        <a class="btn btn-ghost" id="accountsBtn" href="#/accounts" hidden>アカウント</a>
         <span class="user" id="userName"></span>
         <button class="btn btn-ghost" id="logoutBtn">ログアウト</button>
       </div>
@@ -55,6 +56,35 @@
         <button class="btn btn-primary" id="listNewBtn" type="button">＋ 新しいイベント</button>
       </div>
       <div id="eventGroups"></div>
+    </section>
+
+    <!-- アカウント（運営だけ）：運営・出品者のアカウントを作る、担当のイベントを決める -->
+    <section class="accounts" id="accounts" hidden>
+      <div class="el-head">
+        <div>
+          <h1>アカウント</h1>
+          <p>運営は、すべてのイベントとアカウントを扱え、「サイトに反映する」ができます。<br>
+            出品者は、担当のイベントだけ。内装・入口・キャラクター・アバター・商品の配置を編集し、商品の申請と注文の確認ができます。
+            会期・送料・支払いなどの案内は変えられず、サイトへの反映は運営に「確認を依頼」します。</p>
+        </div>
+        <a class="btn btn-ghost" href="#/">← イベント一覧</a>
+      </div>
+      <form class="acc-form" id="accForm" autocomplete="off">
+        <h2 id="accFormTitle">アカウントを追加</h2>
+        <div class="acc-grid">
+          <label>ID（ログイン名）<input name="name" required pattern="[\w.@\-]{2,40}" maxlength="40" placeholder="半角英数字（例: hanako-shop）"></label>
+          <label>パスワード<input name="password" type="password" minlength="10" maxlength="200" autocomplete="new-password" placeholder="10文字以上"></label>
+          <label>権限
+            <select name="role"><option value="seller">出品者</option><option value="admin">運営</option></select></label>
+        </div>
+        <fieldset class="acc-events" id="accEvents"><legend>担当のイベント（出品者のみ）</legend><div id="accEventList"></div></fieldset>
+        <p class="hint" id="accHint">パスワードは、ご本人に別の方法（電話・メッセージなど）でお伝えください。</p>
+        <div class="acc-actions">
+          <button class="btn btn-primary" type="submit" id="accSubmit">追加する</button>
+          <button class="btn btn-ghost" type="button" id="accCancel" hidden>やめる</button>
+        </div>
+      </form>
+      <ul class="acc-list" id="accList"></ul>
     </section>
 
     <!-- 編集中のイベント -->
@@ -75,6 +105,8 @@
       <button class="tab" role="tab" data-tab="entrance" aria-selected="false">入口の画面</button>
       <button class="tab" role="tab" data-tab="characters" aria-selected="false">キャラクター</button>
       <button class="tab" role="tab" data-tab="avatars" aria-selected="false">アバター</button>
+      <button class="tab" role="tab" data-tab="submissions" aria-selected="false">商品の申請 <span class="tab-count" id="subCount" hidden></span></button>
+      <button class="tab" role="tab" data-tab="orders" aria-selected="false">注文</button>
       <button class="tab" role="tab" data-tab="history" aria-selected="false">公開の履歴</button>
     </nav>
 
@@ -142,6 +174,51 @@
             <p class="help">正面を向いた全身または顔の絵で、背景が透明な正方形の PNG（512×512px 程度）がおすすめです。足元が画像の下端に来るようにすると、床にきれいに立ちます。</p>
             <ul class="av-list" id="avList"></ul>
           </section>
+        </div>
+
+        <!-- 商品の申請（出品者が登録 → 運営が画像をダウンロードして Shopify に登録） -->
+        <div class="panel" data-panel="submissions" hidden>
+          <p class="help" id="subHelp"></p>
+          <div class="sub-actions">
+            <button class="btn btn-primary" id="subNewBtn" type="button">＋ 商品を申請する</button>
+            <a class="btn admin-only" id="subZipAll" href="#">画像と一覧をまとめてダウンロード（ZIP）</a>
+            <a class="btn btn-ghost admin-only" id="subZipPending" href="#">申請中だけダウンロード</a>
+          </div>
+          <form class="sub-form" id="subForm" hidden novalidate>
+            <h3 id="subFormTitle">商品を申請する</h3>
+            <div class="sub-grid">
+              <label class="wide">商品名<span class="need need-required">必須</span><input name="name" maxlength="120" required></label>
+              <label>価格（税込・円）<span class="need need-required">必須</span><input name="price" type="number" min="1" step="1" inputmode="numeric" required></label>
+              <label>在庫数<span class="need need-required">必須</span><input name="stock" type="number" min="0" step="1" inputmode="numeric" required></label>
+              <label>棚での大きさ<select name="size"><option value="大">大（ぬいぐるみなど）</option><option value="中" selected>中（マグカップなど）</option><option value="小">小（キーホルダーなど）</option></select></label>
+              <label>お一人様の購入上限<span class="need need-hide">任意</span><input name="limit" type="number" min="1" step="1" inputmode="numeric" placeholder="空欄なら上限なし"></label>
+              <label class="wide">仕様（サイズ・素材など）<span class="need need-hide">任意</span><input name="spec" maxlength="200" placeholder="例：約 W24 × H20cm / ポリエステル"></label>
+              <label class="wide">商品の説明<span class="need need-hide">任意</span><textarea name="description" rows="4" maxlength="2000"></textarea></label>
+            </div>
+            <div class="sub-images">
+              <p class="sub-images-label">商品の画像<span class="need need-required">必須</span> <small>5枚まで。1枚目が店内の棚に並びます（背景を透過した、余白のない PNG がおすすめ）。8MB まで</small></p>
+              <ul class="sub-thumbs" id="subThumbs"></ul>
+              <label class="btn btn-small" id="subAddImage">＋ 画像を選ぶ<input type="file" accept="image/png,image/jpeg,image/webp" multiple hidden id="subImageInput"></label>
+            </div>
+            <p class="form-error" id="subError" role="alert"></p>
+            <div class="sub-form-actions">
+              <button class="btn btn-primary" type="submit" id="subSubmit">申請する</button>
+              <button class="btn btn-ghost" type="button" id="subCancel">やめる</button>
+            </div>
+          </form>
+          <ul class="sub-list" id="subList"></ul>
+        </div>
+
+        <!-- 注文（このイベントの商品が入った注文。出品者が発送するために見る） -->
+        <div class="panel" data-panel="orders" hidden>
+          <p class="help">このイベントの商品が入った注文です（Shopify の注文から、このイベントのコレクションの商品だけを出しています）。
+            お届け先を確認して発送してください。「CSV でダウンロード」で Excel などに取り込めます。</p>
+          <div class="sub-actions">
+            <button class="btn" id="ordersReload" type="button">読み込み直す</button>
+            <button class="btn" id="ordersCsv" type="button" disabled>CSV でダウンロード</button>
+            <label class="check"><input type="checkbox" id="ordersUnfulfilled"> 未発送だけ</label>
+          </div>
+          <div id="ordersBody"></div>
         </div>
 
         <!-- 公開の履歴 -->

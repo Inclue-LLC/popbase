@@ -165,4 +165,13 @@ async function handle(req, res) {
   }
 }
 
-module.exports = { handle, validate, CATEGORIES, configured };
+/** 運営へのお知らせメール（出品者の確認依頼・商品の申請など）。送信設定がなければ何もしない */
+async function notify(subject, text) {
+  if (!configured()) return false;
+  try {
+    await getTransport().sendMail({ from: env('CONTACT_FROM') || env('SMTP_USER'), to: env('CONTACT_TO'), subject: `【POP BASE 管理画面】${subject}`, text });
+    return true;
+  } catch (e) { console.error('[notify] メールを送れませんでした:', e.message); return false; }
+}
+
+module.exports = { handle, validate, CATEGORIES, configured, notify };
