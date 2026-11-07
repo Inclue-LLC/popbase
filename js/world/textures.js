@@ -265,9 +265,11 @@ export function signTexture(lines, sign, wM, hM, { radius = 0.18, full = false }
   ctx.shadowBlur = 0;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const total = lines.reduce((s, l) => s + l.size, 0);
+  // gap：その行の上に空けるすき間（看板の高さに対する割合）
+  const total = lines.reduce((s, l) => s + l.size + (l.gap || 0), 0);
   let y = H / 2 - (total * H) / 2;
   for (const l of lines) {
+    y += (l.gap || 0) * H;
     const fs = l.size * H;
     ctx.font = `${l.weight || 800} ${fs * 0.8}px ${font()}`;
     ctx.fillStyle = l.color || sign.ink;
