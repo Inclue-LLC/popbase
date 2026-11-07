@@ -45,10 +45,17 @@ window.AppReady = (async function () {
 
   /* ---------- 共通テキスト ---------- */
   document.querySelectorAll('[data-bind]').forEach((el) => { el.textContent = SHOP[el.dataset.bind] ?? ''; });
+  // ご案内の開催期間：折り返すときは「開始」と「– 終了」の切れ目で（日付と時刻を分けない）
+  {
+    const el = document.querySelector('#info [data-bind="period"]');
+    const m = /^(.+?)\s*([–〜~])\s*(.+)$/.exec(SHOP.period || '');
+    if (el && m) el.innerHTML = `<span class="nb">${esc(m[1])}</span> <span class="nb">${esc(m[2])} ${esc(m[3])}</span>`;
+  }
   // ブラウザのタブ：お店の名前｜オンラインポップアップショップ（イベントのブランド名は出さない）
   document.title = SHOP.tagline ? `${SHOP.title} | ${SHOP.tagline}` : SHOP.title;
   // 購入特典（管理画面で特典の名前が空欄なら表示しない）
-  if (SHOP.novelty) $('#noveltyInfo').textContent = `税込 ${yen(SHOP.novelty.threshold)} 以上お買い上げで「${SHOP.novelty.name}」をプレゼント。`;
+  // 折り返すときは言葉の切れ目で（「をプレ／ゼント」のように切れないように）
+  if (SHOP.novelty) $('#noveltyInfo').innerHTML = `<span class="nb">税込 ${yen(SHOP.novelty.threshold)} 以上</span><span class="nb">お買い上げで</span><span class="nb">「${esc(SHOP.novelty.name)}」</span><span class="nb">をプレゼント。</span>`;
   else $('#noveltyInfo').closest('.info-card').hidden = true;
   renderShippingInfo();
 
