@@ -33,15 +33,27 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const stats = { inside: 0, waiting: 0, timedOut: 0, left: 0, refused: 0, msgs: 0 };
 const sockets = new Set();
 
+// ボットのアバター：お客さんのアバター選び（js/event.js の applyCast・applyAvatars）と同じ一覧から選ぶ
 async function avatarIds() {
-  const ids = ['haru', 'byeol', 'dalbit', 'gomi'];
+  const ids = ['haru', 'byeol', 'dalbit', 'gomi']; // 自社の4体（何も公開されていないとき）
+  const parse = (v) => { if (typeof v !== 'string') return v; try { return JSON.parse(v); } catch { return null; } };
   try {
-    const pub = await (await fetch(`${BASE}/api/published`)).json();
-    let av = pub.event?.avatars;
-    if (typeof av === 'string') av = JSON.parse(av);
-    const hide = new Set(av?.hide || []);
-    const list = ids.filter((id) => !hide.has(id)).concat((av?.custom || []).map((a) => a.id));
-    return list.length ? list : ids;
+    const ev = (await (await fetch(`${BASE}/api/published`)).json()).event || {};
+    // このイベントのキャラクター（使う設定で、名前のあるものがあれば、それがアバターの元になる）
+    const cast = parse(ev.cast);
+    let base;
+    if (cast && Array.isArray(cast.list)) {
+      const named = cast.use !== false ? cast.list.slice(0, 12).filter((x) => x && x.id && x.name).map((x) => x.id) : [];
+      base = named.length ? named : ids;
+    } else {
+      const over = parse(ev.characters) || {};
+      base = ids.filter((id) => !over[id]?.hidden);
+    }
+    const av = parse(ev.avatars) || {};
+    const hide = new Set(Array.isArray(av.hide) ? av.hide : []);
+    const list = base.filter((id) => !hide.has(id))
+      .concat((Array.isArray(av.custom) ? av.custom : []).filter((a) => a && a.id && a.name && a.image).map((a) => a.id));
+    return list.length ? list : base.slice(0, 1);
   } catch { return ids; }
 }
 
