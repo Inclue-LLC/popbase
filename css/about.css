@@ -24,10 +24,11 @@
 }
 
 /* ---------- できること ---------- */
-.cr-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-.cr-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 22px 24px; box-shadow: var(--shadow); }
+.cr-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.cr-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 18px 22px; box-shadow: var(--shadow); }
 .cr-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: var(--surface-2); font-size: 1.5rem; margin-bottom: 12px; }
-.cr-card h3 { font-size: 1.05rem; margin-bottom: 8px; }
+.cr-card h3 { font-size: 1rem; margin-bottom: 8px; }
+.cr-card h3 span { display: inline-block; } /* 見出しは言葉の切れ目で折り返す */
 .cr-card p { margin: 0; line-height: 1.85; color: var(--ink-soft); font-size: .92rem; }
 
 /* ---------- 流れ ---------- */
