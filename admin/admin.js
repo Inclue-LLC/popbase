@@ -1194,7 +1194,7 @@ function renderAvatars() {
   // キャラクターのアバター：このイベントのキャラクター（いなければ自社の4体）
   const own = !(window.CAST_ENABLED && window.CAST?.length);
   $('#avBuiltinNote').textContent = own
-    ? 'このイベントにはキャラクターが登録されていないため、自社の4体（ハル・ビョル・タルビ・ゴミ）をアバターにしています。'
+    ? 'このイベントにはキャラクターが登録されていないため、初期の4体（モク・キラリ・ルナ・ポム）をアバターにしています。'
     : '「キャラクター」タブで登録したキャラクターを、アバターにしています（自社の4体は出しません）。';
   $('#avBuiltin').innerHTML = E.avatarCharacters().map((c) => {
     const on = !v.hide.includes(c.id);
