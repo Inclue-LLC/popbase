@@ -468,6 +468,10 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .ei-name { margin: .7rem 0 0; font-family: var(--font-latin); font-weight: 600; letter-spacing: .14em; font-size: clamp(1.6rem, 6vw, 2.4rem); color: #2e2729; }
 .ei-tag { margin: .2rem 0 0; font-weight: 700; letter-spacing: .12em; font-size: .82rem; color: #7a7075; }
 .ei-text { margin: 2rem auto 0; max-width: 26em; line-height: 1.9; font-weight: 500; color: #4a4245; }
+.ei-links { margin-top: 2.4rem; }
+.ei-links a { color: #7a7075; font-size: .85rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+/* ポリシー・お問い合わせのポップは、入口の画面より手前に出す */
+#policyModal { z-index: 200; }
 @keyframes idle-float { 50% { transform: translateY(-8px); } }
 @media (prefers-reduced-motion: reduce) { .entrance-idle img { animation: none; } }
 /* イベントがないときは、入口の下のページ（店内・ご案内）も出さない */
