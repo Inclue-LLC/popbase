@@ -304,6 +304,8 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .cf-done { text-align: center; display: grid; gap: 10px; justify-items: center; padding: 12px 0 4px; }
 .cf-done-title { font-weight: 800; font-size: 1.15rem; margin: 0; }
 .cf-done p { margin: 0; line-height: 1.8; }
+/* PC：「ありがとうございます。」のあとで改行（スマホは自然に折り返す） */
+@media (max-width: 680px) { .cf-done .cf-br { display: none; } }
 /* PC：写真（左）と、商品名・値段・説明（右）は 1:1。写真は正方形で固定し、右側だけスクロール */
 .product-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 @media (min-width: 681px) {
