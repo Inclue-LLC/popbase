@@ -421,6 +421,22 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
   max-width: calc(100% - 24px); text-align: center;
 }
 
+/* 見本のお店（/demo）の帯：入口の画面の上にも出す。全画面の店内では出さない */
+.demo-bar {
+  position: fixed; left: 0; right: 0; top: 0; z-index: 400; height: 34px;
+  display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 12px;
+  background: #2e2729; color: #fff; font-size: .8rem; font-weight: 700; white-space: nowrap; overflow: hidden;
+}
+.demo-bar span { overflow: hidden; text-overflow: ellipsis; }
+.demo-bar a { color: #f7c9d8; flex: none; }
+body.is-demo { padding-top: 34px; }
+body.is-demo .site-header { top: 34px; }
+body.is-demo .entrance { top: 34px; }
+body.world-fs .demo-bar { display: none; }
+body.is-demo.world-fs { padding-top: 0; }
+.demo-bar .db-short { display: none; }
+@media (max-width: 560px) { .demo-bar { font-size: .74rem; gap: 10px; } .demo-bar .db-long { display: none; } .demo-bar .db-short { display: inline; } }
+
 /* 画像に差し替えたキャラクター */
 .char-img { display: block; aspect-ratio: 1; object-fit: contain; }
 

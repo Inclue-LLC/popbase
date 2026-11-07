@@ -12,7 +12,7 @@
  */
 (function () {
   const cfg = window.SHOPIFY_CONFIG || {};
-  const enabled = !!(cfg.domain && cfg.storefrontToken);
+  const enabled = !window.DEMO && !!(cfg.domain && cfg.storefrontToken); // 見本のお店（/demo）では使わない
 
   // 置き場所メタフィールドの値（管理画面の選択肢）→ 店内のゾーン
   const ZONES = { '左の棚': 'left', '右の棚': 'right', '中央のテーブル': 'island', 'テーブル': 'island', '限定テーブル': 'island', '置かない': 'none',
