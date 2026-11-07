@@ -6,6 +6,8 @@ window.AppReady = (async function () {
   await window.DataSource.load();
   const { SHOP, CHARACTERS, CATEGORIES, PRODUCTS, Art } = window;
   const shopify = window.ShopifyData?.enabled ? window.ShopifyData : null;
+  // 再読み込みしたときに前のスクロール位置へ戻さない（入店後は、いつもページのいちばん上から）
+  try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch { /* noop */ }
   const $ = (sel, root = document) => root.querySelector(sel);
   const yen = (n) => `¥${n.toLocaleString('ja-JP')}`;
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -171,6 +173,8 @@ window.AppReady = (async function () {
   function hideEntrance({ animate = true } = {}) {
     entrance.classList.remove('is-waiting');
     $('#entWait').hidden = true;
+    // 入店したら（再入店・再読み込みでも）、ページのいちばん上（ヘッダー）から見せる
+    if (!document.body.classList.contains('world-fs')) window.scrollTo(0, 0);
     if (!animate) { entrance.classList.add('is-hidden'); return; }
     entrance.classList.add('open');
     setTimeout(() => { entrance.classList.add('is-hidden'); entrance.classList.remove('open'); }, 1400);
