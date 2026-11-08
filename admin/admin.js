@@ -1647,7 +1647,7 @@ const needsShipping = (o) => !o.cancelled && (o.shipped === undefined ? !['FULFI
 const CARRIER_NAMES = { '': '配送会社（未選択）', yamato: 'ヤマト運輸', sagawa: '佐川急便', japanpost: '日本郵便', other: 'その他' };
 // 支払いの状態：支払い済み（緑）／支払い待ち（オレンジ）／返金・取消など（グレー）
 const PAY_CLASS = { PAID: 'pay-ok', PARTIALLY_REFUNDED: 'pay-ok', PENDING: 'pay-wait', AUTHORIZED: 'pay-wait', PARTIALLY_PAID: 'pay-wait' };
-const payPill = (o) => `<span class="pill ${PAY_CLASS[o.financial] || 'pay-off'}">${PAY_CLASS[o.financial] === 'pay-ok' ? '✓ ' : PAY_CLASS[o.financial] === 'pay-wait' ? '⏳ ' : ''}${esc(FIN[o.financial] || o.financial || '')}</span>`;
+const payPill = (o) => `<span class="st ${PAY_CLASS[o.financial] || 'pay-off'}">${esc(FIN[o.financial] || o.financial || '')}</span>`;
 async function loadOrders() {
   const body = $('#ordersBody');
   body.innerHTML = '<p class="hint">注文を読み込んでいます…</p>';
@@ -1677,13 +1677,13 @@ function renderOrders() {
     <li class="order ${o.cancelled ? 'is-cancelled' : ''}">
       <div class="order-head"><b>${esc(o.name)}</b><span class="hint">${fmtTime(o.createdAt)}</span>
         ${o.cancelled ? '<span class="pill pill-ended">キャンセル</span>' : ''}
-        <span class="pill ${needsShipping(o) ? 'ship-todo' : 'ship-done'}">${o.shipped === undefined ? esc(FUL[o.fulfillment] || o.fulfillment || '') : o.shipped ? '発送済み' : '未発送'}</span>
+        <span class="st ${needsShipping(o) ? 'ship-todo' : 'ship-done'}">${o.shipped === undefined ? esc(FUL[o.fulfillment] || o.fulfillment || '') : o.shipped ? '発送済み' : '未発送'}</span>
         ${payPill(o)}</div>
       <ul class="order-items">${o.items.map((i) => `<li>${esc(i.title)}${i.variant && i.variant !== 'Default Title' ? `（${esc(i.variant)}）` : ''} × <b>${i.quantity}</b></li>`).join('')}</ul>
       <div class="order-ship"><b>お届け先</b><p>${esc(o.ship.name)}${o.ship.company ? `（${esc(o.ship.company)}）` : ''} 様<br>${esc(shipText(o))}${o.ship.phone || o.phone ? `<br>TEL ${esc(o.ship.phone || o.phone)}` : ''}${o.email ? `<br>${esc(o.email)}` : ''}</p>
         ${o.note ? `<p class="hint">備考：${esc(o.note)}</p>` : ''}</div>
       ${(o.tracking || []).length ? `<p class="order-track">追跡番号：${o.tracking.map((t) => (t.url ? `<a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.number)}</a>` : esc(t.number))).join('、')}</p>` : ''}
-      ${needsShipping(o) && o.shipped !== undefined && PAY_CLASS[o.financial] === 'pay-wait' ? '<p class="order-paywait">⏳ お支払いがまだです（コンビニ決済・銀行振込など）。入金を確認してから発送してください。</p>' : ''}
+      ${needsShipping(o) && o.shipped !== undefined && PAY_CLASS[o.financial] === 'pay-wait' ? '<p class="order-paywait">お支払いがまだです（コンビニ決済・銀行振込など）。入金を確認してから発送してください。</p>' : ''}
       ${needsShipping(o) && o.shipped !== undefined ? `<form class="order-fulfill" data-order="${esc(o.id)}">
         <select name="carrier" aria-label="配送会社">${Object.entries(CARRIER_NAMES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
         <input name="number" maxlength="60" placeholder="追跡番号（任意）" aria-label="追跡番号" inputmode="text">
