@@ -503,3 +503,18 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 /* 発送の状態（支払いの色と区別する） */
 .pill.ship-todo { background: #e9e2fb; color: #5b45a8; font-weight: 800; }
 .pill.ship-done { background: #ececec; color: #555; }
+
+/* 注文の状態：白地に細い枠と色の点（落ち着いた見た目に） */
+.st { display: inline-flex; align-items: center; gap: 6px; padding: .18em .7em .18em .6em; border: 1px solid #e3dde8; border-radius: 999px; background: #fff;
+  font-size: .72rem; font-weight: 700; letter-spacing: .04em; color: #3d3640; line-height: 1.6; }
+.st::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+.st.pay-ok::before { background: #2fa36b; }
+.st.pay-wait { border-color: #f0d2a8; color: #8a5200; }
+.st.pay-wait::before { background: #e8930c; box-shadow: 0 0 0 3px rgba(232, 147, 12, .18); }
+.st.pay-off { color: #888; }
+.st.pay-off::before { background: #bbb; }
+.st.ship-todo::before { background: #7d63c4; }
+.st.ship-done { color: #888; }
+.st.ship-done::before { background: #bbb; }
+.order-paywait { display: flex; align-items: center; gap: 8px; background: #fbf8f3 !important; color: #6b4a1a !important; font-weight: 600 !important; border: 1px solid #f0e2c8; }
+.order-paywait::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #e8930c; flex: none; }
