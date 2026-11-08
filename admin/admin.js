@@ -1677,8 +1677,8 @@ function renderOrders() {
     <li class="order ${o.cancelled ? 'is-cancelled' : ''}">
       <div class="order-head"><b>${esc(o.name)}</b><span class="hint">${fmtTime(o.createdAt)}</span>
         ${o.cancelled ? '<span class="pill pill-ended">キャンセル</span>' : ''}
-        <span class="st ${needsShipping(o) ? 'ship-todo' : 'ship-done'}">${o.shipped === undefined ? esc(FUL[o.fulfillment] || o.fulfillment || '') : o.shipped ? '発送済み' : '未発送'}</span>
-        ${payPill(o)}</div>
+        ${payPill(o)}
+        <span class="st ${needsShipping(o) ? 'ship-todo' : 'ship-done'}">${o.shipped === undefined ? esc(FUL[o.fulfillment] || o.fulfillment || '') : o.shipped ? '発送済み' : '未発送'}</span></div>
       <ul class="order-items">${o.items.map((i) => `<li>${esc(i.title)}${i.variant && i.variant !== 'Default Title' ? `（${esc(i.variant)}）` : ''} × <b>${i.quantity}</b></li>`).join('')}</ul>
       <div class="order-ship"><b>お届け先</b><p>${esc(o.ship.name)}${o.ship.company ? `（${esc(o.ship.company)}）` : ''} 様<br>${esc(shipText(o))}${o.ship.phone || o.phone ? `<br>TEL ${esc(o.ship.phone || o.phone)}` : ''}${o.email ? `<br>${esc(o.email)}` : ''}</p>
         ${o.note ? `<p class="hint">備考：${esc(o.note)}</p>` : ''}</div>
