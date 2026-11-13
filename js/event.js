@@ -451,15 +451,18 @@
     // names：アバターの名前（キャラクター名と別の名前にするとき）。order：お客さんのアバター選びに並ぶ順番（アバターの id）
     const names = v.names && typeof v.names === 'object' ? v.names : {};
     const nameOf = (id, fallback) => (typeof names[id] === 'string' && names[id].trim() ? names[id].trim() : fallback);
+    // bgs：アバター選びの枠の背景色（空ならキャラクターの「紹介の背景色」、それもなければキャラクターの色を淡く）
+    const bgs = v.bgs && typeof v.bgs === 'object' ? v.bgs : {};
+    const bgOf = (id, c) => (/^#[0-9a-f]{6}$/i.test(bgs[id] || '') ? bgs[id] : c?.cardBg || '');
     const base = avatarCharacters();
     let list = base.filter((c) => !hide.has(c.id))
-      .map((c) => ({ id: c.id, name: nameOf(c.id, c.name), image: c.image || '', character: c }));
+      .map((c) => ({ id: c.id, name: nameOf(c.id, c.name), image: c.image || '', character: c, bg: bgOf(c.id, c) }));
     for (const a of Array.isArray(v.custom) ? v.custom : []) {
       const image = imageUrl(a.image);
-      if (a && a.id && a.name && image) list.push({ id: a.id, name: a.name, image });
+      if (a && a.id && a.name && image) list.push({ id: a.id, name: a.name, image, bg: bgOf(a.id) });
     }
     // すべて外された場合でも、最初のキャラクターは選べるようにする
-    if (!list.length) list.push({ id: base[0].id, name: nameOf(base[0].id, base[0].name), image: base[0].image || '', character: base[0] });
+    if (!list.length) list.push({ id: base[0].id, name: nameOf(base[0].id, base[0].name), image: base[0].image || '', character: base[0], bg: bgOf(base[0].id, base[0]) });
     // 並び順（並び順にないもの＝あとから足したキャラクターなどは、もとの順で後ろに）
     if (Array.isArray(v.order) && v.order.length) {
       const pos = (id) => { const k = v.order.indexOf(id); return k < 0 ? Infinity : k; };

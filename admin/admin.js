@@ -388,6 +388,7 @@ function canonicalAvatars(v) {
     custom: (obj.custom || []).map((a) => ({ id: a.id, name: a.name, image: E.imageUrl(a.image) })),
     names: Object.fromEntries(Object.entries(obj.names || {}).filter(([, n]) => String(n || '').trim()).sort()),
     order: obj.order || [],
+    bgs: Object.fromEntries(Object.entries(obj.bgs || {}).sort()),
   });
 }
 function renderStatus() {
@@ -1256,10 +1257,21 @@ function avatarEdits() {
   v.custom = Array.isArray(v.custom) ? v.custom : [];
   v.names = v.names && typeof v.names === 'object' ? v.names : {};
   v.order = Array.isArray(v.order) ? v.order : [];
+  v.bgs = v.bgs && typeof v.bgs === 'object' ? v.bgs : {};
   state.draft.event.avatars = v;
   return v;
 }
 const newAvatarId = () => `c_${Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(36).padStart(2, '0')).join('').slice(0, 10)}`;
+
+// アバター選びの枠の、初期の背景色（キャラクターの「紹介の背景色」→ キャラクターの色を淡く。追加した画像は淡いグレー）
+const avDefaultBg = (r) => {
+  if (r.custom) return '#f3f4f8';
+  if (/^#[0-9a-f]{6}$/i.test(r.character.cardBg || '')) return r.character.cardBg;
+  const hex = r.character.color || '#e3e6f0';
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  if (!m) return '#f3f4f8';
+  return `#${[m[1], m[2], m[3]].map((x) => Math.round(parseInt(x, 16) * 0.22 + 255 * 0.78).toString(16).padStart(2, '0')).join('')}`;
+};
 
 /** アバターの一覧（並び順どおり）：キャラクターのアバター（外したものも）＋追加したアバター */
 function avatarRows(v) {
@@ -1295,6 +1307,10 @@ function renderAvatars() {
         <span class="av-kind">${r.custom ? '追加した画像' : `キャラクター：${esc(r.character.name)}`}</span>
         <input type="text" data-av-name maxlength="12" value="${esc(name)}" placeholder="${r.custom ? '' : esc(r.character.name)}" aria-label="アバターの名前（12文字まで）">
         ${r.custom ? '' : `<label class="check av-use"><input type="checkbox" data-av-builtin="${esc(r.id)}" ${r.off ? '' : 'checked'}> アバターとして選べる</label>`}
+        <span class="av-bg"><span class="av-bg-label">背景色</span>
+          <input type="color" data-av-bg value="${esc(v.bgs[r.id] || avDefaultBg(r))}" aria-label="アバター選びの背景色">
+          ${E.CARD_PRESETS.map(([hex, label]) => `<button type="button" class="av-swatch${v.bgs[r.id] === hex ? ' is-on' : ''}" data-av-preset="${hex}" style="--p:${hex}" title="${esc(label)}" aria-label="${esc(label)}"></button>`).join('')}
+          ${v.bgs[r.id] ? '<button type="button" class="link-reset" data-av-bg-reset>初期の色に戻す</button>' : '<span class="av-bg-note">初期の色</span>'}</span>
       </span>
       <span class="av-actions">
         <button type="button" class="icon" data-av-move="-1" ${i === 0 ? 'disabled' : ''} aria-label="上へ">↑</button>
@@ -1305,11 +1321,18 @@ function renderAvatars() {
   }).join('');
 
   // プレビュー（お客さんのアバター選び）
-  $('#apGrid').innerHTML = list.map((a) => `<span class="pick" style="--c:${a.character ? esc(a.character.color) : '#e3e6f0'}">
+  $('#apGrid').innerHTML = list.map((a) => `<span class="pick" style="--c:${a.character ? esc(a.character.color) : '#e3e6f0'}${a.bg ? `;--card-bg:${esc(a.bg)}` : ''}">
     ${window.Art.characterSVG(a.character || { image: a.image })}<span>${esc(a.name)}</span></span>`).join('');
 }
 
 $('#avList').addEventListener('change', (e) => {
+  if (e.target.matches('[data-av-bg]')) {
+    const v = avatarEdits();
+    v.bgs[e.target.closest('[data-id]').dataset.id] = e.target.value.toLowerCase();
+    renderAvatars();
+    changed({ previewNow: false });
+    return;
+  }
   const id = e.target.dataset.avBuiltin;
   if (!id) return;
   const v = avatarEdits();
@@ -1354,7 +1377,11 @@ $('#avList').addEventListener('click', (e) => {
   if (!item) return;
   const id = item.dataset.id;
   const v = avatarEdits();
-  if (e.target.closest('[data-av-delete]')) {
+  if (e.target.closest('[data-av-preset]')) {
+    v.bgs[id] = e.target.closest('[data-av-preset]').dataset.avPreset;
+  } else if (e.target.closest('[data-av-bg-reset]')) {
+    delete v.bgs[id];
+  } else if (e.target.closest('[data-av-delete]')) {
     const c = v.custom.find((a) => a.id === id);
     if (!confirm(`「${c.name}」を削除します。よろしいですか？\n（このアバターで入店中のお客さんは、最初のアバターの見た目になります）`)) return;
     v.custom = v.custom.filter((a) => a.id !== id);
