@@ -506,6 +506,11 @@ body.is-demo.world-fs { padding-top: 0; }
 .ent-info-link { margin-top: 14px; color: var(--ent-ink, var(--theme-ink, var(--ink-soft))); font-weight: 700; }
 @media (max-width: 640px) { .ent-info-link { margin-top: 24px; } } /* スマホ：「お店に入る」との間を広めに */
 .entrance.is-picking .ent-info-link, .entrance.is-waiting .ent-info-link { display: none; }
+/* 出品のご案内：入口のいちばん下に小さく（アバター選び・順番待ちの間は出さない） */
+.ent-seller-link { display: table; margin: 26px auto 0; padding: 4px 2px; font-size: .78rem; font-weight: 700; letter-spacing: .04em;
+  color: var(--ent-ink, var(--theme-ink, var(--ink-soft))); opacity: .75; text-decoration: underline; text-underline-offset: 3px; }
+.ent-seller-link:hover { opacity: 1; }
+.entrance.is-picking .ent-seller-link, .entrance.is-waiting .ent-seller-link { display: none; }
 .info-modal { z-index: 200; }
 .info-modal .info-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
 .info-modal .info-card { grid-column: auto !important; box-shadow: none; border: 1px solid var(--line); }
@@ -547,7 +552,7 @@ body.is-demo.world-fs { padding-top: 0; }
 .ei-name { margin: .7rem 0 0; font-family: var(--font-latin); font-weight: 600; letter-spacing: .14em; font-size: clamp(1.6rem, 6vw, 2.4rem); color: #2e2729; }
 .ei-tag { margin: .2rem 0 0; font-weight: 700; letter-spacing: .12em; font-size: .82rem; color: #7a7075; }
 .ei-text { margin: 2rem auto 0; max-width: 26em; line-height: 1.9; font-weight: 500; color: #4a4245; }
-.ei-links { margin-top: 2.4rem; }
+.ei-links { margin-top: 2.4rem; display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 22px; }
 .ei-links a { color: #7a7075; font-size: .85rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 /* ポリシー・お問い合わせのポップは、入口の画面より手前に出す */
 #policyModal { z-index: 200; }
