@@ -166,7 +166,11 @@ export async function buildRoom(theme) {
     let rowSlots; // [[{ p, i, n }]]
     if (lay.rows) {
       levels = [0.38, 1.36];
-      rowSlots = lay.rows.map((row) => row.map((id, i) => (byId[id] ? { p: byId[id], i, n: row.length } : null)).filter(Boolean));
+      // 置いた商品だけを枠の順に並べ、中央にそろえる（空いている枠のすき間は詰める。間隔は5枠のときと同じ）
+      rowSlots = lay.rows.map((row) => {
+        const placed = row.map((id) => byId[id]).filter(Boolean);
+        return placed.map((p, k) => ({ p, i: k + (row.length - placed.length) / 2, n: row.length }));
+      });
     } else {
       const rows = Math.min(2, Math.max(1, Math.ceil(items.length / 4)));
       const perRow = Math.ceil(items.length / rows) || 1;
@@ -225,7 +229,11 @@ export async function buildRoom(theme) {
   const islandLay = window.STORE_LAYOUT.island || {};
   const byIdAll = Object.fromEntries(window.PRODUCTS.map((x) => [x.id, x]));
   const tableSlots = islandLay.items
-    ? islandLay.items.map((id, i) => (byIdAll[id] ? { p: byIdAll[id], i, n: islandLay.items.length } : null)).filter(Boolean)
+    ? (() => {
+      // 置いた商品だけを、中央にそろえて並べる（間隔は5枠のときと同じ）
+      const placed = islandLay.items.map((id) => byIdAll[id]).filter(Boolean);
+      return placed.map((p, k) => ({ p, i: k + (islandLay.items.length - placed.length) / 2, n: islandLay.items.length }));
+    })()
     : productsFor('island').map((p, i, arr) => ({ p, i, n: arr.length }));
   for (const { p, i, n } of tableSlots) {
     const x = -tW / 2 + (tW / n) * (i + 0.5);
