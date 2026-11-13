@@ -19,7 +19,8 @@ const HALF_D = ROOM.d / 2;
 const SIGN_EN_M = 0.27;
 const SIGN_JA_SUB_M = 0.14; // 英字と2行のときの日本語（英字より小さく）。日本語だけのときは英字と同じ大きさ・色
 const sizeFor = (m, boardH) => m / (boardH * 0.8); // signTexture の文字は size × 看板の高さ × 0.8
-const ITEM_HEIGHT = { plush: 0.78, mug: 0.6, tote: 0.66, pouch: 0.56, note: 0.6, keychain: 0.56, sticker: 0.56 };
+// 棚での大きさ（Shopify の「棚での大きさ」：大＝plush・中＝mug・小＝keychain）。中を 100 として 大 120・小 80
+const ITEM_HEIGHT = { plush: 0.72, mug: 0.6, tote: 0.66, pouch: 0.56, note: 0.6, keychain: 0.48, sticker: 0.56 };
 
 
 const basic = (map, extra = {}) => new THREE.MeshBasicMaterial({ map, ...extra });
