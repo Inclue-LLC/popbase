@@ -180,16 +180,13 @@
           <p class="help">お客さんが入店するときに選べるアバターです。「キャラクター」タブでキャラクターを登録しているイベントでは、そのキャラクターがアバターになります
             （登録していなければ、自社の4体）。追加したアバターは、アバター選びと店内（他のお客さんからの見え方）だけに使われます。</p>
           <section class="av-section">
-            <h3>キャラクターのアバター</h3>
-            <p class="hint" id="avBuiltinNote"></p>
-            <div class="av-builtin" id="avBuiltin"></div>
-          </section>
-          <section class="av-section">
             <div class="av-head">
-              <h3>追加したアバター <small id="avCount"></small></h3>
+              <h3>アバター <small id="avCount"></small></h3>
               <label class="btn btn-primary btn-small" id="avAddBtn">＋ 画像からアバターを追加<input type="file" accept="image/png,image/jpeg,image/webp" id="avAddInput" hidden></label>
             </div>
-            <p class="help">正面を向いた全身または顔の絵で、背景が透明な正方形の PNG（512×512px 程度）がおすすめです。足元が画像の下端に来るようにすると、床にきれいに立ちます。</p>
+            <p class="hint" id="avBuiltinNote"></p>
+            <p class="help">上から順に、お客さんのアバター選びに並びます（↑↓で並べ替え）。名前は12文字まで。キャラクターのアバターは、名前が空欄ならキャラクター名になります。<br>
+              追加する画像は、正面を向いた全身または顔の絵で、背景が透明な正方形の PNG（512×512px 程度）がおすすめです。足元が画像の下端に来るようにすると、床にきれいに立ちます。</p>
             <ul class="av-list" id="avList"></ul>
           </section>
         </div>
