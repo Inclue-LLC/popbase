@@ -507,7 +507,7 @@ body.is-demo.world-fs { padding-top: 0; }
 @media (max-width: 640px) { .ent-info-link { margin-top: 24px; } } /* スマホ：「お店に入る」との間を広めに */
 .entrance.is-picking .ent-info-link, .entrance.is-waiting .ent-info-link { display: none; }
 /* 出品のご案内：入口のいちばん下に小さく（アバター選び・順番待ちの間は出さない） */
-.ent-seller-link { display: table; margin: 26px auto 0; padding: 4px 2px; font-size: .78rem; font-weight: 700; letter-spacing: .04em;
+.ent-seller-link { display: table; margin: 0 auto; padding: 2px; font-size: .78rem; font-weight: 700; letter-spacing: .04em;
   color: var(--ent-ink, var(--theme-ink, var(--ink-soft))); opacity: .75; text-decoration: underline; text-underline-offset: 3px; }
 .ent-seller-link:hover { opacity: 1; }
 .entrance.is-picking .ent-seller-link, .entrance.is-waiting .ent-seller-link { display: none; }
