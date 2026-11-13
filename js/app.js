@@ -398,6 +398,8 @@ window.AppReady = (async function () {
     $('#entIdle').hidden = !idle;
     document.body.classList.toggle('shop-idle', idle);
     entrance.classList.toggle('is-closed', !open);
+    // 会期中（営業時間外も含む）：入口の「出品のご案内」は出さない（開催前・イベントのない期間だけ出す）
+    entrance.classList.toggle('is-running', !idle && (st.state === 'open' || st.state === 'closed'));
     $('#entStatus').hidden = open || idle;
     countdownTo = null;
     closesAtNow = open && !idle ? st.closesAt || null : null;
