@@ -213,7 +213,19 @@ function cleanAvatars(value, imageOk) {
     if (!imageOk(a.image)) throw new InputError(`avatars.custom.${i}.image`);
     return { id: a.id, name: a.name.replace(/[\u0000-\u001f]/g, '').trim(), image: { id: String(a.image.id), url: String(a.image.url) } };
   });
-  return { hide, custom: out };
+  // アバターの名前（キャラクターのアバターを別の名前にするとき）と、並び順
+  const idOk = (id) => typeof id === 'string' && (CHARACTER_IDS.includes(id) || /^[ck]_[a-z0-9]{6,16}$/.test(id));
+  const names = {};
+  if (v.names && typeof v.names === 'object' && !Array.isArray(v.names)) {
+    for (const [id, n] of Object.entries(v.names).slice(0, 60)) {
+      if (!idOk(id) || typeof n !== 'string') continue;
+      const t = n.replace(/[\u0000-\u001f]/g, '').trim();
+      if (t.length > 12) throw new InputError(`avatars.names.${id}`);
+      if (t) names[id] = t;
+    }
+  }
+  const order = Array.isArray(v.order) ? [...new Set(v.order.filter(idOk))].slice(0, 60) : [];
+  return { hide, custom: out, names, order };
 }
 
 function cleanLayout(layout) {

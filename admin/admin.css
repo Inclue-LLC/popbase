@@ -518,3 +518,12 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .st.ship-done::before { background: #bbb; }
 .order-paywait { display: flex; align-items: center; gap: 8px; background: #fbf8f3 !important; color: #6b4a1a !important; font-weight: 600 !important; border: 1px solid #f0e2c8; }
 .order-paywait::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #e8930c; flex: none; }
+
+/* アバターの一覧（キャラクター＋追加した画像をまとめて並べ替え） */
+.av-item { grid-template-columns: 64px minmax(0, 1fr) auto !important; }
+.av-item.is-off { opacity: .55; }
+.av-item .av-art { width: 64px; height: 64px; border-radius: 10px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.av-item .av-art svg, .av-item .av-art img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.av-item .av-main { display: grid; gap: 4px; min-width: 0; }
+.av-item .av-kind { font-size: .72rem; color: var(--ink-soft); font-weight: 700; }
+.av-item .av-use { font-size: .78rem; display: inline-flex; gap: 6px; align-items: center; }

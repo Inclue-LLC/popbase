@@ -448,15 +448,23 @@
     let v = value || {};
     if (typeof v === 'string') { try { v = JSON.parse(v); } catch { v = {}; } }
     const hide = new Set(Array.isArray(v.hide) ? v.hide : []);
+    // names：アバターの名前（キャラクター名と別の名前にするとき）。order：お客さんのアバター選びに並ぶ順番（アバターの id）
+    const names = v.names && typeof v.names === 'object' ? v.names : {};
+    const nameOf = (id, fallback) => (typeof names[id] === 'string' && names[id].trim() ? names[id].trim() : fallback);
     const base = avatarCharacters();
-    const list = base.filter((c) => !hide.has(c.id))
-      .map((c) => ({ id: c.id, name: c.name, image: c.image || '', character: c }));
+    let list = base.filter((c) => !hide.has(c.id))
+      .map((c) => ({ id: c.id, name: nameOf(c.id, c.name), image: c.image || '', character: c }));
     for (const a of Array.isArray(v.custom) ? v.custom : []) {
       const image = imageUrl(a.image);
       if (a && a.id && a.name && image) list.push({ id: a.id, name: a.name, image });
     }
     // すべて外された場合でも、最初のキャラクターは選べるようにする
-    if (!list.length) list.push({ id: base[0].id, name: base[0].name, image: base[0].image || '', character: base[0] });
+    if (!list.length) list.push({ id: base[0].id, name: nameOf(base[0].id, base[0].name), image: base[0].image || '', character: base[0] });
+    // 並び順（並び順にないもの＝あとから足したキャラクターなどは、もとの順で後ろに）
+    if (Array.isArray(v.order) && v.order.length) {
+      const pos = (id) => { const k = v.order.indexOf(id); return k < 0 ? Infinity : k; };
+      list = list.map((a, k) => ({ a, k })).sort((x, y) => pos(x.a.id) - pos(y.a.id) || x.k - y.k).map((x) => x.a);
+    }
     window.AVATARS = list;
     return list;
   }
