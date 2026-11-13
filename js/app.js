@@ -190,8 +190,11 @@ window.AppReady = (async function () {
     // 送料・発送（店内管理画面の「送料・発送」で設定。送料無料になる金額が 0 なら送料無料なし）
     // 送料の文は管理画面で入力（未入力のとき＝お試し表示だけ、初期の送料から作る）
     const free = SHOP.freeShippingThreshold > 0;
-    $('#shippingInfo').textContent = SHOP.shippingText || (!SHOP.shippingFee ? '送料無料。'
-      : `全国一律 ${yen(SHOP.shippingFee)}${free ? `。${yen(SHOP.freeShippingThreshold)} 以上で送料無料。` : ''}`);
+    // 送料無料になる金額を設定していれば、送料の文の下に条件を添える（文の中にすでに書いてあれば足さない）
+    const freeLine = free ? `税込 ${yen(SHOP.freeShippingThreshold)} 以上のお買い上げで送料無料` : '';
+    $('#shippingInfo').textContent = SHOP.shippingText
+      ? (freeLine && !/送料無料/.test(SHOP.shippingText) ? `${SHOP.shippingText}\n${freeLine}` : SHOP.shippingText)
+      : (!SHOP.shippingFee ? '送料無料。' : `全国一律 ${yen(SHOP.shippingFee)}${free ? `\n${freeLine}` : ''}`);
     $('#shippingNote').textContent = SHOP.shippingNote || '';
     $('#shippingNote').closest('.info-card').hidden = !SHOP.shippingNote;
     $('#paymentInfo').textContent = SHOP.paymentText || '';
