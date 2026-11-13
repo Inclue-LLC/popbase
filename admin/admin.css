@@ -231,7 +231,7 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .ap-card { background: #fff; color: #3a3346; border-radius: 20px; padding: 18px; display: grid; gap: 12px; text-align: center; box-shadow: 0 0 0 1.5px var(--line); }
 .ap-card h3 { font-size: 1.05rem; }
 .ap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.ap-grid .pick { display: grid; justify-items: center; gap: 2px; padding: 8px 4px 6px; border-radius: 14px; background: color-mix(in srgb, var(--c, #e3e6f0) 22%, #fff); font-weight: 700; font-size: .78rem; }
+.ap-grid .pick { display: grid; justify-items: center; gap: 2px; padding: 8px 4px 6px; border-radius: 14px; background: var(--card-bg, color-mix(in srgb, var(--c, #e3e6f0) 22%, #fff)); font-weight: 700; font-size: .78rem; }
 .ap-grid .pick svg, .ap-grid .pick img { width: 100%; max-width: 64px; aspect-ratio: 1; object-fit: contain; }
 .ap-name { margin: 0; font-size: .82rem; color: #6f6880; }
 .btn.is-disabled { opacity: .45; pointer-events: none; }
@@ -527,3 +527,11 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .av-item .av-main { display: grid; gap: 4px; min-width: 0; }
 .av-item .av-kind { font-size: .72rem; color: var(--ink-soft); font-weight: 700; }
 .av-item .av-use { font-size: .78rem; display: inline-flex; gap: 6px; align-items: center; }
+
+/* アバターの背景色 */
+.av-item .av-bg { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; font-size: .75rem; color: var(--ink-soft); }
+.av-item .av-bg-label { font-weight: 700; margin-right: 2px; }
+.av-item .av-bg input[type=color] { width: 30px; height: 24px; padding: 0; border: 1.5px solid var(--line); border-radius: 6px; background: none; cursor: pointer; }
+.av-swatch { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--p); padding: 0; cursor: pointer; }
+.av-swatch.is-on { outline: 2px solid var(--ink); outline-offset: 1px; }
+.av-item .link-reset { border: 0; background: none; color: var(--accent, #7d63c4); text-decoration: underline; font-size: .75rem; padding: 0 2px; cursor: pointer; }

@@ -225,7 +225,11 @@ function cleanAvatars(value, imageOk) {
     }
   }
   const order = Array.isArray(v.order) ? [...new Set(v.order.filter(idOk))].slice(0, 60) : [];
-  return { hide, custom: out, names, order };
+  const bgs = {};
+  if (v.bgs && typeof v.bgs === 'object' && !Array.isArray(v.bgs)) {
+    for (const [id, c] of Object.entries(v.bgs).slice(0, 60)) if (idOk(id) && typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c)) bgs[id] = c.toLowerCase();
+  }
+  return { hide, custom: out, names, order, bgs };
 }
 
 function cleanLayout(layout) {
