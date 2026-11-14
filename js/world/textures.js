@@ -455,7 +455,8 @@ function trimTransparent(img, key) {
  */
 export async function characterTexture(character, size = 256, { scale = 1, by = 'height' } = {}) {
   const src = character.image ? await loadImage(character.image) : await svgImage(window.Art.characterSVG(character), size, size);
-  const c = makeCanvas(size, size);
+  // by: 'area'（店内のアバター）：横長の絵が横に広がれるよう、横 1.3 倍の板にする（js/world/avatars.js が板の比率を合わせる）
+  const c = makeCanvas(by === 'area' ? size * 1.3 : size, size);
   if (src) {
     const img = trimTransparent(src, character.image || null);
     const boxH = size * 0.94;
@@ -463,12 +464,15 @@ export async function characterTexture(character, size = 256, { scale = 1, by = 
     const pad = Math.max(2, size * 0.01); // 下端に少し余白（端の画素が欠けないように）
     // 高さを基準にそろえ、scale（1 以下）で、ほかのキャラクターとの高さの比率を反映（はみ出すほど横に長い絵だけ幅に合わせて縮める）
     let k = (boxH / img.height) * Math.max(0.2, Math.min(1, scale));
-    // by: 'size'（店内のアバター）：縦横の長いほうを基準に（アバター選びと同じ。いちばん大きい絵が枠いっぱい、ほかは同じ倍率、下限 25%）
-    if (by === 'size') k = (boxH / Math.max(img.width, img.height)) * Math.max(0.25, Math.min(1, scale));
-    if (img.width * k > boxW) k = boxW / img.width;
+    if (by === 'area') {
+      // 絵の面積（縦×横）を基準に（アバター選びと同じ）。いちばん面積の大きい絵は「面積の平方根」が枠の高さの 94%、
+      // ほかは同じ倍率（下限 25%）。高さは枠まで、幅は板の幅（1.3 倍）まで
+      k = (boxH / Math.sqrt(img.width * img.height)) * Math.max(0.25, Math.min(1, scale));
+      k = Math.min(k, boxH / img.height, (c.width * 0.98) / img.width);
+    } else if (img.width * k > boxW) k = boxW / img.width;
     const w = img.width * k;
     const h = img.height * k;
-    c.getContext('2d').drawImage(img, (size - w) / 2, size - pad - h, w, h);
+    c.getContext('2d').drawImage(img, (c.width - w) / 2, size - pad - h, w, h);
   }
   return toTexture(c);
 }
@@ -483,10 +487,10 @@ export async function characterFrac(character, { by = 'height' } = {}) {
   const src = await loadImage(character.image);
   if (!src) return 0;
   const t = trimTransparent(src, character.image);
-  if (by === 'size') {
-    // 縦横の長いほう（元の画像のピクセル数）。店内のアバターの大きさの比率に使う（アバター選びと同じ基準）
+  if (by === 'area') {
+    // 絵の面積の平方根（元の画像のピクセル数）。店内のアバターの大きさの比率に使う（アバター選びと同じ基準）
     const k = Math.min(1, 512 / Math.max(src.width, src.height)); // trimTransparent は長い辺 512px までに縮めて調べる
-    return Math.max(t.width, t.height) / k;
+    return Math.sqrt(t.width * t.height) / k;
   }
   return (t.frac || 1) * src.height;
 }

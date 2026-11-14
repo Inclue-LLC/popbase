@@ -132,7 +132,8 @@
   }
 
   // アバター選び用：絵のまわりの透明な余白を切り落として、正方形の真ん中に置いた画像
-  // 大きさは、アップした画像どうしの比率のまま（絵の部分のピクセル数。いちばん大きい絵が枠いっぱい）
+  // 大きさは「絵の面積」（縦×横）を基準に、アップした画像どうしの比率のまま（いちばん面積の大きい絵が基準の大きさ）。
+  // 横長・縦長の絵も、正方形に近い絵と同じくらいの大きさに見えるように
   const fitted = new Map(); // 画像 URL → 真ん中にそろえた画像
   const trimmed = new Map(); // 画像 URL → { canvas, w, h }（w・h：アップした画像での絵の部分のピクセル数）。読めない画像は null
   let fitKey = '';
@@ -154,13 +155,18 @@
     }));
     if (key !== fitKey) return false; // 待っている間に、並べるアバターが変わった
     const ok = list.map((u) => [u, trimmed.get(u)]).filter(([, t]) => t);
-    const S = 256, box = S * 0.96; // いちばん大きい絵のまわりの余白：各辺 2%
-    const biggest = Math.max(0.01, ...ok.map(([, t]) => Math.max(t.w, t.h)));
+    const S = 256;
+    const cap = S * 0.96; // 縦・横とも、ここまで（枠のまわりの余白：各辺 2%）
+    const target = S * 0.86; // いちばん面積の大きい絵の「面積の平方根」（正方形の絵なら一辺）
+    const area = (t) => Math.sqrt(t.w * t.h);
+    const biggest = Math.max(0.01, ...ok.map(([, t]) => area(t)));
     fitted.clear();
     for (const [u, t] of ok) {
-      // いちばん大きい絵を枠いっぱいに。ほかの絵は同じ倍率（小さすぎて見えなくならないよう、枠の 25% より小さくはしない）
-      let k = box / biggest;
-      if (Math.max(t.w, t.h) * k < box * 0.25) k = (box * 0.25) / Math.max(t.w, t.h);
+      // 全部の絵を同じ倍率に（小さすぎて見えなくならないよう、基準の 25% より小さくはしない）
+      let k = target / biggest;
+      if (area(t) * k < target * 0.25) k = (target * 0.25) / area(t);
+      // 枠からはみ出すほど縦長・横長の絵だけ、枠に合わせて縮める
+      k = Math.min(k, cap / t.w, cap / t.h);
       const w = t.w * k, h = t.h * k;
       const c = document.createElement('canvas');
       c.width = S; c.height = S;

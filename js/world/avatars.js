@@ -21,7 +21,7 @@ function maxFrac() {
   const key = list.map((a) => `${a.id}|${srcOf(a).image || ''}`).join(',');
   if (key !== ratioKey || !ratioMax) {
     ratioKey = key;
-    ratioMax = Promise.all(list.map((a) => characterFrac(srcOf(a), { by: 'size' }))).then((f) => Math.max(...f, 0));
+    ratioMax = Promise.all(list.map((a) => characterFrac(srcOf(a), { by: 'area' }))).then((f) => Math.max(...f, 0));
   }
   return ratioMax;
 }
@@ -39,6 +39,7 @@ export class Avatar {
     this.t = Math.random() * 10;
     this.target = new THREE.Vector3();
     this.size = 0.9;
+    this.aspect = 1; // 板の横÷縦（絵の面積を基準にした店内のアバターは、横長の絵が広がれるよう 1.3）
 
     shadowTex ||= shadowTexture();
     const shadow = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9),
@@ -62,7 +63,7 @@ export class Avatar {
     this.sprite.renderOrder = 2;
     this.baseY = 0.03;
     this.sprite.position.y = this.baseY;
-    this.sprite.scale.set(this.size, this.size, 1);
+    this.sprite.scale.set(this.size * this.aspect, this.size, 1);
     this.group.add(this.sprite);
 
     this.label = document.createElement('div');
@@ -78,11 +79,13 @@ export class Avatar {
     // キャラクターならその絵、管理画面で追加したアバターならアップロードした画像
     const a = window.HaneulEvent.findAvatar(avatar);
     const src = srcOf(a);
-    const [frac, max] = await Promise.all([characterFrac(src, { by: 'size' }), maxFrac()]);
+    const [frac, max] = await Promise.all([characterFrac(src, { by: 'area' }), maxFrac()]);
     const scale = frac && max ? Math.min(1, frac / max) : 1;
     const key = `${a.id}|${src.image || ''}|${scale.toFixed(3)}`;
-    if (!texCache.has(key)) texCache.set(key, characterTexture(src, 256, { scale, by: 'size' }));
+    if (!texCache.has(key)) texCache.set(key, characterTexture(src, 256, { scale, by: 'area' }));
     const tex = await texCache.get(key);
+    this.aspect = tex.image ? tex.image.width / tex.image.height : 1;
+    this.sprite.scale.x = this.size * this.aspect;
     this.sprite.material.map = tex;
     this.sprite.material.needsUpdate = true;
   }
@@ -115,11 +118,11 @@ export class Avatar {
     if (this.moving) {
       const b = Math.abs(Math.sin(this.t * 9));
       this.sprite.position.y = this.baseY + b * 0.08;
-      this.sprite.scale.set(this.size * (1 + (1 - b) * 0.05), this.size * (1 - (1 - b) * 0.05), 1);
+      this.sprite.scale.set(this.size * this.aspect * (1 + (1 - b) * 0.05), this.size * (1 - (1 - b) * 0.05), 1);
     } else {
       this.sprite.position.y += (this.baseY - this.sprite.position.y) * Math.min(1, dt * 10);
       const breathe = 1 + Math.sin(this.t * 2) * 0.012;
-      this.sprite.scale.set(this.size, this.size * breathe, 1);
+      this.sprite.scale.set(this.size * this.aspect, this.size * breathe, 1);
     }
   }
 
