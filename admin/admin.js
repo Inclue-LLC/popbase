@@ -1003,7 +1003,7 @@ function fieldHtml(f, value, placeholders) {
   } else if (f.type === 'textarea') {
     // 初期の文がある欄（返品・交換など）は、空欄のときその文を入れた状態で出す
     const text = value ?? '';
-    input = `<textarea id="${id}" data-key="${f.key}" maxlength="300" rows="${f.defaultValue ? 4 : 2}">${esc(text)}</textarea>`;
+    input = `<textarea id="${id}" data-key="${f.key}" maxlength="${f.maxLength || 300}" rows="${f.rows || (f.defaultValue ? 4 : 2)}"${f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : ''}>${esc(text)}</textarea>`;
   } else if (f.type === 'collection') {
     // Shopify のコレクションから選ぶ
     const list = state.collections.slice();

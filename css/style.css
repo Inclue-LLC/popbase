@@ -279,6 +279,11 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .policy-body table { border-collapse: collapse; width: 100%; margin: .6em 0 1em; }
 .policy-body th, .policy-body td { border: 1px solid var(--line); padding: .5em .7em; text-align: left; vertical-align: top; }
 .policy-body a { color: var(--accent); }
+/* 特定商取引法に基づく表記（出品者）：「項目：内容」の表 */
+.policy-body h4 { font-size: .95rem; margin: 1.2em 0 .3em; }
+.policy-body h4:first-child { margin-top: 0; }
+.policy-body .legal-table th { width: 10em; background: color-mix(in srgb, var(--line) 35%, transparent); font-weight: 700; }
+@media (max-width: 560px) { .policy-body .legal-table th { width: 7em; } }
 /* お問い合わせフォーム */
 #contactForm { display: grid; gap: 14px; }
 .cf-field { display: grid; gap: 6px; font-weight: 700; font-size: .9rem; border: 0; padding: 0; margin: 0; min-width: 0; }
