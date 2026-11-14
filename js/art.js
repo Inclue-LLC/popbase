@@ -132,9 +132,9 @@
   }
 
   // アバター選び用：絵のまわりの透明な余白を切り落として、正方形の真ん中に置いた画像
-  // 大きさは、アップした画像どうしの比率のまま（キャンバスに対する絵の大きさ。いちばん大きい絵が枠いっぱい）
+  // 大きさは、アップした画像どうしの比率のまま（絵の部分のピクセル数。いちばん大きい絵が枠いっぱい）
   const fitted = new Map(); // 画像 URL → 真ん中にそろえた画像
-  const trimmed = new Map(); // 画像 URL → { canvas, w, h }（w・h：キャンバスの長い辺に対する絵の部分の割合）。読めない画像は null
+  const trimmed = new Map(); // 画像 URL → { canvas, w, h }（w・h：アップした画像での絵の部分のピクセル数）。読めない画像は null
   let fitKey = '';
   async function prepareFit(urls = []) {
     const list = [...new Set(urls.filter(Boolean).map(String))];
@@ -147,10 +147,9 @@
         const img = await loadImg(u);
         if (!img) return;
         const t = trim(img);
-        // 絵の部分の大きさを、アップした画像（キャンバス）の長いほうの辺に対する割合で持つ
-        // （同じ大きさのキャンバスに描いた絵どうしなら、その大きさの比率がそのまま出る。画像の解像度のちがいには左右されない）
-        const side = Math.max(1, Math.min(512, Math.max(img.width, img.height))); // trim() は長い辺 512px までに縮めて調べる
-        trimmed.set(u, { canvas: t.canvas, w: t.canvas.width / side, h: t.canvas.height / side });
+        // 絵の部分の大きさを、アップした画像でのピクセル数で持つ（余白なしでアップした画像なら、画像の大きさそのもの）
+        const k = Math.min(1, 512 / Math.max(img.width, img.height)); // trim() は長い辺 512px までに縮めて調べる
+        trimmed.set(u, { canvas: t.canvas, w: t.canvas.width / k, h: t.canvas.height / k });
       } catch { /* 読み取れない画像はそのまま表示 */ }
     }));
     if (key !== fitKey) return false; // 待っている間に、並べるアバターが変わった
