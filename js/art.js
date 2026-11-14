@@ -154,7 +154,7 @@
     }));
     if (key !== fitKey) return false; // 待っている間に、並べるアバターが変わった
     const ok = list.map((u) => [u, trimmed.get(u)]).filter(([, t]) => t);
-    const S = 256, box = S * 0.92;
+    const S = 256, box = S * 0.96; // いちばん大きい絵のまわりの余白：各辺 2%
     const biggest = Math.max(0.01, ...ok.map(([, t]) => Math.max(t.w, t.h)));
     fitted.clear();
     for (const [u, t] of ok) {
