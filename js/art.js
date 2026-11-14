@@ -131,27 +131,43 @@
     return ok.length > 0;
   }
 
-  // アバター選び用：絵のまわりの透明な余白を切り落として、正方形の真ん中に、枠いっぱいの大きさで置いた画像
-  // （画像ごとに余白の量がちがっても、カードの中のイラストの位置と大きさがそろう）
-  const fitted = new Map(); // 画像 URL → 真ん中にそろえた画像（作れなかった画像は null）
+  // アバター選び用：絵のまわりの透明な余白を切り落として、正方形の真ん中に置いた画像
+  // 大きさは、アップした画像どうしの比率のまま（キャンバスに対する絵の大きさ。いちばん大きい絵が枠いっぱい）
+  const fitted = new Map(); // 画像 URL → 真ん中にそろえた画像
+  const trimmed = new Map(); // 画像 URL → { canvas, w, h }（w・h：キャンバスの長い辺に対する絵の部分の割合）。読めない画像は null
+  let fitKey = '';
   async function prepareFit(urls = []) {
-    const todo = [...new Set(urls.filter(Boolean).map(String))].filter((u) => !fitted.has(u));
-    if (!todo.length) return false;
-    await Promise.all(todo.map(async (u) => {
-      fitted.set(u, null);
+    const list = [...new Set(urls.filter(Boolean).map(String))];
+    const key = list.slice().sort().join('\n');
+    if (key === fitKey) return false;
+    fitKey = key;
+    await Promise.all(list.filter((u) => !trimmed.has(u)).map(async (u) => {
+      trimmed.set(u, null);
       try {
         const img = await loadImg(u);
         if (!img) return;
-        const t = trim(img).canvas;
-        const S = 256, box = S * 0.92;
-        const k = Math.min(box / t.width, box / t.height);
-        const w = t.width * k, h = t.height * k;
-        const c = document.createElement('canvas');
-        c.width = S; c.height = S;
-        c.getContext('2d').drawImage(t, (S - w) / 2, (S - h) / 2, w, h);
-        fitted.set(u, c.toDataURL('image/png'));
+        const t = trim(img);
+        // 絵の部分の大きさを、アップした画像（キャンバス）の長いほうの辺に対する割合で持つ
+        // （同じ大きさのキャンバスに描いた絵どうしなら、その大きさの比率がそのまま出る。画像の解像度のちがいには左右されない）
+        const side = Math.max(1, Math.min(512, Math.max(img.width, img.height))); // trim() は長い辺 512px までに縮めて調べる
+        trimmed.set(u, { canvas: t.canvas, w: t.canvas.width / side, h: t.canvas.height / side });
       } catch { /* 読み取れない画像はそのまま表示 */ }
     }));
+    if (key !== fitKey) return false; // 待っている間に、並べるアバターが変わった
+    const ok = list.map((u) => [u, trimmed.get(u)]).filter(([, t]) => t);
+    const S = 256, box = S * 0.92;
+    const biggest = Math.max(0.01, ...ok.map(([, t]) => Math.max(t.w, t.h)));
+    fitted.clear();
+    for (const [u, t] of ok) {
+      // いちばん大きい絵を枠いっぱいに。ほかの絵は同じ倍率（小さすぎて見えなくならないよう、枠の 25% より小さくはしない）
+      let k = box / biggest;
+      if (Math.max(t.w, t.h) * k < box * 0.25) k = (box * 0.25) / Math.max(t.w, t.h);
+      const w = t.w * k, h = t.h * k;
+      const c = document.createElement('canvas');
+      c.width = S; c.height = S;
+      c.getContext('2d').drawImage(t.canvas, (S - w) / 2, (S - h) / 2, w, h);
+      try { fitted.set(u, c.toDataURL('image/png')); } catch { /* noop */ }
+    }
     return true;
   }
 
