@@ -46,6 +46,7 @@
     /** 入店を申し込む（入店券があれば、その続きから） */
     start() {
       if (window.DEMO) return V.startDemo();
+      if (window.PREVIEW_MODE) return V.startPreview();
       V.wanted = true;
       if (V.state === 'ended' || V.state === 'closed') V.state = 'idle';
       const url = resolveUrl();
@@ -150,6 +151,17 @@
           if (Math.random() < 0.003) emit('message', { t: 'emote', id: b.id, e: Math.floor(Math.random() * 6) });
         }
       }, 120);
+    },
+
+    /*
+     * 管理画面からの下書きの確認（?preview=draft）：会期・営業時間に関係なく、サーバーにはつながず、すぐ入店
+     * （本番の店内の人数・順番待ちには影響しない。ほかのお客さんは表示しない）
+     */
+    startPreview() {
+      V.state = 'inside';
+      emit('status', 'online');
+      emit('admitted', { crowded: false, preview: true });
+      emit('message', { t: 'welcome', peers: [] });
     },
 
     goOffline() {

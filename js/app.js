@@ -389,7 +389,8 @@ window.AppReady = (async function () {
   function renderStoreStatus() {
     if (entrancePreview) return;
     const serverSaysClosed = Visit.state === 'closed' && Date.now() - serverClosedAt < 60e3;
-    const st = HS.status(SHOP.schedule || {});
+    // 管理画面からの下書きの確認：会期外・営業時間外でも、営業中として表示する（店内を確認できるように）
+    const st = window.PREVIEW_MODE ? { state: 'open', closesAt: null } : HS.status(SHOP.schedule || {});
     const open = st.state === 'open' && !serverSaysClosed;
     // 開催中のイベントも次の予定もない（イベントが1つもない／最後のイベントが終わった）：POP BASE だけの画面
     // （次のイベントが予定されていれば、サーバーはそのイベントを返すので、ここには来ない）
