@@ -4,7 +4,8 @@
  */
 const TEXT = ['brand', 'title', 'period', 'left_title', 'left_label', 'right_title', 'right_label', 'island_title', 'island_label', 'novelty_name',
   'entrance_kicker', 'entrance_heading', 'entrance_message', 'entrance_button'];
-const MULTILINE = ['entrance_notice', 'shipping_note', 'shipping_text', 'payment_text', 'return_text']; // 改行を許す（300文字まで）
+const MULTILINE = ['entrance_notice', 'shipping_note', 'shipping_text', 'payment_text', 'return_text', 'legal_notice']; // 改行を許す（300文字まで。MULTILINE_MAX にあるものはその文字数まで）
+const MULTILINE_MAX = { legal_notice: 2000 }; // 特定商取引法に基づく表記（出品者）
 const COLOR = ['wall_color', 'wall_pattern_color', 'lower_color', 'trim_color', 'floor_color_1', 'floor_color_2', 'rug_color', 'sign_color', 'sign_text_color', 'sign_sub_color',
   'entrance_color_top', 'entrance_color_bottom', 'entrance_heading_color', 'entrance_text_color', 'product_bg_color', 'avatar_ring_color', 'char_note_color'];
 const IMAGE = ['wall_image', 'floor_image', 'entrance_logo', 'entrance_image'];
@@ -75,7 +76,7 @@ function cleanEvent(event, imageOk) {
       if (UNIT_LIMITS[k] && textUnits(v) > UNIT_LIMITS[k]) throw new InputError(`${k}（全角${UNIT_LIMITS[k] / 2}文字・半角${UNIT_LIMITS[k]}文字まで）`);
       out[k] = v.replace(/[\u0000-\u001f]/g, '');
     } else if (MULTILINE.includes(k)) {
-      if (typeof v !== 'string' || v.length > 300) throw new InputError(k);
+      if (typeof v !== 'string' || v.length > (MULTILINE_MAX[k] || 300)) throw new InputError(k);
       out[k] = v.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f]/g, '');
     } else if (COLOR.includes(k)) {
       if (!/^#[0-9a-f]{6}$/i.test(v)) throw new InputError(k);
@@ -268,6 +269,6 @@ function flatten(event) {
 
 // 出品者が変えられない項目（会期・営業時間・人数・商品のコレクション・送料や支払いなどの案内・購入特典）。js/event.js の SELLER_LOCKED と同じ
 const SELLER_LOCKED = ['open_at', 'close_at', 'daily_open', 'daily_close', 'capacity', 'collection',
-  'shipping_text', 'shipping_note', 'free_shipping_threshold', 'payment_text', 'return_text', 'novelty', 'novelty_name', 'novelty_threshold'];
+  'shipping_text', 'shipping_note', 'free_shipping_threshold', 'payment_text', 'return_text', 'legal_notice', 'novelty', 'novelty_name', 'novelty_threshold'];
 
 module.exports = { SELLER_LOCKED, REQUIRED, missingRequired, KEYS, TEXT, MULTILINE, COLOR, IMAGE, SELECT, NUMBER, JSON_KEYS, cleanEvent, cleanLayout, flatten, InputError };
