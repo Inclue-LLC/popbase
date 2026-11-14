@@ -21,7 +21,7 @@ function maxFrac() {
   const key = list.map((a) => `${a.id}|${srcOf(a).image || ''}`).join(',');
   if (key !== ratioKey || !ratioMax) {
     ratioKey = key;
-    ratioMax = Promise.all(list.map((a) => characterFrac(srcOf(a)))).then((f) => Math.max(...f, 0));
+    ratioMax = Promise.all(list.map((a) => characterFrac(srcOf(a), { by: 'size' }))).then((f) => Math.max(...f, 0));
   }
   return ratioMax;
 }
@@ -78,10 +78,10 @@ export class Avatar {
     // キャラクターならその絵、管理画面で追加したアバターならアップロードした画像
     const a = window.HaneulEvent.findAvatar(avatar);
     const src = srcOf(a);
-    const [frac, max] = await Promise.all([characterFrac(src), maxFrac()]);
+    const [frac, max] = await Promise.all([characterFrac(src, { by: 'size' }), maxFrac()]);
     const scale = frac && max ? Math.min(1, frac / max) : 1;
     const key = `${a.id}|${src.image || ''}|${scale.toFixed(3)}`;
-    if (!texCache.has(key)) texCache.set(key, characterTexture(src, 256, { scale }));
+    if (!texCache.has(key)) texCache.set(key, characterTexture(src, 256, { scale, by: 'size' }));
     const tex = await texCache.get(key);
     this.sprite.material.map = tex;
     this.sprite.material.needsUpdate = true;

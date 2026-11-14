@@ -453,7 +453,7 @@ function trimTransparent(img, key) {
  * 透明な余白を切り落としてから、決まった枠（高さ 94%）に下揃えで収める。
  * イラストの下の部分（アバター用の足元など）も含めて収め、足元が床・名前の札のすぐ上に来るようにする。
  */
-export async function characterTexture(character, size = 256, { scale = 1 } = {}) {
+export async function characterTexture(character, size = 256, { scale = 1, by = 'height' } = {}) {
   const src = character.image ? await loadImage(character.image) : await svgImage(window.Art.characterSVG(character), size, size);
   const c = makeCanvas(size, size);
   if (src) {
@@ -463,6 +463,8 @@ export async function characterTexture(character, size = 256, { scale = 1 } = {}
     const pad = Math.max(2, size * 0.01); // 下端に少し余白（端の画素が欠けないように）
     // 高さを基準にそろえ、scale（1 以下）で、ほかのキャラクターとの高さの比率を反映（はみ出すほど横に長い絵だけ幅に合わせて縮める）
     let k = (boxH / img.height) * Math.max(0.2, Math.min(1, scale));
+    // by: 'size'（店内のアバター）：縦横の長いほうを基準に（アバター選びと同じ。いちばん大きい絵が枠いっぱい、ほかは同じ倍率、下限 25%）
+    if (by === 'size') k = (boxH / Math.max(img.width, img.height)) * Math.max(0.25, Math.min(1, scale));
     if (img.width * k > boxW) k = boxW / img.width;
     const w = img.width * k;
     const h = img.height * k;
@@ -476,11 +478,16 @@ export async function characterTexture(character, size = 256, { scale = 1 } = {}
  * キャラクターどうしの大きさの比率は、この高さの比（いちばん高いキャラクターを 100%）。
  * 画像のないキャラクター（自社の4体の元のイラストなど）は 0 を返す（＝比率を付けず、いちばん大きいものと同じ扱い）
  */
-export async function characterFrac(character) {
+export async function characterFrac(character, { by = 'height' } = {}) {
   if (!character.image) return 0;
   const src = await loadImage(character.image);
   if (!src) return 0;
   const t = trimTransparent(src, character.image);
+  if (by === 'size') {
+    // 縦横の長いほう（元の画像のピクセル数）。店内のアバターの大きさの比率に使う（アバター選びと同じ基準）
+    const k = Math.min(1, 512 / Math.max(src.width, src.height)); // trimTransparent は長い辺 512px までに縮めて調べる
+    return Math.max(t.width, t.height) / k;
+  }
   return (t.frac || 1) * src.height;
 }
 
