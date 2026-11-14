@@ -131,10 +131,34 @@
     return ok.length > 0;
   }
 
-  function characterSVG(c, cls = '') {
+  // アバター選び用：絵のまわりの透明な余白を切り落として、正方形の真ん中に、枠いっぱいの大きさで置いた画像
+  // （画像ごとに余白の量がちがっても、カードの中のイラストの位置と大きさがそろう）
+  const fitted = new Map(); // 画像 URL → 真ん中にそろえた画像（作れなかった画像は null）
+  async function prepareFit(urls = []) {
+    const todo = [...new Set(urls.filter(Boolean).map(String))].filter((u) => !fitted.has(u));
+    if (!todo.length) return false;
+    await Promise.all(todo.map(async (u) => {
+      fitted.set(u, null);
+      try {
+        const img = await loadImg(u);
+        if (!img) return;
+        const t = trim(img).canvas;
+        const S = 256, box = S * 0.92;
+        const k = Math.min(box / t.width, box / t.height);
+        const w = t.width * k, h = t.height * k;
+        const c = document.createElement('canvas');
+        c.width = S; c.height = S;
+        c.getContext('2d').drawImage(t, (S - w) / 2, (S - h) / 2, w, h);
+        fitted.set(u, c.toDataURL('image/png'));
+      } catch { /* 読み取れない画像はそのまま表示 */ }
+    }));
+    return true;
+  }
+
+  function characterSVG(c, cls = '', opts = {}) {
     if (!c.image && !bodies[c.kind]) return `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true">${placeholderSVG(c)}</svg>`;
     if (c.image) {
-      const src = String(sized.get(String(c.image)) || c.image).replace(/["<>]/g, '');
+      const src = String((opts.fit && fitted.get(String(c.image))) || sized.get(String(c.image)) || c.image).replace(/["<>]/g, '');
       return `<img class="char-img ${cls}" src="${src}" alt="" aria-hidden="true" loading="lazy">`;
     }
     return `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true">${character(c)}</svg>`;
@@ -197,5 +221,5 @@
     return `<svg viewBox="0 0 200 200" aria-hidden="true">${c ? shape(c) : NO_IMAGE}</svg>`;
   }
 
-  window.Art = { prepareSizes, character, characterSVG, productSVG, tint, starPoints };
+  window.Art = { prepareSizes, prepareFit, character, characterSVG, productSVG, tint, starPoints };
 })();

@@ -294,7 +294,9 @@ window.AppReady = (async function () {
     $('#entPickGrid').innerHTML = window.AVATARS.map((a) => `
       <button type="button" class="pick-char" role="radio" data-avatar="${escAttr(a.id)}" aria-checked="${a.id === pickSel}"
         style="--c:${a.character ? a.character.color : '#e3e6f0'}${a.bg ? `;--card-bg:${a.bg}` : ''}">
-        ${Art.characterSVG(a.character || { image: a.image })}<span>${esc(a.name)}</span></button>`).join('');
+        ${Art.characterSVG(a.character || { image: a.image }, '', { fit: true })}<span>${esc(a.name)}</span></button>`).join('');
+    // 画像のアバターは、余白を切り落として真ん中にそろえた画像ができたら描き直す
+    Art.prepareFit(window.AVATARS.map((a) => (a.character ? a.character.image : a.image))).then((added) => { if (added && !$('#entPick').hidden) renderEntrancePick(); });
   }
   function openEntrancePick() {
     // 入店のたびに、いちばん左のアバターを選んだ状態から（前回選んだものは引き継がない）

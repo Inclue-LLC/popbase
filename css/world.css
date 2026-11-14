@@ -177,12 +177,12 @@ body.world-fs .world {
 .picker-card h3 { font-size: 1.2rem; }
 .pick-chars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .pick-char {
-  display: grid; justify-items: center; gap: 2px;
+  display: grid; justify-items: center; gap: 2px; grid-template-rows: auto 1fr; align-items: start; /* イラストは全カードで同じ高さに（名前が2行のカードがあっても上下にずれない） */
   padding: 8px 4px 6px; border-radius: 16px; border: 2px solid transparent;
   background: var(--card-bg, color-mix(in srgb, var(--c) 22%, var(--surface)));
   font-weight: 700; font-size: .85rem; color: #3a3346; /* 名前の色は入口のアバター選びと同じ */
 }
-.pick-char svg, .pick-char .char-img { width: 100%; max-width: 76px; height: auto; }
+.pick-char svg, .pick-char .char-img { width: 100%; max-width: 76px; height: auto; aspect-ratio: 1; }
 .pick-char[aria-pressed="true"] { border-color: var(--theme-accent, #9b80e0); box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent, #9b80e0) 35%, transparent); }
 /* ボタンなどの色は、入口のアバター選びと同じ（設定されたテーマの色） */
 .picker-card { color: #2e2729; }
