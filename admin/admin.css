@@ -231,7 +231,7 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .ap-card { background: #fff; color: #3a3346; border-radius: 20px; padding: 18px; display: grid; gap: 12px; text-align: center; box-shadow: 0 0 0 1.5px var(--line); }
 .ap-card h3 { font-size: 1.05rem; }
 .ap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.ap-grid .pick { display: grid; justify-items: center; gap: 2px; padding: 8px 4px 6px; border-radius: 14px; background: var(--card-bg, color-mix(in srgb, var(--c, #e3e6f0) 22%, #fff)); font-weight: 700; font-size: .78rem; }
+.ap-grid .pick { display: grid; justify-items: center; gap: 2px; grid-template-rows: auto 1fr; align-items: start; padding: 8px 4px 6px; border-radius: 14px; background: var(--card-bg, color-mix(in srgb, var(--c, #e3e6f0) 22%, #fff)); font-weight: 700; font-size: .78rem; }
 .ap-grid .pick svg, .ap-grid .pick img { width: 100%; max-width: 64px; aspect-ratio: 1; object-fit: contain; }
 .ap-name { margin: 0; font-size: .82rem; color: #6f6880; }
 .btn.is-disabled { opacity: .45; pointer-events: none; }

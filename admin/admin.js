@@ -1283,6 +1283,7 @@ function avatarRows(v) {
   return rows.map((r, k) => ({ r, k })).sort((x, y) => pos(x.r.id) - pos(y.r.id) || x.k - y.k).map((x) => x.r);
 }
 
+let apFitGen = 0; // プレビューを描き直したら、前の画像の準備の結果は使わない
 function renderAvatars() {
   const v = avatarEdits();
   E.applyCharacters(state.draft.event.characters);
@@ -1322,7 +1323,12 @@ function renderAvatars() {
 
   // プレビュー（お客さんのアバター選び）
   $('#apGrid').innerHTML = list.map((a) => `<span class="pick" style="--c:${a.character ? esc(a.character.color) : '#e3e6f0'}${a.bg ? `;--card-bg:${esc(a.bg)}` : ''}">
-    ${window.Art.characterSVG(a.character || { image: a.image })}<span>${esc(a.name)}</span></span>`).join('');
+    ${window.Art.characterSVG(a.character || { image: a.image }, '', { fit: true })}<span>${esc(a.name)}</span></span>`).join('');
+  const gen = ++apFitGen;
+  window.Art.prepareFit(list.map((a) => (a.character ? a.character.image : a.image))).then((added) => {
+    if (!added || gen !== apFitGen) return;
+    $('#apGrid').querySelectorAll('.pick').forEach((el, k) => { const a = list[k]; if (a) el.firstElementChild.outerHTML = window.Art.characterSVG(a.character || { image: a.image }, '', { fit: true }); });
+  });
 }
 
 $('#avList').addEventListener('change', (e) => {

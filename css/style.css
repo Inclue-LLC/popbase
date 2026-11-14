@@ -493,7 +493,7 @@ body.is-demo.world-fs { padding-top: 0; }
 .ep-title { margin: 0 0 12px; font-weight: 800; font-size: 1.05rem; }
 .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 10px; margin-bottom: 10px; }
 .ep-grid .pick-char {
-  display: grid; justify-items: center; gap: 2px; padding: 8px 4px 6px;
+  display: grid; justify-items: center; gap: 2px; padding: 8px 4px 6px; grid-template-rows: auto 1fr; align-items: start; /* イラストは全カードで同じ高さに（名前が2行のカードがあっても上下にずれない） */
   border-radius: 16px; border: 2px solid transparent;
   background: var(--card-bg, color-mix(in srgb, var(--c) 22%, #fff)); font-weight: 700; font-size: .85rem; color: #3a3346;
 }

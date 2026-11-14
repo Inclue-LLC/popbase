@@ -176,7 +176,8 @@ async function main() {
     const escName = (v) => String(v).replace(/[&<>"']/g, '');
     $('#pickChars').innerHTML = window.AVATARS.map((a) => `
       <button class="pick-char" data-avatar="${escName(a.id)}" aria-pressed="${pick.avatar === a.id}" style="--c:${a.character ? a.character.color : '#e3e6f0'}${a.bg ? `;--card-bg:${a.bg}` : ''}">
-        ${window.Art.characterSVG(a.character || { image: a.image })}<span>${escName(a.name)}</span></button>`).join('');
+        ${window.Art.characterSVG(a.character || { image: a.image }, '', { fit: true })}<span>${escName(a.name)}</span></button>`).join('');
+    window.Art.prepareFit(window.AVATARS.map((a) => (a.character ? a.character.image : a.image))).then((added) => { if (added && !picker.hidden) renderPicker(); });
   }
   $('#pickChars').addEventListener('click', (e) => {
     const b = e.target.closest('[data-avatar]');
