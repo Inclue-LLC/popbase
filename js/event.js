@@ -106,8 +106,8 @@
   // 前の初期の文（そのまま保存されているイベントは、新しい初期の文で表示する）
   const OLD_RETURN_TEXTS = ['POP BASEの商品は期間・数量限定のため、お客様のご都合による返品・交換・キャンセルはお受けしていません。不良品やお届け間違いは、至急、交換をさせていただきます。\nただし、在庫切れ等の理由により、交換商品をご用意できない場合はご返品にて承りいたします。'];
   const returnTextOf = (v) => { const s = String(v ?? '').replace(/\r\n/g, '\n'); return !s.trim() || OLD_RETURN_TEXTS.includes(s.trim()) ? RETURN_TEXT : s; };
-  // 特定商取引法に基づく表記（出品者）の記入欄の薄い文字（書き方の例）
-  const LEGAL_TEMPLATE = '販売業者：\n運営統括責任者：\n所在地：\n電話番号：\nメールアドレス：\n販売価格：各商品ページに記載（税込）\n商品代金以外の必要料金：送料（ご案内の「送料」をご覧ください）\nお支払い方法：ご案内の「お支払い方法」をご覧ください\n商品の引き渡し時期：ご案内の「発送について」をご覧ください\n返品・交換について：ご案内の「返品・交換・キャンセルについて」をご覧ください';
+  // 特定商取引法に基づく表記（出店者・発送元）の記入欄の薄い文字（書き方の例）。販売業者は POP BASE（Shopify の表記）
+  const LEGAL_TEMPLATE = '出店者：\n発送元：\n所在地：\nお問い合わせ先：';
   const noveltyOn = (ev = {}) => ev.novelty === 'on' || (ev.novelty !== 'off' && ev.novelty_name != null && String(ev.novelty_name).trim() !== '');
 
   /* 管理画面のフォーム定義 */
@@ -125,7 +125,7 @@
     { group: '送料・発送・お支払い', key: 'shipping_note', label: '発送について', hint: 'ご案内の「発送について」に出す文（例：会期終了後、12月下旬より順次発送します）。改行できます（300文字まで）', type: 'textarea' },
     { group: '送料・発送・お支払い', key: 'payment_text', label: 'お支払い方法', hint: 'ご案内の「お支払い方法」に出す文。実際に使える方法は Shopify の「設定 → 決済」で決まるので、同じ内容にしてください。初期の文が入っています。改行できます（300文字まで）', type: 'textarea', defaultValue: PAYMENT_TEXT },
     { group: '送料・発送・お支払い', key: 'return_text', label: '返品・交換・キャンセルについて', hint: 'ご案内の「返品・交換・キャンセルについて」に出す文。初期の文が入っています。改行できます（300文字まで）', type: 'textarea', defaultValue: RETURN_TEXT },
-    { group: '特定商取引法に基づく表記', key: 'legal_notice', label: '出品者（販売業者）の表記', hint: 'ページ下の「特定商取引法に基づく表記」に出します。1行に1項目、「項目：内容」の形で書くと表になります（例：販売業者：株式会社〇〇）。運営者（POP BASE）の表記は、この下に自動で続けて出します。改行できます（2000文字まで）', type: 'textarea', maxLength: 2000, rows: 10, placeholder: LEGAL_TEMPLATE },
+    { group: '特定商取引法に基づく表記', key: 'legal_notice', label: '出店者（発送元）の表記', hint: 'ページ下の「特定商取引法に基づく表記」に、販売業者（POP BASE）の表記に続けて出します。1行に1項目、「項目：内容」の形で書くと表になります（例：出店者：株式会社〇〇）。改行できます（2000文字まで）', type: 'textarea', maxLength: 2000, rows: 10, placeholder: LEGAL_TEMPLATE },
     { group: 'イベント', key: 'theme_preset', label: 'ベースのテーマ', hint: '下の項目で空欄のものは、このテーマの値になります', type: 'select', options: () => Object.entries(window.THEMES).filter(([k]) => k !== 'event').map(([k, t]) => ({ value: k, label: t.name })) },
     { group: 'イベント', key: 'capacity', label: '店内の上限人数', hint: '同時に店内に入れる人数。いっぱいのときは、入口で順番待ちになります', type: 'select', options: () => opt([['10', '10人'], ['20', '20人'], ['30', '30人'], ['40', '40人'], ['', '50人']]) },
     { group: '壁', key: 'wall_image', label: '壁紙の画像', hint: '横長の画像（例: 2048×540px）。指定すると柄より優先', type: 'image' },
@@ -320,7 +320,7 @@
     S.shippingNote = has(f, 'shipping_note') ? String(f.shipping_note) : '';
     S.paymentText = has(f, 'payment_text') && String(f.payment_text).trim() ? String(f.payment_text) : PAYMENT_TEXT;
     S.returnText = returnTextOf(f.return_text);
-    S.legalNotice = has(f, 'legal_notice') ? String(f.legal_notice).trim() : ''; // 特定商取引法に基づく表記（出品者）
+    S.legalNotice = has(f, 'legal_notice') ? String(f.legal_notice).trim() : ''; // 特定商取引法に基づく表記（出店者・発送元）
     S.capacity = [10, 20, 30, 40, 50].includes(Number(f.capacity)) ? Number(f.capacity) : 50; // 店内の上限人数（ご案内の「混雑時の入店」）
     S.novelty = noveltyOn(f) && has(f, 'novelty_name')
       ? { threshold: has(f, 'novelty_threshold') ? Number(f.novelty_threshold) : NOVELTY_THRESHOLD, name: f.novelty_name }
