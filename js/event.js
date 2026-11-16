@@ -106,8 +106,11 @@
   // 前の初期の文（そのまま保存されているイベントは、新しい初期の文で表示する）
   const OLD_RETURN_TEXTS = ['POP BASEの商品は期間・数量限定のため、お客様のご都合による返品・交換・キャンセルはお受けしていません。不良品やお届け間違いは、至急、交換をさせていただきます。\nただし、在庫切れ等の理由により、交換商品をご用意できない場合はご返品にて承りいたします。'];
   const returnTextOf = (v) => { const s = String(v ?? '').replace(/\r\n/g, '\n'); return !s.trim() || OLD_RETURN_TEXTS.includes(s.trim()) ? RETURN_TEXT : s; };
-  // 特定商取引法に基づく表記（出店者・発送元）の記入欄の薄い文字（書き方の例）。販売業者は POP BASE（Shopify の表記）
-  const LEGAL_TEMPLATE = '出店者：\n発送元：\n所在地：\nお問い合わせ先：';
+  // 特定商取引法に基づく表記（出店者・発送元）の書き方の例（法人・個人）。販売業者は POP BASE（Shopify の表記）
+  const LEGAL_TEMPLATES = {
+    corp: '出店者：株式会社〇〇\n代表者：\n所在地：\n電話番号：\nメールアドレス：\n発送元：出店者より直接発送します',
+    individual: '出店者：〇〇（屋号・作家名・ブランド名）\n発送元：出店者より直接発送します\nお問い合わせ先：POP BASE（ページ下の「お問い合わせ」から）',
+  };
   const noveltyOn = (ev = {}) => ev.novelty === 'on' || (ev.novelty !== 'off' && ev.novelty_name != null && String(ev.novelty_name).trim() !== '');
 
   /* 管理画面のフォーム定義 */
@@ -125,7 +128,10 @@
     { group: '送料・発送・お支払い', key: 'shipping_note', label: '発送について', hint: 'ご案内の「発送について」に出す文（例：会期終了後、12月下旬より順次発送します）。改行できます（300文字まで）', type: 'textarea' },
     { group: '送料・発送・お支払い', key: 'payment_text', label: 'お支払い方法', hint: 'ご案内の「お支払い方法」に出す文。実際に使える方法は Shopify の「設定 → 決済」で決まるので、同じ内容にしてください。初期の文が入っています。改行できます（300文字まで）', type: 'textarea', defaultValue: PAYMENT_TEXT },
     { group: '送料・発送・お支払い', key: 'return_text', label: '返品・交換・キャンセルについて', hint: 'ご案内の「返品・交換・キャンセルについて」に出す文。初期の文が入っています。改行できます（300文字まで）', type: 'textarea', defaultValue: RETURN_TEXT },
-    { group: '特定商取引法に基づく表記', key: 'legal_notice', label: '出店者（発送元）の表記', hint: 'ページ下の「特定商取引法に基づく表記」に、販売業者（POP BASE）の表記に続けて出します。1行に1項目、「項目：内容」の形で書くと表になります（例：出店者：株式会社〇〇）。改行できます（2000文字まで）', type: 'textarea', maxLength: 2000, rows: 10, placeholder: LEGAL_TEMPLATE },
+    { group: '特定商取引法に基づく表記', key: 'legal_kind', label: '出店者の区分', hint: '法人か個人かで、下の欄の書き方の例が変わります', type: 'select', options: () => opt([['', '法人'], ['individual', '個人']]) },
+    { group: '特定商取引法に基づく表記', key: 'legal_notice', label: '出店者（発送元）の表記',
+      hint: (ev) => `ページ下の「特定商取引法に基づく表記」に、販売業者（POP BASE）の表記に続けて出します。1行に1項目、「項目：内容」の形で書くと表になります。${ev.legal_kind === 'individual' ? '個人の出店者は、本名・住所・電話番号は書かず、屋号・作家名と、お問い合わせ先を POP BASE にする書き方がおすすめです。' : ''}改行できます（2000文字まで）`,
+      type: 'textarea', maxLength: 2000, rows: 8, placeholder: (ev) => LEGAL_TEMPLATES[ev.legal_kind === 'individual' ? 'individual' : 'corp'], template: (ev) => LEGAL_TEMPLATES[ev.legal_kind === 'individual' ? 'individual' : 'corp'] },
     { group: 'イベント', key: 'theme_preset', label: 'ベースのテーマ', hint: '下の項目で空欄のものは、このテーマの値になります', type: 'select', options: () => Object.entries(window.THEMES).filter(([k]) => k !== 'event').map(([k, t]) => ({ value: k, label: t.name })) },
     { group: 'イベント', key: 'capacity', label: '店内の上限人数', hint: '同時に店内に入れる人数。いっぱいのときは、入口で順番待ちになります', type: 'select', options: () => opt([['10', '10人'], ['20', '20人'], ['30', '30人'], ['40', '40人'], ['', '50人']]) },
     { group: '壁', key: 'wall_image', label: '壁紙の画像', hint: '横長の画像（例: 2048×540px）。指定すると柄より優先', type: 'image' },
@@ -187,7 +193,7 @@
   const NEED = {
     brand: ['required'], title: ['required'], open_at: ['required'], close_at: ['required'], collection: ['required'],
     novelty: ['default', 'なし'], novelty_name: ['required'], novelty_threshold: ['required'], shipping_note: ['required'], shipping_text: ['required'], payment_text: ['required'], return_text: ['required'],
-    free_shipping_threshold: ['hide'], capacity: ['none'], legal_notice: ['default', '運営者（POP BASE）の表記だけ'], // 選ぶだけの欄なのでバッジなし
+    free_shipping_threshold: ['hide'], capacity: ['none'], legal_notice: ['default', '運営者（POP BASE）の表記だけ'], legal_kind: ['none'], // 選ぶだけの欄なのでバッジなし
     product_bg_color: ['default', 'テーマの色'],
     daily_open: ['default', '24時間営業'], daily_close: ['default', '24時間営業'], period: ['default', '日時から自動で作成'],
     theme_preset: ['default', 'Milk Tea'], font: ['default', '初期設定のフォント'],
@@ -519,6 +525,6 @@
   applyCast(''); // 最初は自社の4体
   // 出品者が変えられない項目（server/admin/fields.js の SELLER_LOCKED と同じ）
   const SELLER_LOCKED = ['open_at', 'close_at', 'daily_open', 'daily_close', 'capacity', 'collection',
-    'shipping_text', 'shipping_note', 'free_shipping_threshold', 'payment_text', 'return_text', 'legal_notice', 'novelty', 'novelty_name', 'novelty_threshold'];
+    'shipping_text', 'shipping_note', 'free_shipping_threshold', 'payment_text', 'return_text', 'legal_kind', 'legal_notice', 'novelty', 'novelty_name', 'novelty_threshold'];
   window.HaneulEvent = { SELLER_LOCKED, placeLimit, CARD_PRESETS, avatarCharacters, castOf, applyCast, MAX_CAST, noveltyOn, NOVELTY_THRESHOLD, missingRequired, returnTextOf, textUnits, clampUnits, FIELDS, FONTS, applyFont, applyCharacters, applyAvatars, findAvatar, fontReady, IMAGE_KEYS, ROWS, SLOTS, TABLE_SLOTS, applyEvent, applyLayout, normalize, autoLayout, flatten, imageUrl, original };
 })();

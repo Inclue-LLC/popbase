@@ -193,6 +193,7 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .ep-stage iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; background: #fff; pointer-events: auto; }
 .preview.is-entrance .preview-box, .preview.is-entrance #previewViews, .preview.is-entrance > .preview-note,
 .preview.is-avatars .preview-box, .preview.is-avatars #previewViews, .preview.is-avatars > .preview-note { display: none; }
+.tpl-wrap { display: grid; gap: 6px; justify-items: start; }
 .field textarea { width: 100%; min-height: 64px; padding: .45em .7em; border-radius: 8px; border: 1.5px solid var(--line); background: var(--surface); resize: vertical; font: inherit; color: inherit; }
 
 /* キャラクター */

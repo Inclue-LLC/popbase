@@ -16,7 +16,8 @@ const SELECT = {
   light: ['', 'day', 'night'],
   entrance_characters: ['', 'hide'],
   capacity: ['', '10', '20', '30', '40', '50'], // 店内の上限人数（'' は 50 人）
-  novelty: ['', 'on', 'off'], // 購入特典のあり・なし（'' は名前が入っていればあり）
+  novelty: ['', 'on', 'off'],
+  legal_kind: ['', 'individual'], // 出店者の区分（'' は法人）。特定商取引法に基づく表記の書き方の例を切り替える // 購入特典のあり・なし（'' は名前が入っていればあり）
   // js/event.js の FONTS と同じ値
   font: ['', 'mplus-maru', 'zen-maru', 'kosugi-maru', 'kiwi-maru', 'noto-sans', 'zen-kaku', 'noto-serif', 'yusei', 'hachi-maru', 'dotgothic'],
 };
@@ -269,6 +270,6 @@ function flatten(event) {
 
 // 出品者が変えられない項目（会期・営業時間・人数・商品のコレクション・送料や支払いなどの案内・購入特典）。js/event.js の SELLER_LOCKED と同じ
 const SELLER_LOCKED = ['open_at', 'close_at', 'daily_open', 'daily_close', 'capacity', 'collection',
-  'shipping_text', 'shipping_note', 'free_shipping_threshold', 'payment_text', 'return_text', 'legal_notice', 'novelty', 'novelty_name', 'novelty_threshold'];
+  'shipping_text', 'shipping_note', 'free_shipping_threshold', 'payment_text', 'return_text', 'legal_kind', 'legal_notice', 'novelty', 'novelty_name', 'novelty_threshold'];
 
 module.exports = { SELLER_LOCKED, REQUIRED, missingRequired, KEYS, TEXT, MULTILINE, COLOR, IMAGE, SELECT, NUMBER, JSON_KEYS, cleanEvent, cleanLayout, flatten, InputError };
