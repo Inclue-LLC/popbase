@@ -1,1 +1,5 @@
-{%- comment -%} 中身は表示しない（layout/theme.liquid で POP BASE へ移動する） {%- endcomment -%}
+{%- comment -%} ページ：ふだんは中身を表示しない（layout/theme.liquid で POP BASE へ移動する）。移動を止めているときはページの内容 {%- endcomment -%}
+{%- if settings.redirect_off -%}
+<h1>{{ page.title | escape }}</h1>
+<div>{{ page.content }}</div>
+{%- endif -%}

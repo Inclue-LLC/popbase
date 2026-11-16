@@ -1,1 +1,23 @@
-{%- comment -%} 中身は表示しない（layout/theme.liquid で POP BASE へ移動する） {%- endcomment -%}
+{%- comment -%} 商品：ふだんは中身を表示しない（layout/theme.liquid で POP BASE へ移動する）。移動を止めているときは商品の情報 {%- endcomment -%}
+{%- if settings.redirect_off -%}
+<div class="pd">
+  <div>{%- if product.featured_image -%}<img src="{{ product.featured_image | image_url: width: 900 }}" alt="{{ product.featured_image.alt | default: product.title | escape }}" width="900" height="900">{%- endif -%}</div>
+  <div>
+    <h1>{{ product.title | escape }}</h1>
+    <p class="price">{{ product.price | money }}（税込）{% if product.available == false %}　売り切れ{% endif %}</p>
+    {%- if product.available -%}
+      {%- form 'product', product -%}
+        {%- if product.variants.size > 1 -%}
+          <p><select name="id">{%- for v in product.variants -%}<option value="{{ v.id }}"{% unless v.available %} disabled{% endunless %}>{{ v.title | escape }}（{{ v.price | money }}）</option>{%- endfor -%}</select></p>
+        {%- else -%}
+          <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+        {%- endif -%}
+        <input type="hidden" name="quantity" value="1">
+        <input type="hidden" name="return_to" value="/checkout">
+        <p><button type="submit">購入手続きへ</button></p>
+      {%- endform -%}
+    {%- endif -%}
+    <div>{{ product.description }}</div>
+  </div>
+</div>
+{%- endif -%}
