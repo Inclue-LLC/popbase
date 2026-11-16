@@ -1,1 +1,16 @@
-{%- comment -%} 中身は表示しない（layout/theme.liquid で POP BASE へ移動する） {%- endcomment -%}
+{%- comment -%} コレクション：ふだんは中身を表示しない（layout/theme.liquid で POP BASE へ移動する）。移動を止めているときは商品の一覧 {%- endcomment -%}
+{%- if settings.redirect_off -%}
+<h1>{{ collection.title | escape }}</h1>
+{%- assign products = collection.products -%}
+<div class="grid">
+  {%- for product in products -%}
+    <a class="card" href="{{ product.url }}">
+      {%- if product.featured_image -%}<img src="{{ product.featured_image | image_url: width: 480 }}" alt="{{ product.featured_image.alt | default: product.title | escape }}" loading="lazy" width="480" height="480">{%- endif -%}
+      <div>{{ product.title | escape }}</div>
+      <div class="price">{{ product.price | money }}{% if product.available == false %}（売り切れ）{% endif %}</div>
+    </a>
+  {%- else -%}
+    <p>商品はまだありません。</p>
+  {%- endfor -%}
+</div>
+{%- endif -%}

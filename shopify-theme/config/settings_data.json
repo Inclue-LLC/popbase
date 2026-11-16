@@ -1,5 +1,6 @@
 {
   "current": {
-    "redirect_url": "https://popbase.jp"
+    "redirect_url": "https://popbase.jp",
+    "redirect_off": false
   }
 }

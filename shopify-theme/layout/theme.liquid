@@ -3,16 +3,17 @@
   お客さんが Shopify のお店のページ（商品一覧・商品ページなど）を開いたら、POP BASE（popbase.jp）へ移動する。
   お会計（チェックアウト）と注文状況のページはテーマを使わないので、そのまま Shopify で表示される。
   規約・ポリシーのページ（/policies/…）とギフトカードのページだけは、移動せずにそのまま表示する。
+  テーマ設定の「POP BASE への移動を止める」がオンのとき（決済サービスの審査など）は、どのページも移動せずに表示する。
 {%- endcomment -%}
 {%- assign target = settings.redirect_url | default: 'https://popbase.jp' -%}
 {%- assign stay = false -%}
-{%- if request.path contains '/policies/' or template.name == 'gift_card' -%}{%- assign stay = true -%}{%- endif -%}
+{%- if request.path contains '/policies/' or template.name == 'gift_card' or settings.redirect_off -%}{%- assign stay = true -%}{%- endif -%}
 <!doctype html>
 <html lang="{{ request.locale.iso_code | default: 'ja' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>POP BASE</title>
+  <title>{% if page_title != blank and template.name != 'index' %}{{ page_title | escape }} | {% endif %}{{ shop.name | default: 'POP BASE' | escape }}</title>
   {%- unless stay -%}
     <meta http-equiv="refresh" content="0; url={{ target | escape }}">
     <link rel="canonical" href="{{ target | escape }}">
@@ -26,13 +27,34 @@
     .moving { min-height: 100vh; display: grid; place-items: center; text-align: center; }
     table { border-collapse: collapse; width: 100%; }
     th, td { border: 1px solid #ece2e8; padding: .5em .7em; text-align: left; vertical-align: top; }
+    a { color: #8a5fb8; }
+    .site-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+    .site-foot { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ece2e8; font-size: .9rem; }
+    .site-foot nav { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-bottom: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 18px; }
+    .card { text-decoration: none; color: inherit; display: block; }
+    .card img, .pd img { width: 100%; height: auto; border-radius: 12px; background: #fff; aspect-ratio: 1; object-fit: contain; }
+    .price { font-weight: 700; }
+    .pd { display: grid; gap: 20px; }
+    @media (min-width: 640px) { .pd { grid-template-columns: 1fr 1fr; } }
   </style>
 </head>
 <body>
   {%- if stay -%}
     <div class="wrap">
-      <p><a class="brand" href="{{ target | escape }}">POP BASE</a></p>
+      <header class="site-head">
+        <a class="brand" href="{% if settings.redirect_off %}{{ routes.root_url }}{% else %}{{ target | escape }}{% endif %}">{{ shop.name | default: 'POP BASE' | escape }}</a>
+        {%- if settings.redirect_off -%}<a href="{{ target | escape }}">POP BASE（{{ target | remove: 'https://' | remove: 'http://' | escape }}）</a>{%- endif -%}
+      </header>
       {{ content_for_layout }}
+      {%- if settings.redirect_off -%}
+        <footer class="site-foot">
+          <nav aria-label="規約・ポリシー">
+            {%- for policy in shop.policies -%}<a href="{{ policy.url }}">{{ policy.title | escape }}</a>{%- endfor -%}
+          </nav>
+          <small>&copy; {{ 'now' | date: '%Y' }} {{ shop.name | escape }}</small>
+        </footer>
+      {%- endif -%}
     </div>
   {%- else -%}
     <div class="moving">

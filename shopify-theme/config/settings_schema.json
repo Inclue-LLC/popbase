@@ -15,6 +15,13 @@
         "id": "redirect_url",
         "label": "お客さんを移動させるページ",
         "info": "Shopify のお店のページを開いたお客さんを、このページへ移動します（初期値：https://popbase.jp）"
+      },
+      {
+        "type": "checkbox",
+        "id": "redirect_off",
+        "label": "POP BASE への移動を止める",
+        "default": false,
+        "info": "決済サービスの審査などで、Shopify のお店のページ（商品・特定商取引法に基づく表記など）をそのまま見せたいときだけオンにします。終わったら必ずオフに戻してください"
       }
     ]
   }
