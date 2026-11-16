@@ -985,7 +985,8 @@ function overlapWith(ev) {
 
 function fieldHtml(f, value, placeholders) {
   const id = `f_${f.key}`;
-  const label = `<label for="${id}">${esc(f.label)}${needBadge(f)}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`;
+  const hint = typeof f.hint === 'function' ? f.hint(state.draft.event) : f.hint;
+  const label = `<label for="${id}">${esc(f.label)}${needBadge(f)}${hint ? `<span class="hint">${esc(hint)}</span>` : ''}</label>`;
   const defaultColorLabel = f.defaultLabel || (String(f.themePath || '').startsWith('const.') ? '初期の色' : 'テーマの色');
   let input = '';
   if (f.type === 'text' || f.type === 'number') {
@@ -1003,7 +1004,10 @@ function fieldHtml(f, value, placeholders) {
   } else if (f.type === 'textarea') {
     // 初期の文がある欄（返品・交換など）は、空欄のときその文を入れた状態で出す
     const text = value ?? '';
-    input = `<textarea id="${id}" data-key="${f.key}" maxlength="${f.maxLength || 300}" rows="${f.rows || (f.defaultValue ? 4 : 2)}"${f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : ''}>${esc(text)}</textarea>`;
+    const ph = typeof f.placeholder === 'function' ? f.placeholder(state.draft.event) : f.placeholder;
+    input = `<textarea id="${id}" data-key="${f.key}" maxlength="${f.maxLength || 300}" rows="${f.rows || (f.defaultValue ? 4 : 2)}"${ph ? ` placeholder="${esc(ph)}"` : ''}>${esc(text)}</textarea>`;
+    // 書き方の例がある欄（特定商取引法に基づく表記）：例を欄に入れて、書き換えて使えるように
+    if (f.template) input = `<div class="tpl-wrap">${input}<button type="button" class="btn btn-small btn-ghost" data-template="${f.key}">書き方の例を入れる</button></div>`;
   } else if (f.type === 'collection') {
     // Shopify のコレクションから選ぶ
     const list = state.collections.slice();
@@ -1082,7 +1086,7 @@ for (const sel of Object.values(FORMS)) {
     // 購入特典の「なし／あり」で、条件金額と名前の欄を出し入れする
     if (key === 'collection') { changeCollection(e.target.value); markMissing(); return; }
     if (key === 'theme_preset') { applyThemeColors(); return; }
-    if (key === 'novelty' || e.target.type === 'color') { renderForm(); return; }
+    if (key === 'novelty' || key === 'legal_kind' || e.target.type === 'color') { renderForm(); return; }
     const input = e.target.closest('[data-upload]');
     if (!input || !input.files[0]) return;
     const file = input.files[0];
@@ -1099,6 +1103,17 @@ for (const sel of Object.values(FORMS)) {
     }
   });
   form.addEventListener('click', (e) => {
+    const tpl = e.target.closest('[data-template]');
+    if (tpl) {
+      const f = E.FIELDS.find((x) => x.key === tpl.dataset.template);
+      const cur = String(state.draft.event[f.key] || '').trim();
+      if (cur && !confirm('いま入っている内容を、書き方の例で置き換えますか？')) return;
+      state.draft.event[f.key] = f.template(state.draft.event);
+      renderForm();
+      changed();
+      $(`#f_${f.key}`)?.focus();
+      return;
+    }
     const preset = e.target.closest('[data-preset]');
     if (preset) {
       state.draft.event[preset.dataset.preset] = preset.dataset.hex;
