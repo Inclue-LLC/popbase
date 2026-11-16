@@ -80,8 +80,9 @@ window.AppReady = (async function () {
     const demo = $('#demoNote');
     if (demo) demo.hidden = !!shopify;
 
-    // 特定商取引法に基づく表記：イベントに出品者の表記があれば、出品者の表記＋運営者（POP BASE）の表記を POP BASE の中で開く
-    // （出品者の表記がなければ、これまでどおり運営者の表記だけ）
+    // 特定商取引法に基づく表記：販売業者は運営者（POP BASE）。イベントに出店者の表記があれば、
+    // 運営者（POP BASE）の表記のあとに、出店者（発送元）の表記を続けて POP BASE の中で開く
+    // （出店者の表記がなければ、これまでどおり運営者の表記だけ）
     let byType = {};
     const legalLink = links?.querySelector('[data-policy="legal-notice"]');
     if (legalLink && SHOP.legalNotice) {
@@ -91,18 +92,18 @@ window.AppReady = (async function () {
         e.stopImmediatePropagation();
         const body = document.createDocumentFragment();
         const h = (t) => { const el = document.createElement('h4'); el.textContent = t; return el; };
-        body.append(h('出品者（販売業者）'), legalTable(SHOP.legalNotice));
         const op = byType['legal-notice'];
         if (op) {
-          body.append(h('サイト運営者（POP BASE）'), safePolicyHtml(op.body));
+          body.append(h('販売業者（POP BASE）'), safePolicyHtml(op.body));
         } else if (shopify && domain) {
           const p = document.createElement('p');
           const a = document.createElement('a');
           a.href = `https://${domain}/policies/legal-notice`; a.target = '_blank'; a.rel = 'noopener';
-          a.textContent = 'サイト運営者（POP BASE）の表記はこちら';
+          a.textContent = '販売業者（POP BASE）の表記はこちら';
           p.append(a);
-          body.append(p);
+          body.append(h('販売業者（POP BASE）'), p);
         }
+        body.append(h('出店者（発送元）'), legalTable(SHOP.legalNotice));
         $('#policyTitle').textContent = '特定商取引法に基づく表記';
         $('#policyBody').replaceChildren(body);
         openLayer($('#policyModal'));
