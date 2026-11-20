@@ -68,3 +68,8 @@
 .cr-form { display: grid; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(20px, 4vw, 32px); box-shadow: var(--shadow); }
 .cr-done { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 32px 20px; box-shadow: var(--shadow); }
 .about-page .site-footer a { color: var(--ink-soft); }
+
+/* ダークモード：説明文などのグレーの文字は読みづらいので白に（はじめの淡い背景の部分は、もとの濃い文字のまま） */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .about-page { --ink-soft: #ffffff; }
+}
