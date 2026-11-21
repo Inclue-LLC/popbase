@@ -693,6 +693,12 @@ window.AppReady = (async function () {
     fly.className = 'fly-item';
     const pic = imageEl?.querySelector('img, svg');
     if (pic) fly.append(pic.cloneNode(true)); else fly.classList.add('is-dot');
+    // 背景は、商品の画面の写真の背景色のまま（ダークモードでも黒くならないように）
+    if (pic && imageEl) {
+      const cs = getComputedStyle(imageEl);
+      fly.style.backgroundColor = cs.backgroundColor;
+      if (cs.backgroundImage && cs.backgroundImage !== 'none') fly.style.backgroundImage = cs.backgroundImage;
+    }
     const size = pic ? Math.min(140, src.width * 0.6) : 22;
     const x0 = src.left + src.width / 2, y0 = src.top + src.height / 2;
     const x1 = to.left + to.width / 2, y1 = to.top + to.height / 2;
