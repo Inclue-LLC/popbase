@@ -32,6 +32,24 @@
 .cr-card h3 span { display: inline-block; } /* 見出しは言葉の切れ目で折り返す */
 .cr-card p { margin: 0; line-height: 1.85; color: var(--ink-soft); font-size: .92rem; }
 
+/* ---------- 活用シーン（PC は2列） ---------- */
+#scenes { padding-top: 0; }
+.cr-scenes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.cr-scene {
+  display: grid; grid-template-columns: 48px 1fr; column-gap: 16px; align-items: start;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 22px 24px; box-shadow: var(--shadow);
+}
+.cr-scene .cr-icon { grid-row: span 2; margin-bottom: 0; }
+.cr-scene h3 { font-size: 1.05rem; margin: 2px 0 8px; }
+.cr-scene h3 span { display: inline-block; } /* 見出しは言葉の切れ目で折り返す */
+.cr-scene p { margin: 0; line-height: 1.85; color: var(--ink-soft); font-size: .92rem; }
+@media (max-width: 680px) {
+  .cr-scenes { grid-template-columns: 1fr; }
+  /* スマホ：文の幅を広くとるため、アイコンは見出しの上に */
+  .cr-scene { grid-template-columns: 1fr; padding: 20px 18px 22px; }
+  .cr-scene .cr-icon { grid-row: auto; margin-bottom: 12px; }
+}
+
 /* ---------- 流れ ---------- */
 .cr-narrow { max-width: 760px; margin: 0 auto; }
 .cr-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; display: grid; gap: 12px; }
