@@ -213,6 +213,9 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 }
 .fly-item > img, .fly-item > svg { display: block; width: 100%; height: 100%; object-fit: contain; padding: 0; }
 .fly-item.is-dot { border-radius: 50%; background: var(--pink); border: 0; }
+/* 商品の画面に隠れたカートの代わりに、一時的に手前に出すカート */
+.cart-ghost { position: fixed !important; z-index: 290; margin: 0; pointer-events: none; transition: opacity .3s; }
+.cart-ghost.is-leaving { opacity: 0; }
 /* カートの下に「+1」 */
 .fly-plus {
   position: fixed; z-index: 300; pointer-events: none; transform: translateX(-50%);
