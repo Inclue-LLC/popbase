@@ -153,6 +153,11 @@ body.world-fs .world {
   position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px;
   border-radius: 50%; background: rgba(255, 255, 255, .92); box-shadow: 0 4px 10px rgba(0, 0, 0, .2);
 }
+/* 操作パッドの中央に、薄い方向マーク（上下左右の矢印） */
+.joystick .knob::after {
+  content: ''; position: absolute; inset: 9px; opacity: .3; pointer-events: none;
+  background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233a3346' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v18M3 12h18M12 3 9.5 5.5M12 3l2.5 2.5M12 21l-2.5-2.5M12 21l2.5-2.5M3 12l2.5-2.5M3 12l2.5 2.5M21 12l-2.5-2.5M21 12l-2.5 2.5'/%3E%3C/svg%3E");
+}
 @media (pointer: coarse) {
   /* スマホ・タブレット：右手の親指で動かせるよう、移動のスティックを右下、スタンプを左下に */
   .joystick { display: block; left: auto; right: 22px; }

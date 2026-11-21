@@ -664,14 +664,32 @@ window.AppReady = (async function () {
     state.cart[id] = have + added;
     saveCart();
     flyToCart(sourceEl, imageEl, added);
-    toast(`「${p.name}」をカートに入れました${added < n ? `（上限のため ${added} 点）` : ''}`);
+    // スマホの商品の画面では、下のお知らせがボタン（「✓ カートに入れました」）に重なるので、上限で減ったときだけ出す
+    const quiet = imageEl && window.matchMedia('(max-width: 680px)').matches && added === n;
+    if (!quiet) toast(`「${p.name}」をカートに入れました${added < n ? `（上限のため ${added} 点）` : ''}`);
     return true;
   }
 
   /* カートに入れたときの動き：商品の写真が弧を描いてカートへ飛び、カートが弾んで「+個数」が出る */
   function flyToCart(el, imageEl, added = 1) {
     // 全画面のときは店内右上のカートボタンへ
-    const target = document.body.classList.contains('world-fs') ? $('#hudCart') : $('#cartBtn');
+    let target = document.body.classList.contains('world-fs') ? $('#hudCart') : $('#cartBtn');
+    // カートのボタンが商品の画面の下に隠れているとき（スマホなど）は、同じ場所に、同じ見た目のカートを一時的に手前に出す
+    {
+      const r = target.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      if (r.width && !target.contains(hit)) {
+        const ghost = target.cloneNode(true);
+        ghost.removeAttribute('id');
+        ghost.querySelectorAll('[id]').forEach((x) => x.removeAttribute('id'));
+        ghost.setAttribute('aria-hidden', 'true');
+        ghost.classList.add('cart-ghost');
+        Object.assign(ghost.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+        document.body.appendChild(ghost);
+        setTimeout(() => { ghost.classList.add('is-leaving'); setTimeout(() => ghost.remove(), 300); }, 2100);
+        target = ghost;
+      }
+    }
     const pop = () => {
       target.classList.remove('bump');
       void target.offsetWidth;
