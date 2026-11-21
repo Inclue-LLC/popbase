@@ -195,7 +195,7 @@ export async function buildRoom(theme) {
         const item = plane(h, h, basic(tex, { transparent: true, alphaTest: 0.05 }));
         item.position.set(lx, y + 0.025 + h / 2, 0.02);
         unit.add(item);
-        const tag = plane(0.64, 0.16, basic(T.tagTexture(p.name, p.price, { soldOut: p.stock === 0 }), { transparent: true }));
+        const tag = plane(0.17 * T.TAG_ASPECT, 0.17, basic(T.tagTexture(p.name, p.price, { soldOut: p.stock === 0 }), { transparent: true })); // 値札（値段だけ）
         tag.position.set(lx, y - 0.1, shelfDepth / 2 + 0.005);
         unit.add(tag);
         const pos = new THREE.Vector3();
@@ -247,7 +247,7 @@ export async function buildRoom(theme) {
     group.add(sp);
     const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.tagTexture(p.name, p.price, { soldOut: p.stock === 0 }), transparent: true }));
     tag.center.set(0.5, 0);
-    tag.scale.set(0.56, 0.14, 1);
+    tag.scale.set(0.15 * T.TAG_ASPECT, 0.15, 1); // 値札（値段だけ）
     tag.position.set(x, tH + h + 0.04, tZ);
     group.add(tag);
     const front = new THREE.Vector3(x, 0, tZ + tD / 2 + 0.5);
