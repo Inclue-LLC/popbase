@@ -307,26 +307,32 @@ function fitText(ctx, text, x, y, maxW) {
   } else ctx.fillText(text, x, y);
 }
 
-/** 値札（値段だけ。店内で見えやすいように大きく） */
+/** 値札（値段だけ。店内で見えやすいように大きく）
+ * 見た目は、商品の前で出る案内（css/world.css の .prompt-btn）に合わせる：
+ * 白い丸いピルの形、テーマの色の細めの線（55%）、文字はテーマの文字の色。売り切れはグレー */
 export const TAG_ASPECT = 300 / 128; // 値札の横÷縦（js/world/room.js で板の大きさを合わせる）
 export function tagTexture(name, price, { soldOut = false } = {}) {
   const c = makeCanvas(300, 128);
   const ctx = c.getContext('2d');
-  rr(ctx, 6, 6, 288, 116, 28);
+  const en = window.THEMES?.[window.SHOP?.theme]?.entrance || {};
+  const accent = en.accent || '#b9a3ec';
+  const ink = en.ink || '#2e2729';
+  rr(ctx, 5, 5, 290, 118, 59); // 高さの半分の丸み（ピルの形）
   ctx.fillStyle = '#ffffff';
   ctx.fill();
-  // 周りの線：テーマの色（看板の小さい文字と同じ色。管理画面の「看板の小さい文字の色」で変えたときはその色）
-  ctx.lineWidth = 7;
-  ctx.strokeStyle = window.THEMES?.[window.SHOP?.theme]?.sign?.sub || '#b58f7d';
+  ctx.lineWidth = 6; // 案内の線（2px）と同じ太さの見え方
+  if (soldOut) ctx.strokeStyle = '#cfc8cc';
+  else { ctx.strokeStyle = accent; ctx.globalAlpha = 0.55; }
   ctx.stroke();
+  ctx.globalAlpha = 1;
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
-  ctx.fillStyle = soldOut ? '#c0392b' : '#2e2733';
+  ctx.fillStyle = soldOut ? '#8c8388' : ink;
   const text = soldOut ? 'SOLD OUT' : `¥${Number(price).toLocaleString('ja-JP')}`;
   // 枠に収まる大きさまで文字を小さくする（桁の多い値段・SOLD OUT）
-  let px = 72;
-  do { ctx.font = `800 ${px}px ${font()}`; px -= 2; } while (ctx.measureText(text).width > 256 && px > 30);
-  ctx.fillText(text, 150, 68);
+  let px = 68;
+  do { ctx.font = `700 ${px}px ${font()}`; px -= 2; } while (ctx.measureText(text).width > 236 && px > 30);
+  ctx.fillText(text, 150, 66);
   return toTexture(c);
 }
 
