@@ -39,7 +39,7 @@ export class Avatar {
     this.t = Math.random() * 10;
     this.target = new THREE.Vector3();
     this.size = 0.9;
-    this.aspect = 1; // 板の横÷縦（絵の面積を基準にした店内のアバターは、横長の絵が広がれるよう 1.3）
+    this.aspect = 1; // 板の横÷縦（今は正方形の板なので 1）
 
     shadowTex ||= shadowTexture();
     const shadow = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9),
