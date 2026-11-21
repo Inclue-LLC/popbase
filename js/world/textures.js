@@ -459,8 +459,8 @@ function trimTransparent(img, key) {
  */
 export async function characterTexture(character, size = 256, { scale = 1, by = 'height' } = {}) {
   const src = character.image ? await loadImage(character.image) : await svgImage(window.Art.characterSVG(character), size, size);
-  // by: 'area'（店内のアバター）：横長の絵が横に広がれるよう、横 1.3 倍の板にする（js/world/avatars.js が板の比率を合わせる）
-  const c = makeCanvas(by === 'area' ? size * 1.3 : size, size);
+  // 板は正方形（横長の絵も、横幅はアバター1人分まで。横に広げると大きく見えすぎるため）
+  const c = makeCanvas(size, size);
   if (src) {
     const img = trimTransparent(src, character.image || null);
     const boxH = size * 0.94;
@@ -470,7 +470,7 @@ export async function characterTexture(character, size = 256, { scale = 1, by = 
     let k = (boxH / img.height) * Math.max(0.2, Math.min(1, scale));
     if (by === 'area') {
       // 絵の面積（縦×横）を基準に（アバター選びと同じ）。いちばん面積の大きい絵は「面積の平方根」が枠の高さの 94%、
-      // ほかは同じ倍率（下限 25%）。高さは枠まで、幅は板の幅（1.3 倍）まで
+      // ほかは同じ倍率（下限 25%）。高さは枠まで、幅は板の幅（アバター1人分）まで
       k = (boxH / Math.sqrt(img.width * img.height)) * Math.max(0.25, Math.min(1, scale));
       k = Math.min(k, boxH / img.height, (c.width * 0.98) / img.width);
     } else if (img.width * k > boxW) k = boxW / img.width;
