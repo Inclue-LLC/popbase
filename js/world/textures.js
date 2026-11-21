@@ -307,25 +307,34 @@ function fitText(ctx, text, x, y, maxW) {
   } else ctx.fillText(text, x, y);
 }
 
-/** 値札（値段だけ。店内で見えやすいように大きく） */
+/** 値札（値段だけ。POP カードの形：上にテーマの色の帯、下に大きな値段。売り切れは帯が赤） */
 export const TAG_ASPECT = 300 / 128; // 値札の横÷縦（js/world/room.js で板の大きさを合わせる）
 export function tagTexture(name, price, { soldOut = false } = {}) {
   const c = makeCanvas(300, 128);
   const ctx = c.getContext('2d');
-  rr(ctx, 4, 4, 292, 120, 30);
+  // 帯の色：看板の小さい文字の色（テーマの色。管理画面の「看板の小さい文字の色」で変えたときはその色）
+  const band = soldOut ? '#c0392b' : (window.THEMES?.[window.SHOP?.theme]?.sign?.sub || '#b58f7d');
+  rr(ctx, 4, 4, 292, 120, 20);
   ctx.fillStyle = '#ffffff';
   ctx.fill();
+  ctx.save();
+  rr(ctx, 4, 4, 292, 120, 20);
+  ctx.clip();
+  ctx.fillStyle = band;
+  ctx.fillRect(4, 4, 292, 22);
+  ctx.restore();
+  rr(ctx, 4, 4, 292, 120, 20);
   ctx.lineWidth = 3;
-  ctx.strokeStyle = 'rgba(58,51,70,.18)';
+  ctx.strokeStyle = 'rgba(58,51,70,.15)';
   ctx.stroke();
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
   ctx.fillStyle = soldOut ? '#c0392b' : '#2e2733';
   const text = soldOut ? 'SOLD OUT' : `¥${Number(price).toLocaleString('ja-JP')}`;
-  // 枠に収まる大きさまで文字を小さくする（桁の多い値段・SOLD OUT）
-  let px = 72;
-  do { ctx.font = `800 ${px}px ${font()}`; px -= 2; } while (ctx.measureText(text).width > 256 && px > 30);
-  ctx.fillText(text, 150, 68);
+  // 帯の下の白い部分に収まる大きさまで文字を小さくする（桁の多い値段・SOLD OUT）
+  let px = 66;
+  do { ctx.font = `900 ${px}px ${font()}`; px -= 2; } while (ctx.measureText(text).width > 250 && px > 30);
+  ctx.fillText(text, 150, 78);
   return toTexture(c);
 }
 
