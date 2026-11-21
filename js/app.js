@@ -610,7 +610,10 @@ window.AppReady = (async function () {
     $('#pmBadges').innerHTML = badges(p);
     $('#pmName').textContent = p.name;
     $('#pmPrice').innerHTML = `${yen(p.price)}<small>税込</small>`;
-    $('#pmDesc').textContent = p.desc;
+    // 商品説明：空行で区切った部分を段落にする（段落の間の余白を CSS で調整できるように）。段落の中の改行はそのまま
+    $('#pmDesc').replaceChildren(...String(p.desc || '').split(/\n[ \t\u3000]*\n+/).map((t) => t.replace(/^\n+|\n+$/g, '')).filter((t) => t.trim()).map((t) => {
+      const el = document.createElement('p'); el.textContent = t; return el;
+    }));
     $('#pmSpec').textContent = p.spec;
     syncDetail();
     openLayer($('#productModal'));
@@ -633,41 +636,83 @@ window.AppReady = (async function () {
   }
   $('#pmMinus').addEventListener('click', () => { qty--; syncDetail(); });
   $('#pmPlus').addEventListener('click', () => { qty++; syncDetail(); });
-  $('#pmAdd').addEventListener('click', (e) => { addToCart(current.id, qty, e.currentTarget); syncDetail(); });
+  let addedTimer = 0;
+  $('#pmAdd').addEventListener('click', (e) => {
+    const ok = addToCart(current.id, qty, e.currentTarget, $('#pmImage'));
+    syncDetail();
+    // ボタン：少しの間「カートに入れました」にする（入れたことが分かるように）
+    if (ok) {
+      const btn = $('#pmAdd');
+      clearTimeout(addedTimer);
+      btn.classList.remove('is-added'); void btn.offsetWidth;
+      btn.classList.add('is-added');
+      btn.textContent = '✓ カートに入れました';
+      addedTimer = setTimeout(() => { btn.classList.remove('is-added'); if (current) syncDetail(); }, 1400);
+    }
+  });
 
   /* ---------- カート ---------- */
-  function addToCart(id, n, sourceEl) {
+  function addToCart(id, n, sourceEl, imageEl) {
     const p = productById[id];
     const have = state.cart[id] || 0;
     const room = maxQty(p) - have;
     if (room <= 0) {
-      return toast(p.limit && have >= p.limit ? `「${p.name}」はお一人様 ${p.limit} 点までです` : '在庫数を超えるため追加できません');
+      toast(p.limit && have >= p.limit ? `「${p.name}」はお一人様 ${p.limit} 点までです` : '在庫数を超えるため追加できません');
+      return false;
     }
     const added = Math.min(n, room);
     state.cart[id] = have + added;
     saveCart();
-    flyToCart(sourceEl);
+    flyToCart(sourceEl, imageEl, added);
     toast(`「${p.name}」をカートに入れました${added < n ? `（上限のため ${added} 点）` : ''}`);
+    return true;
   }
 
-  function flyToCart(el) {
+  /* カートに入れたときの動き：商品の写真が弧を描いてカートへ飛び、カートが弾んで「+個数」が出る */
+  function flyToCart(el, imageEl, added = 1) {
     // 全画面のときは店内右上のカートボタンへ
     const target = document.body.classList.contains('world-fs') ? $('#hudCart') : $('#cartBtn');
-    target.classList.remove('bump');
-    void target.offsetWidth;
-    target.classList.add('bump');
-    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const from = el.getBoundingClientRect();
+    const pop = () => {
+      target.classList.remove('bump');
+      void target.offsetWidth;
+      target.classList.add('bump');
+      const to = target.getBoundingClientRect();
+      const plus = document.createElement('div');
+      plus.className = 'fly-plus';
+      plus.textContent = `+${added}`;
+      plus.style.left = `${to.left + to.width / 2}px`;
+      plus.style.top = `${to.bottom + 4}px`;
+      document.body.appendChild(plus);
+      setTimeout(() => plus.remove(), 1100);
+    };
+    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { pop(); return; }
+    const src = (imageEl || el).getBoundingClientRect();
     const to = target.getBoundingClientRect();
-    const dot = document.createElement('div');
-    dot.className = 'fly-dot';
-    dot.style.left = `${from.left + from.width / 2}px`;
-    dot.style.top = `${from.top + from.height / 2}px`;
-    document.body.appendChild(dot);
-    dot.animate([
-      { transform: 'translate(-50%,-50%) scale(1)' },
-      { transform: `translate(calc(-50% + ${to.left - from.left}px), calc(-50% + ${to.top - from.top}px)) scale(.4)`, opacity: 0.6 },
-    ], { duration: 550, easing: 'cubic-bezier(.5,-0.3,.7,1)' }).onfinish = () => dot.remove();
+    // 飛ぶもの：商品の写真（なければ丸）
+    const fly = document.createElement('div');
+    fly.className = 'fly-item';
+    const pic = imageEl?.querySelector('img, svg');
+    if (pic) fly.append(pic.cloneNode(true)); else fly.classList.add('is-dot');
+    const size = pic ? Math.min(140, src.width * 0.6) : 22;
+    const x0 = src.left + src.width / 2, y0 = src.top + src.height / 2;
+    const x1 = to.left + to.width / 2, y1 = to.top + to.height / 2;
+    fly.style.width = fly.style.height = `${size}px`;
+    fly.style.left = `${x0}px`;
+    fly.style.top = `${y0}px`;
+    document.body.appendChild(fly);
+    // 上へふくらむ弧を描いて、小さくなりながらカートへ
+    // 弧のふくらみ（画面の上にはみ出さないように）
+    const lift = Math.max(0, Math.min(90, y0 - size / 2 - 8 - Math.min(0, y1 - y0) * 0.5));
+    const frames = [];
+    for (let i = 0; i <= 10; i++) {
+      const t = i / 10;
+      const e = t * t * (3 - 2 * t);
+      const x = (x1 - x0) * e;
+      const y = (y1 - y0) * e - lift * 4 * t * (1 - t);
+      const s = i === 0 ? 1 : i === 1 ? 1.12 : 1.12 - 0.92 * t;
+      frames.push({ transform: `translate(-50%,-50%) translate(${x}px, ${y}px) scale(${s})`, opacity: t > 0.9 ? 0.4 : 1 });
+    }
+    fly.animate(frames, { duration: 800, easing: 'linear' }).onfinish = () => { fly.remove(); pop(); };
   }
 
   function saveCart() {

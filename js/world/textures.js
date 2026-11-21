@@ -307,28 +307,25 @@ function fitText(ctx, text, x, y, maxW) {
   } else ctx.fillText(text, x, y);
 }
 
-/** 値札（商品名＋価格） */
+/** 値札（値段だけ。店内で見えやすいように大きく） */
+export const TAG_ASPECT = 300 / 128; // 値札の横÷縦（js/world/room.js で板の大きさを合わせる）
 export function tagTexture(name, price, { soldOut = false } = {}) {
-  const c = makeCanvas(512, 128);
+  const c = makeCanvas(300, 128);
   const ctx = c.getContext('2d');
-  rr(ctx, 4, 4, 504, 120, 22);
+  rr(ctx, 4, 4, 292, 120, 30);
   ctx.fillStyle = '#ffffff';
   ctx.fill();
   ctx.lineWidth = 3;
-  ctx.strokeStyle = 'rgba(58,51,70,.15)';
+  ctx.strokeStyle = 'rgba(58,51,70,.18)';
   ctx.stroke();
   ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
-  ctx.fillStyle = '#6f6880';
-  ctx.font = `500 34px ${font()}`;
-  let label = name.replace(/【.*?】/g, '').trim();
-  while (ctx.measureText(label).width > 300 && label.length > 2) label = label.slice(0, -1);
-  if (label !== name.replace(/【.*?】/g, '').trim()) label += '…';
-  ctx.fillText(label, 26, 64);
-  ctx.textAlign = 'right';
-  ctx.fillStyle = soldOut ? '#c0392b' : '#3a3346';
-  ctx.font = `800 42px ${font()}`;
-  ctx.fillText(soldOut ? 'SOLD OUT' : `¥${price.toLocaleString('ja-JP')}`, 488, 64);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = soldOut ? '#c0392b' : '#2e2733';
+  const text = soldOut ? 'SOLD OUT' : `¥${Number(price).toLocaleString('ja-JP')}`;
+  // 枠に収まる大きさまで文字を小さくする（桁の多い値段・SOLD OUT）
+  let px = 72;
+  do { ctx.font = `800 ${px}px ${font()}`; px -= 2; } while (ctx.measureText(text).width > 256 && px > 30);
+  ctx.fillText(text, 150, 68);
   return toTexture(c);
 }
 

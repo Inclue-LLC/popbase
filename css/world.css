@@ -97,7 +97,7 @@ body.world-fs .world {
   background: var(--theme-btn, #d9729a); color: #fff; font-size: .68rem; font-weight: 800; line-height: 18px;
 }
 .hud-cart-count[hidden] { display: none; }
-.hud-cart.bump { animation: bump .4s; }
+.hud-cart.bump { animation: bump .55s; }
 
 .hud-prompt { left: 50%; bottom: 84px; transform: translateX(-50%); }
 .hud-prompt[hidden] { display: none; }
@@ -135,7 +135,11 @@ body.world-fs .world {
   padding: .3em .9em; border-radius: 10px;
   background: rgba(20, 22, 40, .5); color: #fff; font-size: .74rem;
   pointer-events: none;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px;
 }
+/* 操作の説明のアイコン（矢印キー・ドラッグ・ホイール） */
+.hud-help span { display: inline-flex; align-items: center; gap: 5px; }
+.hud-help svg { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* スマホ用スティック */
 .joystick {
