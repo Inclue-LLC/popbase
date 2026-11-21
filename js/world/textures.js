@@ -312,11 +312,12 @@ export const TAG_ASPECT = 300 / 128; // 値札の横÷縦（js/world/room.js で
 export function tagTexture(name, price, { soldOut = false } = {}) {
   const c = makeCanvas(300, 128);
   const ctx = c.getContext('2d');
-  rr(ctx, 4, 4, 292, 120, 30);
+  rr(ctx, 6, 6, 288, 116, 28);
   ctx.fillStyle = '#ffffff';
   ctx.fill();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = 'rgba(58,51,70,.18)';
+  // 周りの線：テーマの色（看板の小さい文字と同じ色。管理画面の「看板の小さい文字の色」で変えたときはその色）
+  ctx.lineWidth = 7;
+  ctx.strokeStyle = window.THEMES?.[window.SHOP?.theme]?.sign?.sub || '#b58f7d';
   ctx.stroke();
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
