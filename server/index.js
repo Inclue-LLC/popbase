@@ -94,6 +94,18 @@ const server = http.createServer(async (req, res) => {
       return;
     }
   }
+  // 特定商取引法に基づく表記（server/admin/site.js）。POP BASE（販売業者）の表記＋公開中のイベントの出店者（発送元）の表記
+  if (urlPath === '/legal-notice' || urlPath === '/legal-notice/') {
+    let sellerText = '';
+    let brand = '';
+    try {
+      const pub = await adminApi.published();
+      sellerText = pub?.event?.legal_notice || '';
+      brand = pub?.event?.brand || '';
+    } catch { /* イベントが読めなくても、POP BASE の表記は出す */ }
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', 'x-content-type-options': 'nosniff' });
+    return res.end(require('./admin/site').legalPage({ sellerText, brand }));
+  }
   if (urlPath.startsWith('/admin/api/') || urlPath === '/api/published' || urlPath === '/api/policies' || urlPath.startsWith('/uploads/')) {
     try {
       if ((await adminApi.handle(req, res, urlPath)) !== false) return;

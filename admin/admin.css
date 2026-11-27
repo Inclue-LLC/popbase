@@ -536,3 +536,6 @@ code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; fon
 .av-swatch { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--p); padding: 0; cursor: pointer; }
 .av-swatch.is-on { outline: 2px solid var(--ink); outline-offset: 1px; }
 .av-item .link-reset { border: 0; background: none; color: var(--accent, #7d63c4); text-decoration: underline; font-size: .75rem; padding: 0 2px; cursor: pointer; }
+/* 特定商取引法に基づく表記（運営だけ） */
+#legalText { width: 100%; padding: .6em .8em; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); font: inherit; line-height: 1.8; color: inherit; resize: vertical; }
+.legal-admin .el-head a:not(.btn) { color: var(--accent, #8a6bd6); }

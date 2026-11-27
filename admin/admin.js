@@ -72,6 +72,7 @@ async function start() {
     state.minPassword = s.minPassword || 10;
     document.body.classList.toggle('is-seller', isSeller());
     $('#accountsBtn').hidden = isSeller();
+    $('#legalBtn').hidden = isSeller();
     $('#publishBtn').textContent = isSeller() ? '反映の確認を依頼する' : 'サイトに反映する';
     $('#publishBtn').title = isSeller() ? '運営が内容を確認して、お客さんのサイトに反映します' : '';
     $('#storage').textContent = isSeller() ? '出品者のアカウント' : `保存先：${s.storage}`;
@@ -186,8 +187,10 @@ function renderEventBar() {
 /* ---------- 画面の切り替え（#/ = イベント一覧、#/event/ID = イベントの編集） ---------- */
 let openTab = null; // イベントを開いたときに選ぶタブ
 async function route() {
-  if (location.hash === '#/accounts' && !isSeller()) { await flushSave(); showAccounts(); return; }
+  if (location.hash === '#/accounts' && !isSeller()) { await flushSave(); $('#legalAdmin').hidden = true; showAccounts(); return; }
+  if (location.hash === '#/legal' && !isSeller()) { await flushSave(); $('#accounts').hidden = true; showLegal(); return; }
   $('#accounts').hidden = true;
+  $('#legalAdmin').hidden = true;
   const m = /^#\/event\/([\w-]+)$/.exec(location.hash);
   let target = m && state.events.find((x) => x.id === m[1]);
   // ほかのスタッフが作ったばかりのイベントなど、一覧にまだないときは読み込み直す
@@ -1449,6 +1452,51 @@ async function requestReview() {
     toast('運営に確認を依頼しました。確認が済むと、お客さんのサイトに反映されます');
   } catch (e) { toast(e.message, { error: true }); }
 }
+
+/* ---------- 特定商取引法に基づく表記（運営だけ。サイト全体で1つ） ---------- */
+const LEGAL_SITE_TEMPLATE = [
+  '販売業者：',
+  '運営統括責任者：',
+  '所在地：',
+  '電話番号：',
+  'メールアドレス：',
+  '販売URL：https://popbase.jp',
+  '販売価格：各商品ページに記載（税込）',
+  '商品代金以外の必要料金：送料（各イベントのご案内に記載）、コンビニ決済・銀行振込の手数料',
+  'お支払い方法：クレジットカード、コンビニ決済、銀行振込など（ご注文時の決済画面にてご確認ください）',
+  'お支払い時期：クレジットカードはご注文時、コンビニ決済・銀行振込はご注文後の期限内',
+  '商品の引き渡し時期：各イベントのご案内「発送について」に記載',
+  '返品・交換について：お客様のご都合による返品・交換はお受けしていません。不良品やお届け間違いは交換いたします',
+  '販売形態：委託販売（商品は各出店者から直接発送されます）',
+].join('\n');
+async function showLegal() {
+  state.eventId = null;
+  state.draft = null;
+  $('#app').classList.add('is-list');
+  $('#eventList').hidden = true;
+  $('#legalAdmin').hidden = false;
+  window.scrollTo(0, 0);
+  $('#legalSaved').textContent = '';
+  try {
+    const r = await api('site-legal');
+    $('#legalText').value = r.text || '';
+    if (r.updatedAt) $('#legalSaved').textContent = `最後の保存：${new Date(r.updatedAt).toLocaleString('ja-JP')}${r.updatedBy ? `（${r.updatedBy}）` : ''}`;
+  } catch (e) { toast(e.message, { error: true }); }
+}
+$('#legalTemplate').addEventListener('click', () => {
+  const t = $('#legalText');
+  if (t.value.trim() && !confirm('いま入っている内容を、書き方の例で置き換えますか？')) return;
+  t.value = LEGAL_SITE_TEMPLATE;
+  t.focus();
+});
+$('#legalForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const r = await api('site-legal', { method: 'PUT', body: { text: $('#legalText').value } });
+    $('#legalSaved').textContent = `保存しました（${new Date(r.updatedAt).toLocaleString('ja-JP')}）`;
+    toast('特定商取引法に基づく表記を保存しました。サイトのページにすぐ反映されます');
+  } catch (err) { toast(err.message, { error: true }); }
+});
 
 /* ---------- アカウント（運営だけ） ---------- */
 let accEditing = null; // 変更中のアカウントの ID
