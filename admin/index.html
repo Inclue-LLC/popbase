@@ -54,6 +54,7 @@
         <a class="btn" id="previewLink" href="/?preview=draft" target="_blank" rel="noopener" title="下書きの内容で実際のサイトを開く">サイトで確認</a>
         <button class="btn btn-primary" id="publishBtn" disabled>サイトに反映する</button>
         <a class="btn btn-ghost" id="accountsBtn" href="#/accounts" hidden>アカウント</a>
+        <a class="btn btn-ghost" id="legalBtn" href="#/legal" hidden title="サイトの「特定商取引法に基づく表記」のページ（popbase.jp/legal-notice）">特商法</a>
         <button class="btn btn-ghost" id="pwBtn" type="button">パスワード変更</button>
         <span class="user" id="userName"></span>
         <button class="btn btn-ghost" id="logoutBtn">ログアウト</button>
@@ -70,6 +71,30 @@
         <button class="btn btn-primary" id="listNewBtn" type="button">＋ 新しいイベント</button>
       </div>
       <div id="eventGroups"></div>
+    </section>
+
+    <!-- 特定商取引法に基づく表記（運営だけ）：サイト全体で1つ。popbase.jp/legal-notice に出す（server/admin/site.js） -->
+    <section class="accounts legal-admin" id="legalAdmin" hidden>
+      <div class="el-head">
+        <div>
+          <h1>特定商取引法に基づく表記</h1>
+          <p>販売業者（POP BASE）の表記です。サイトのページ <a href="/legal-notice" target="_blank" rel="noopener">popbase.jp/legal-notice</a> に出し、
+            お客さんのサイトのページ下の「特定商取引法に基づく表記」から開けます。<br>
+            会期中のイベントに「出店者（発送元）の表記」があれば、その下に続けて出します（イベントごとに「内装・イベント」タブで入力）。</p>
+        </div>
+        <a class="btn btn-ghost" href="#/">← イベント一覧</a>
+      </div>
+      <form class="acc-form" id="legalForm">
+        <label for="legalText"><b>表記の内容</b>
+          <span class="hint">1行に1項目、「項目：内容」の形で書くと表になります（例：販売業者：〇〇）。「項目：」のない行は、前の項目の続き（改行）になります。5000文字まで</span></label>
+        <textarea id="legalText" rows="18" maxlength="5000"></textarea>
+        <div class="acc-actions">
+          <button class="btn btn-primary" type="submit">保存する（すぐにサイトに出ます）</button>
+          <button class="btn btn-ghost" type="button" id="legalTemplate">書き方の例を入れる</button>
+          <a class="btn btn-ghost" href="/legal-notice" target="_blank" rel="noopener">ページを見る</a>
+          <span class="hint" id="legalSaved"></span>
+        </div>
+      </form>
     </section>
 
     <!-- アカウント（運営だけ）：運営・出品者のアカウントを作る、担当のイベントを決める -->

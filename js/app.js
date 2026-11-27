@@ -80,60 +80,8 @@ window.AppReady = (async function () {
     const demo = $('#demoNote');
     if (demo) demo.hidden = !!shopify;
 
-    // 特定商取引法に基づく表記：販売業者は運営者（POP BASE）。イベントに出店者の表記があれば、
-    // 運営者（POP BASE）の表記のあとに、出店者（発送元）の表記を続けて POP BASE の中で開く
-    // （出店者の表記がなければ、これまでどおり運営者の表記だけ）
+    // 特定商取引法に基づく表記は、popbase.jp の中のページ（/legal-notice。server/admin/site.js）
     let byType = {};
-    const legalLink = links?.querySelector('[data-policy="legal-notice"]');
-    if (legalLink && SHOP.legalNotice) {
-      legalLink.hidden = false;
-      legalLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        const body = document.createDocumentFragment();
-        const h = (t) => { const el = document.createElement('h4'); el.textContent = t; return el; };
-        const op = byType['legal-notice'];
-        if (op) {
-          body.append(h('販売業者（POP BASE）'), safePolicyHtml(op.body));
-        } else if (shopify && domain) {
-          const p = document.createElement('p');
-          const a = document.createElement('a');
-          a.href = `https://${domain}/policies/legal-notice`; a.target = '_blank'; a.rel = 'noopener';
-          a.textContent = '販売業者（POP BASE）の表記はこちら';
-          p.append(a);
-          body.append(h('販売業者（POP BASE）'), p);
-        }
-        body.append(h('出店者（発送元）'), legalTable(SHOP.legalNotice));
-        $('#policyTitle').textContent = '特定商取引法に基づく表記';
-        $('#policyBody').replaceChildren(body);
-        openLayer($('#policyModal'));
-        $('#policyModal .modal-card').scrollTop = 0;
-      });
-    }
-    // 「項目：内容」の行は表に、それ以外の行は前の項目の続き（なければ段落）にする
-    function legalTable(text) {
-      const frag = document.createDocumentFragment();
-      let table = null;
-      let lastTd = null;
-      for (const raw of String(text).split('\n')) {
-        const line = raw.trim();
-        if (!line) { lastTd = null; continue; }
-        const m = line.match(/^([^：:]{1,24})[：:]\s*(.*)$/);
-        if (m) {
-          if (!table) { table = document.createElement('table'); table.className = 'legal-table'; frag.append(table); }
-          const tr = table.insertRow();
-          const th = document.createElement('th'); th.scope = 'row'; th.textContent = m[1].trim();
-          const td = document.createElement('td'); td.textContent = m[2];
-          tr.append(th, td);
-          lastTd = td;
-        } else if (lastTd) {
-          lastTd.append(document.createElement('br'), line);
-        } else {
-          const p = document.createElement('p'); p.textContent = line; frag.append(p); table = null;
-        }
-      }
-      return frag;
-    }
 
     // サーバーが Shopify からポリシーの文章を読めたら、リンクを押したときに POP BASE の中で開く
     // （読めないとき＝権限がない・未入力などは、上の Shopify のページへのリンクのまま）

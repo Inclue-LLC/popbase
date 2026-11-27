@@ -287,6 +287,18 @@ async function handle(req, res, urlPath) {
       console.log(`[admin] ${user} が ${name} のパスワード設定用リンクを発行しました`);
       return json(res, 200, { url: setupUrl(r.token), expiresAt: r.expiresAt, user: auth.getUser(name) });
     }
+    // 特定商取引法に基づく表記（POP BASE・販売業者）。サイト全体で1つ（server/admin/site.js）。運営だけ
+    if (route === 'site-legal') {
+      const site = require('./site');
+      if (req.method === 'GET') return json(res, 200, site.getLegal());
+      if (req.method === 'PUT') {
+        const body = await readJson(req);
+        if (typeof body.text !== 'string' || body.text.length > site.LEGAL_MAX) throw new InputError(`${site.LEGAL_MAX}文字までで入力してください`);
+        const r = site.setLegal(body.text, user);
+        console.log(`[admin] ${user} が特定商取引法に基づく表記を変更しました`);
+        return json(res, 200, r);
+      }
+    }
     if (route === 'users') {
       if (req.method === 'GET') return json(res, 200, { users: auth.listUsers() });
       if (req.method === 'POST') {
@@ -421,4 +433,4 @@ function loginAllowedOrTell(res, ip) {
   return false;
 }
 
-module.exports = { handle, store };
+module.exports = { handle, store, published: () => store.getPublished() };
