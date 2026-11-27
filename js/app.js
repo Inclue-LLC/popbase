@@ -80,7 +80,24 @@ window.AppReady = (async function () {
     const demo = $('#demoNote');
     if (demo) demo.hidden = !!shopify;
 
-    // 特定商取引法に基づく表記は、popbase.jp の中のページ（/legal-notice。server/admin/site.js）
+    // 特定商取引法に基づく表記：これまでどおりポップで表示する。中身は popbase.jp の中のページ（/legal-notice。server/admin/site.js）
+    // から読み込む（Shopify のページには移動しない）。読み込めないときだけ、そのページを開く
+    document.addEventListener('click', async (e) => {
+      const a = e.target.closest('[data-legal]');
+      if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      e.preventDefault();
+      try {
+        const html = await (await fetch('/legal-notice', { cache: 'no-store' })).text();
+        const main = new DOMParser().parseFromString(html, 'text/html').querySelector('.legal-main');
+        if (!main) throw new Error('no content');
+        main.querySelector('h1')?.remove(); // 見出しはポップの見出しに出す
+        main.querySelectorAll('script, style, iframe').forEach((x) => x.remove());
+        $('#policyTitle').textContent = '特定商取引法に基づく表記';
+        $('#policyBody').replaceChildren(...main.children);
+        openLayer($('#policyModal'));
+        $('#policyModal .modal-card').scrollTop = 0;
+      } catch { location.href = a.href; }
+    });
     let byType = {};
 
     // サーバーが Shopify からポリシーの文章を読めたら、リンクを押したときに POP BASE の中で開く

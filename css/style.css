@@ -302,6 +302,8 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .policy-body h4:first-child { margin-top: 0; }
 .policy-body .legal-table th { width: 10em; background: color-mix(in srgb, var(--line) 35%, transparent); font-weight: 700; }
 @media (max-width: 560px) { .policy-body .legal-table th { width: 7em; } }
+.policy-body section:first-child h2 { margin-top: 0; }
+.policy-body h2 small { margin-left: 8px; font-size: .85em; font-weight: 500; color: var(--ink-soft); }
 /* お問い合わせフォーム */
 #contactForm { display: grid; gap: 14px; }
 .cf-field { display: grid; gap: 6px; font-weight: 700; font-size: .9rem; border: 0; padding: 0; margin: 0; min-width: 0; }
