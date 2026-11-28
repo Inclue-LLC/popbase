@@ -486,12 +486,12 @@ async function main() {
   Visit.on('admitted', () => {
     if (fsUsed() || document.body.classList.contains('world-fs')) return;
     clearTimeout(glowTimer);
-    // 入口の扉が開くのを待ってから
+    // 入店から1秒後に
     glowTimer = setTimeout(() => {
       fsBtn.classList.remove('is-glow'); void fsBtn.offsetWidth;
       fsBtn.classList.add('is-glow');
       glowTimer = setTimeout(() => fsBtn.classList.remove('is-glow'), 4800);
-    }, 1200);
+    }, 1000);
   });
   fsBtn.addEventListener('click', () => {
     try { localStorage.setItem(FS_USED, '1'); } catch { /* noop */ }
