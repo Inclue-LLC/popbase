@@ -92,26 +92,15 @@ body.world-fs .world {
 .hud-fs { display: inline-flex; align-items: center; gap: 5px; background: var(--theme-btn, var(--primary)); color: var(--theme-btn-ink, var(--primary-ink)); box-shadow: 0 2px 10px rgba(0, 0, 0, .2); }
 .hud-fs:hover { background: color-mix(in srgb, var(--theme-btn, var(--primary)) 88%, #000); }
 .hud-fs { position: relative; }
-/* 入店してすぐ、数秒だけ光らせる（ボタンが弾み、白い光の輪が広がり、光がボタンの上をすっと流れる。3回） */
-.hud-fs { overflow: visible; }
-.hud-fs.is-glow { animation: fsGlowBtn 1.5s ease-in-out 3; }
-.hud-fs.is-glow::after {
-  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  animation: fsGlowRing 1.5s ease-out 3;
-}
+/* 入店してすぐ、数秒だけ光らせる（光がボタンの上をすっと流れる。3回） */
+.hud-fs { overflow: hidden; }
 .hud-fs.is-glow::before {
   content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .35) 50%, transparent 70%) no-repeat;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .5) 50%, transparent 62%) no-repeat;
   background-size: 250% 100%; animation: fsSheen 1.5s ease-in-out 3;
 }
-@keyframes fsGlowRing {
-  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, .95), 0 0 0 0 color-mix(in srgb, var(--theme-accent, #b9a3ec) 90%, transparent); }
-  60% { box-shadow: 0 0 0 3px rgba(255, 255, 255, .5), 0 0 0 6px color-mix(in srgb, var(--theme-accent, #b9a3ec) 35%, transparent); }
-  100% { box-shadow: 0 0 0 5px rgba(255, 255, 255, 0), 0 0 0 9px color-mix(in srgb, var(--theme-accent, #b9a3ec) 0%, transparent); }
-}
-@keyframes fsGlowBtn { 0%, 100% { transform: scale(1); } 35% { transform: scale(1.05); } 70% { transform: scale(1.01); } }
-@keyframes fsSheen { 0% { background-position: 120% 0; } 100% { background-position: -120% 0; } }
-@media (prefers-reduced-motion: reduce) { .hud-fs.is-glow, .hud-fs.is-glow::after, .hud-fs.is-glow::before { animation: none; } }
+@keyframes fsSheen { 0% { background-position: 100% 0; } 100% { background-position: 0% 0; } } /* 光の筋が、ボタンの左の外から右の外へ流れる */
+@media (prefers-reduced-motion: reduce) { .hud-fs.is-glow::before { animation: none; } }
 .hud-fs.is-on { background: rgba(255, 255, 255, .9); color: var(--theme-ink, #3a3346); box-shadow: 0 2px 8px rgba(0, 0, 0, .15); }
 .hud-fs.is-on:hover { background: #fff; }
 .hud-fs .fs-icon { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex: none; }
