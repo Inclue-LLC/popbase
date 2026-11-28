@@ -490,7 +490,7 @@ async function main() {
     glowTimer = setTimeout(() => {
       fsBtn.classList.remove('is-glow'); void fsBtn.offsetWidth;
       fsBtn.classList.add('is-glow');
-      glowTimer = setTimeout(() => fsBtn.classList.remove('is-glow'), 4800);
+      glowTimer = setTimeout(() => fsBtn.classList.remove('is-glow'), 3200); // 1.5秒 × 2回
     }, 1000);
   });
   fsBtn.addEventListener('click', () => {
