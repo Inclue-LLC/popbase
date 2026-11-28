@@ -10,7 +10,7 @@
 }
 /* スマホ：ヘッダーの下の線から「IN STORE」までを詰める（店内を最初の画面に多く入れるため） */
 @media (max-width: 640px) {
-  .section-store { padding-top: 32px; }
+  .section-store { padding-top: 26px; }
 }
 
 .world {
