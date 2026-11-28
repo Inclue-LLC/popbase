@@ -730,13 +730,25 @@ window.AppReady = (async function () {
       el.hidden = t.count === 0;
     }
 
+    // カートの上：購入特典と送料無料の「あと○円」を、ここにまとめて出す（同じ金額なら1本にまとめる）
     const nov = SHOP.novelty;
-    $('#noveltyBar').hidden = !nov;
-    const remain = nov ? nov.threshold - t.subtotal : 0;
-    const pct = nov ? Math.min(100, (t.subtotal / nov.threshold) * 100) : 0;
-    if (nov) $('#noveltyBar').innerHTML = `
-      <p>${remain > 0 ? `特典「${SHOP.novelty.name}」まで<span class="nb">あと <strong>${yen(remain)}</strong></span>` : `🎉 特典「${SHOP.novelty.name}」が付きます`}</p>
-      <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}"><span style="width:${pct}%"></span></div>`;
+    const fs = SHOP.freeShippingThreshold > 0 ? SHOP.freeShippingThreshold : 0;
+    const goals = [];
+    if (nov && fs && nov.threshold === fs) goals.push({ at: fs, label: `特典「${esc(nov.name)}」と送料無料`, done: `特典「${esc(nov.name)}」が付き、送料無料になります` });
+    else {
+      if (nov) goals.push({ at: nov.threshold, label: `特典「${esc(nov.name)}」`, done: `特典「${esc(nov.name)}」が付きます` });
+      if (fs) goals.push({ at: fs, label: '送料無料', done: '送料無料になります' });
+      goals.sort((a, b) => a.at - b.at);
+    }
+    $('#noveltyBar').hidden = !goals.length;
+    $('#noveltyBar').innerHTML = goals.map((g) => {
+      const remain = g.at - t.subtotal;
+      const pct = Math.min(100, (t.subtotal / g.at) * 100);
+      return `<div class="goal${remain <= 0 ? ' is-done' : ''}">
+        <p>${remain > 0 ? `${g.label}まで<span class="nb">あと <strong>${yen(remain)}</strong></span>` : `🎉 ${g.done}`}</p>
+        <div class="meter" role="progressbar" aria-label="${g.label}まで" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}"><span style="width:${pct}%"></span></div>
+      </div>`;
+    }).join('');
 
     $('#cartItems').innerHTML = t.lines.length ? t.lines.map(({ p, q }) => `
       <li class="cart-item" style="--c:${charOf(p).color}">
@@ -762,8 +774,7 @@ window.AppReady = (async function () {
         <div><dt>送料</dt><dd>${t.free ? '無料' : shopify ? 'お会計時に計算' : t.shipping ? yen(t.shipping) : '無料'}</dd></div>
         <div class="total"><dt>${shopify && !t.free ? '合計（税込・送料別）' : '合計（税込）'}</dt><dd>${yen(shopify && !t.free ? t.subtotal : t.total)}</dd></div>
       </dl>
-      ${shopify && !t.free ? '<p class="hint">送料は、次の購入手続き画面で計算されます</p>' : ''}
-      ${!t.free && SHOP.freeShippingThreshold > 0 ? `<p class="hint">あと ${yen(SHOP.freeShippingThreshold - t.subtotal)} で送料無料</p>` : ''}` : '';
+      ${shopify && !t.free ? '<p class="hint">送料は、次の購入手続き画面で計算されます</p>' : ''}` : ''; // 「あと○円で送料無料」は、上の特典の欄にまとめて出す
     $('#checkoutBtn').disabled = t.lines.length === 0;
     document.dispatchEvent(new CustomEvent('haneul:cart', { detail: { count: t.count } }));
   }
