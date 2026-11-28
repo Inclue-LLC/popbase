@@ -177,8 +177,8 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .logo-mark { width: 30px; height: auto; }
 /* ロゴの横の「オンラインポップアップショップ」（お店の名前の説明。イベントのブランド名は出さない） */
 .logo small { display: inline-block; margin-left: .3em; padding-left: .8em; border-left: 1px solid var(--line); font-family: var(--font); font-size: .72rem; font-weight: 700; letter-spacing: .08em; color: var(--ink-soft); white-space: nowrap; }
-@media (max-width: 400px) {
-  /* 狭い画面：説明はお店の名前の下に小さく（カートのボタンが下の行に落ちないように） */
+@media (max-width: 640px) {
+  /* スマホ：「オンラインポップアップショップ」は、お店の名前（POP BASE）の下に小さく2段で */
   .logo { display: inline-grid; grid-template-columns: auto auto; column-gap: 8px; row-gap: 0; }
   .logo .logo-mark { grid-row: span 2; }
   .logo span { line-height: 1.1; align-self: end; }
@@ -378,8 +378,9 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 }
 .is-open .drawer-panel { transform: none; }
 .drawer-head { display: flex; justify-content: space-between; align-items: center; }
-.novelty { background: var(--surface-2); border-radius: 16px; padding: 12px 14px; font-size: .85rem; }
+.novelty { background: var(--surface-2); border-radius: 16px; padding: 12px 14px; font-size: .85rem; display: grid; gap: 12px; }
 .novelty p { margin: 0 0 8px; }
+.novelty .goal.is-done .meter span { background: linear-gradient(90deg, #8fd3b0, #4fb58a); } /* 達成したものは緑 */
 .novelty strong { color: var(--pink); }
 .meter { height: 10px; background: var(--surface); border-radius: 999px; overflow: hidden; }
 .meter span { display: block; height: 100%; background: linear-gradient(90deg, #c3b2f2, #f59ab7); border-radius: inherit; transition: width .4s; }
