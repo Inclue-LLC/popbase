@@ -479,7 +479,24 @@ async function main() {
     if (on) root.focus({ preventScroll: true });
     else restoreScroll();
   }
+  /* 入店してすぐ、「全画面にする」を数秒だけ光らせて気づいてもらう（一度でも全画面にした人には出さない） */
+  const FS_USED = 'haneul:fsUsed';
+  const fsUsed = () => { try { return localStorage.getItem(FS_USED) === '1'; } catch { return false; } };
+  let glowTimer = 0;
+  Visit.on('admitted', () => {
+    if (fsUsed() || document.body.classList.contains('world-fs')) return;
+    clearTimeout(glowTimer);
+    // 入口の扉が開くのを待ってから
+    glowTimer = setTimeout(() => {
+      fsBtn.classList.remove('is-glow'); void fsBtn.offsetWidth;
+      fsBtn.classList.add('is-glow');
+      glowTimer = setTimeout(() => fsBtn.classList.remove('is-glow'), 4800);
+    }, 1200);
+  });
   fsBtn.addEventListener('click', () => {
+    try { localStorage.setItem(FS_USED, '1'); } catch { /* noop */ }
+    clearTimeout(glowTimer);
+    fsBtn.classList.remove('is-glow');
     const on = !document.body.classList.contains('world-fs');
     if (on) {
       setFs(true);
