@@ -184,14 +184,8 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
   .logo span { line-height: 1.1; align-self: end; }
   .logo small { margin: 0; padding: 0; border: 0; font-size: .6rem; letter-spacing: .02em; line-height: 1.3; align-self: start; }
 }
-.nav { display: flex; gap: 4px; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
-.nav a {
-  color: var(--ink-soft); text-decoration: none; font-weight: 700; font-size: .9rem;
-  padding: .4em .9em; border-radius: 999px; white-space: nowrap;
-}
-.nav a:hover { background: var(--surface-2); color: var(--ink); }
 .cart-btn {
-  position: relative; flex: none;
+  position: relative; flex: none; margin-left: auto; /* ヘッダーの右端 */
   width: 44px; height: 44px; border-radius: 50%;
   border: 0; background: var(--primary); color: var(--primary-ink);
   display: grid; place-items: center;
@@ -426,14 +420,11 @@ h1, h2, h3, h4 { line-height: 1.35; margin: 0; }
 .toast.show { transform: translate(-50%, 0); opacity: 1; }
 
 @media (max-width: 640px) {
-  /* スマホ：1行目はロゴ、2行目に「店内・ご案内」とカート（カートは店内・ご案内と同じ高さの右端） */
-  .site-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px 8px; padding-top: 30px; padding-bottom: 5px; } /* 上の端からロゴまで 30px */
-  .logo { grid-column: 1 / -1; justify-self: start; }
-  .nav { grid-column: 1; grid-row: 2; margin: 0 0 0 -4px; }
-  .nav a { font-size: .85rem; padding: .3em .9em; }
-  .cart-btn { grid-column: 2; grid-row: 2; margin: 0; width: 38px; height: 38px; top: -4px; }
+  /* スマホ：1行に、左にロゴ、右端にカート */
+  .site-header { gap: 8px; }
+  .cart-btn { width: 38px; height: 38px; }
   .cart-btn svg { width: 22px; height: 22px; }
-  html { scroll-padding-top: 128px; }
+  html { scroll-padding-top: 64px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
